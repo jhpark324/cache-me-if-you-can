@@ -1,0 +1,93 @@
+{
+  "date": "2026-11-02",
+  "environment": "WSL Linux x64 / Python 3.12 / Node 22.22.1 / Chromium",
+  "backend_real_cpu": {
+    "passed": 181,
+    "skipped": 0,
+    "seconds": 37.13,
+    "provider_inference": false
+  },
+  "clean_backend_without_embedding_extra": {
+    "passed": 180,
+    "skipped": 1,
+    "seconds": 26.97,
+    "locked_install": true
+  },
+  "frontend_fixture": {
+    "passed": 57,
+    "integration_skipped_in_this_run": 3
+  },
+  "frontend_real_api": {
+    "port": 8014,
+    "background_jobs": false,
+    "auth": "fresh empty test directory; no user authentication",
+    "storage": "isolated mkdtemp /tmp/cache-me-final-integration-*",
+    "suite": "3 real API Playwright integration files",
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "elapsed_seconds": 21.4,
+    "owned_server_stopped": true,
+    "initial_failure": "home graph test relied on existing records; corrected by explicitly seeding a survivor record"
+  },
+  "frontend_final_targeted": {
+    "passed": 21
+  },
+  "script_regressions": {
+    "passed": 12
+  },
+  "clean_frontend": {
+    "npm_ci": true,
+    "typescript": true,
+    "vite_build": true,
+    "lockfiles_unchanged": true
+  },
+  "runtime": {
+    "server_restarted": true,
+    "record_count": 12,
+    "record_revisions_and_state_unchanged": true,
+    "provider_login_and_selected_model_preserved": true,
+    "model_catalog_refreshed": true,
+    "index_ready": true,
+    "ready_records": 12,
+    "graph_nodes": 25,
+    "graph_edges": 63,
+    "search_hits": 5,
+    "new_ai_answers_generated": false
+  },
+  "dependency_audits": {
+    "npm_known_vulnerabilities": 0,
+    "python_audited_packages": 106,
+    "python_known_vulnerabilities": 0,
+    "python_skipped": [
+      "local second-brain project",
+      "torch 2.15.0+cpu local version"
+    ],
+    "torch_public_2_15_0_separate_known_vulnerabilities": 0,
+    "cpu_binary_supply_chain_audit": false
+  },
+  "documentation": {
+    "svg_diagrams": 14,
+    "mermaid_cli": "12.0.0",
+    "relative_markdown_file_links_checked": true,
+    "external_urls_and_anchors_not_exhaustively_checked": true
+  },
+  "publication_check": {
+    "working_tree_and_current_index": true,
+    "known_secret_and_runtime_file_findings": 0,
+    "git_initialized": false,
+    "history_remote_image_content_all_secret_formats_excluded": true
+  },
+  "remote_ci": {
+    "configuration_added": true,
+    "yaml_and_sha_permissions_checked": true,
+    "hosted_run": false
+  },
+  "pending": [
+    "license and repository visibility decision",
+    "native OS installation/OAuth/MCP gates",
+    "user-deferred actual logout and login",
+    "large dataset and real-user Korean quality",
+    "further service and state boundaries"
+  ]
+}

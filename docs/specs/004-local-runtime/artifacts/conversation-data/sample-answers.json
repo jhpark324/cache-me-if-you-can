@@ -1,0 +1,611 @@
+{
+  "synthetic": true,
+  "actual_selected_model": true,
+  "cases": [
+    {
+      "case": "long-tail",
+      "question": "모래책장 기록 후반에 남긴 확인 질문은 뭐였어?",
+      "expected_case": "reading-proposal-result-long",
+      "elapsed_seconds": 12.53,
+      "result": {
+        "answer_id": "76441a75-b305-402d-939c-0a536d72310e",
+        "parts": [
+          {
+            "part_id": "038378fe-fddb-46e5-a4a6-c8dcb63c5936",
+            "kind": "stored_knowledge",
+            "text": "모래책장 기록 후반에 남긴 확인 질문은 “왜 실행하지 않은 제안이 결과로 읽혔는가?”였어. 가상 진행자 지우가 나중에 다시 꺼내 볼 질문으로 남긴 것이지, 실제 참석자에게 물어봤다는 기록은 아니야.",
+            "sources": [
+              {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 1366,
+                "body_end": 1953
+              }
+            ]
+          }
+        ],
+        "evidence_status": "insufficient",
+        "limitations": [
+          "기록·근거 구간·본문의 공유 예산을 넘어 일부 구간을 생략했습니다.",
+          "기록 수 예산으로 검색 결과의 일부만 포함했습니다."
+        ],
+        "sources": [
+          {
+            "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+            "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+            "node_id": null,
+            "body_start": 1366,
+            "body_end": 1953
+          }
+        ],
+        "retrieval": {
+          "items": [
+            {
+              "source": {
+                "capture_id": "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+                "revision_id": "eca77fb3-c9ff-4913-acd5-b0245db10f65",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 293
+              },
+              "label": "가상 진행자 지우는 모래책장 첫 대화의 도입에서 사실 확인 질문을 하나만 사용하기로 선택했다. 이야기 전체를",
+              "capture_label": "[테스트] 모래책장 도입은 사실 확인 질문 하나로 제한",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 1366,
+                "body_end": 1953
+              },
+              "label": "## 모임에서 질문을 쓰는 방법 진행자는 사실 확인 질문 하나를 먼저 던지고, 이어서 서로 다른 해석을 물어",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": true
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 575,
+                "body_end": 959
+              },
+              "label": "## AI가 제안한 기록 방식 AI는 인물의 발언 옆에 종류를 짧게 표시해 보는 방식을 설명했다. ‘늦게 열",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 185
+              },
+              "label": "가상 독서모임 ‘모래책장’은 대화용으로 만든 짧은 이야기 『느린 등대』를 읽으며 제안, 선택, 실행 결과를 ",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 959,
+                "body_end": 1366
+              },
+              "label": "## 시간과 조건을 함께 보관하기 ‘금요일에 하기로 했다’와 ‘금요일에 했다’는 다르다. 결정 문장에는 시험",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 185,
+                "body_end": 575
+              },
+              "label": "## 이야기에서 주어진 정보 이야기 속 인물 하린은 바닷가 마을의 작은 도서관을 맡는다. 밤에 등대 불빛을 ",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "fc588d4b-efc4-44ea-90b4-86539ef74a56",
+                "revision_id": "78935661-b26e-43e9-8ca2-0e6b55a5dde5",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 329
+              },
+              "label": "가상 진행자 지우는 2026년 11월 1일 모래책장 첫 실험을 마친 뒤, 도입 질문에는 두 사람이 바로 답했",
+              "capture_label": "[테스트] 모래책장 첫 실험에서 짧은 질문 뒤 나온 서로 다른 해석",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+                "revision_id": "425f52f9-f87c-49c9-9704-5e271a4e787f",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 269
+              },
+              "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+              "capture_label": "[테스트] 산책 중 떠오른 질문",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "53a0304f-f0ca-4fbd-965c-ff67c571f7f1",
+                "revision_id": "516c52e7-77be-4536-83cc-faacc871c860",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 301
+              },
+              "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+              "capture_label": "[테스트] 하루의 감정을 말로 정리하기",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6",
+                "revision_id": "9821aa42-cf8c-4100-9b48-ca3c9f7172ac",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 318
+              },
+              "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+              "capture_label": "[테스트] 배운 내용과 일상을 연결하는 질문",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+                "revision_id": "638ccc97-ab79-455b-b7ff-b5e3877ba432",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 311
+              },
+              "label": "가상 진행자 지우는 모래책장 첫 대화에서 각자 이야기 문장 하나와 질문 하나를 골라 보게 하는 작은 실험을 ",
+              "capture_label": "[테스트] 모래책장 첫 대화는 각자 질문 한 개를 골라보기",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 901,
+                "body_end": 1820
+              },
+              "label": "## 서버에서 확인할 응답의 의미 성공 응답에는 실제 저장본의 식별자와 저장된 내용이 있어야 한다는 제안을 ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 1820,
+                "body_end": 1978
+              },
+              "label": "## 남은 의문 응답을 영구히 확인할 수 없는 경우 사용자에게 어떤 복구 동선을 제공할지는 아직 정하지 않았",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 404,
+                "body_end": 653
+              },
+              "label": "## 하나의 저장 의도에 대응하는 요청 식별자 Codex는 한 번의 저장 의도에 요청 식별자를 부여하고, 응",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 653,
+                "body_end": 901
+              },
+              "label": "## 화면에서 유지할 초안 오류가 보인다고 사용자가 쓴 문장을 비우지 않는다. 운영자는 다시 입력하는 수고를",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 149
+              },
+              "label": "별빛 노트라는 가상 프로젝트에서 운영자는 저장 응답이 늦을 때 같은 메모가 두 번 생기는 상황을 검토했다. ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 149,
+                "body_end": 404
+              },
+              "label": "## 재현하려는 사용자 행동 운영자는 메모를 입력한 뒤 저장 버튼을 누르고, 화면이 그대로여서 같은 버튼을 ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6",
+                "revision_id": "b38442b8-6972-4bd8-8046-818fb257a800",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 320
+              },
+              "label": "가상 독서모임 ‘모래책장’의 진행자가 재사용하기 위해 보관한 질문 카드다. 아래 문장은 모임에서 읽을 자료이",
+              "capture_label": "[테스트] 모래책장 진행자가 다시 사용할 질문 카드",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "25e3012b-c74f-4320-8155-9157c2d03168",
+                "revision_id": "7df10a03-d449-4f73-b2d1-5a0e95d89b0b",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 285
+              },
+              "label": "가상 독서모임 ‘모래책장’은 네 명이 45분 동안 이야기하는 첫 실험을 준비하고 있다. 가상 진행자 지우는 ",
+              "capture_label": "[테스트] 모래책장 독서모임의 첫 실험 조건",
+              "cited": false
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "expected_capture_cited": true
+    },
+    {
+      "case": "trip-not-booked",
+      "question": "기록상 항구 오후 여행을 이미 예약했어? 정한 조건과 아직 확인하지 않은 점을 알려줘.",
+      "expected_case": "trip-harbor-context",
+      "elapsed_seconds": 25.55,
+      "result": {
+        "answer_id": "85c19a7c-3627-4b67-ae80-feff37b82cc8",
+        "parts": [
+          {
+            "part_id": "a1346bc2-25a9-46e1-a9a8-a5d7085dbccc",
+            "kind": "stored_knowledge",
+            "text": "아니요. 기록상 ‘항구 오후’는 실제 예약이 아니라 두 사람이 당일에 다녀오는 **가상 여행 구상**입니다. 지우는 두 사람 합계 지출을 12만 원 안쪽으로 잡고, 오래 걷지 않으며 새벽에 출발하지 않는 구성을 원했습니다. 비가 오면 실내 대안을 고를 수 있어야 하고, 새벽 일출 코스 대신 오후 실내 동선을 우선 검토하기로 했습니다. 이는 특정 장소를 정하거나 예약했다는 뜻은 아닙니다.",
+            "sources": [
+              {
+                "capture_id": "ab5e4070-c391-4df3-84b1-260629d7f280",
+                "revision_id": "7d02b3d6-8044-40b1-83a5-907d6751f838",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 282
+              },
+              {
+                "capture_id": "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+                "revision_id": "64e57bea-c648-46f5-99ce-3f79a6e30c64",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 273
+              }
+            ]
+          },
+          {
+            "part_id": "73459304-1a10-4eaf-93f6-b6fc83b93af5",
+            "kind": "stored_knowledge",
+            "text": "점심 이후 전시 공간 한 곳과 가까운 카페를 묶는 동선은 AI가 제안한 후보일 뿐, 지우는 저장해 두고 나중에 비교하기로 했습니다. 실제 장소와 총비용은 미정이고 동선도 확정하지 않았습니다. 교통비·식비·입장료가 예산에 맞는지, 방문일의 운영시간과 휴무, 전시 공간에서 카페까지의 이동 구간, 비가 올 때 실내에서 기다릴 수 있는지, 예약이 필요한지 모두 아직 확인하지 않았습니다. 비가 오지 않는 날의 야외 대안도 정하지 않았습니다.",
+            "sources": [
+              {
+                "capture_id": "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+                "revision_id": "64e57bea-c648-46f5-99ce-3f79a6e30c64",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 273
+              },
+              {
+                "capture_id": "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+                "revision_id": "8ee68373-2945-48ec-afb4-c728ad615eff",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 276
+              },
+              {
+                "capture_id": "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+                "revision_id": "3534e50f-ba85-406f-b47e-effae48f3df6",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 332
+              }
+            ]
+          }
+        ],
+        "evidence_status": "insufficient",
+        "limitations": [
+          "기록 수 예산으로 검색 결과의 일부만 포함했습니다.",
+          "기록·근거 구간·본문의 공유 예산을 넘어 일부 구간을 생략했습니다.",
+          "근거량 한도로 일부 구간을 읽지 못했습니다.",
+          "변경·상충 관계의 양쪽 또는 근거가 예산에서 빠져 현재 조건을 확정할 수 없습니다.",
+          "검색 결과에 일부 기록·근거 구간이 생략되었다는 도구 알림이 있어, 확인한 기록을 기준으로 답했습니다."
+        ],
+        "sources": [
+          {
+            "capture_id": "ab5e4070-c391-4df3-84b1-260629d7f280",
+            "revision_id": "7d02b3d6-8044-40b1-83a5-907d6751f838",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 282
+          },
+          {
+            "capture_id": "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+            "revision_id": "64e57bea-c648-46f5-99ce-3f79a6e30c64",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 273
+          },
+          {
+            "capture_id": "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+            "revision_id": "8ee68373-2945-48ec-afb4-c728ad615eff",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 276
+          },
+          {
+            "capture_id": "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+            "revision_id": "3534e50f-ba85-406f-b47e-effae48f3df6",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 332
+          }
+        ],
+        "retrieval": {
+          "items": [
+            {
+              "source": {
+                "capture_id": "ab5e4070-c391-4df3-84b1-260629d7f280",
+                "revision_id": "7d02b3d6-8044-40b1-83a5-907d6751f838",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 282
+              },
+              "label": "가상 여행 프로젝트 ‘항구 오후’는 두 사람이 당일에 다녀오는 짧은 나들이를 가정한다. 가상 기획자 지우는 ",
+              "capture_label": "[테스트] 항구 오후 여행의 예산과 이동 조건",
+              "cited": true
+            },
+            {
+              "source": {
+                "capture_id": "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+                "revision_id": "64e57bea-c648-46f5-99ce-3f79a6e30c64",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 273
+              },
+              "label": "가상 기획자 지우는 ‘항구 오후’ 여행을 준비할 때 새벽 일출 코스보다 오후 실내 동선을 우선 검토하기로 선",
+              "capture_label": "[테스트] 항구 오후는 새벽 일출 대신 오후 실내 후보를 우선",
+              "cited": true
+            },
+            {
+              "source": {
+                "capture_id": "30cc69c2-7763-4a91-9ffb-6caedcd0866b",
+                "revision_id": "ca55aa16-0315-4166-9e96-5c5d8c410ce6",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 288
+              },
+              "label": "가상 사용자 지우는 2026년 10월 29일 별도의 나들이 약속이 취소되었을 때 아쉬움과 안도감을 함께 느꼈",
+              "capture_label": "[테스트] 이전 나들이 취소에서 아쉬움과 안도감을 함께 느낌",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+                "revision_id": "8ee68373-2945-48ec-afb4-c728ad615eff",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 276
+              },
+              "label": "가상 여행 ‘항구 오후’에서 AI는 점심 이후 실내 전시 공간 한 곳과 가까운 카페를 묶는 동선을 후보로 제",
+              "capture_label": "[테스트] 항구 오후의 비 오는 날 실내 동선 후보",
+              "cited": true
+            },
+            {
+              "source": {
+                "capture_id": "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+                "revision_id": "f5d89de6-80b2-43df-9c07-f4bb2d01a030",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 331
+              },
+              "label": "별빛 노트의 가상 운영자는 동일 입력과 요청 식별자로 재전송한 한 사례에서 기록이 하나였고 두 응답의 생성 ",
+              "capture_label": "[테스트] 재전송 확인에서 통과한 항목과 남은 실패 경우",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+                "revision_id": "3534e50f-ba85-406f-b47e-effae48f3df6",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 332
+              },
+              "label": "가상 여행 ‘항구 오후’의 실제 장소를 고르기 전에 다시 사용할 확인표다. 현재 어느 항목도 확인을 마쳤다고",
+              "capture_label": "[테스트] 항구 오후의 장소를 고를 때 사용할 확인표",
+              "cited": true
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 959,
+                "body_end": 1366
+              },
+              "label": "## 시간과 조건을 함께 보관하기 ‘금요일에 하기로 했다’와 ‘금요일에 했다’는 다르다. 결정 문장에는 시험",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 1366,
+                "body_end": 1953
+              },
+              "label": "## 모임에서 질문을 쓰는 방법 진행자는 사실 확인 질문 하나를 먼저 던지고, 이어서 서로 다른 해석을 물어",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 185,
+                "body_end": 575
+              },
+              "label": "## 이야기에서 주어진 정보 이야기 속 인물 하린은 바닷가 마을의 작은 도서관을 맡는다. 밤에 등대 불빛을 ",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 575,
+                "body_end": 959
+              },
+              "label": "## AI가 제안한 기록 방식 AI는 인물의 발언 옆에 종류를 짧게 표시해 보는 방식을 설명했다. ‘늦게 열",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+                "revision_id": "1d5464e2-e753-421d-8212-b932fd13c61b",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 185
+              },
+              "label": "가상 독서모임 ‘모래책장’은 대화용으로 만든 짧은 이야기 『느린 등대』를 읽으며 제안, 선택, 실행 결과를 ",
+              "capture_label": "[테스트] 느린 등대에서 제안과 실행 결과를 나누는 토론 메모",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 653,
+                "body_end": 901
+              },
+              "label": "## 화면에서 유지할 초안 오류가 보인다고 사용자가 쓴 문장을 비우지 않는다. 운영자는 다시 입력하는 수고를",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 1820,
+                "body_end": 1978
+              },
+              "label": "## 남은 의문 응답을 영구히 확인할 수 없는 경우 사용자에게 어떤 복구 동선을 제공할지는 아직 정하지 않았",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 404,
+                "body_end": 653
+              },
+              "label": "## 하나의 저장 의도에 대응하는 요청 식별자 Codex는 한 번의 저장 의도에 요청 식별자를 부여하고, 응",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 901,
+                "body_end": 1820
+              },
+              "label": "## 서버에서 확인할 응답의 의미 성공 응답에는 실제 저장본의 식별자와 저장된 내용이 있어야 한다는 제안을 ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 149
+              },
+              "label": "별빛 노트라는 가상 프로젝트에서 운영자는 저장 응답이 늦을 때 같은 메모가 두 번 생기는 상황을 검토했다. ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+                "revision_id": "4bb10912-2791-4148-9cf1-48943061d9ce",
+                "node_id": null,
+                "body_start": 149,
+                "body_end": 404
+              },
+              "label": "## 재현하려는 사용자 행동 운영자는 메모를 입력한 뒤 저장 버튼을 누르고, 화면이 그대로여서 같은 버튼을 ",
+              "capture_label": "[테스트] 별빛 노트 저장 재시도의 조건과 확인 기준",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "ca932af4-11e9-4584-8c25-4d30eadeb7d4",
+                "revision_id": "b922eccd-6425-4950-a2e7-48c310bf873a",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 284
+              },
+              "label": "가상 프로젝트 별빛 노트에서 운영자가 반복 질문의 검색 응답을 캐시하는 아이디어를 제안했다. AI는 기록 수",
+              "capture_label": "[테스트] 검색 응답 캐시를 후보로만 보관한 별빛 노트",
+              "cited": false
+            },
+            {
+              "source": {
+                "capture_id": "9b8a3cc2-9648-4d6b-8722-fe56cb2d6a11",
+                "revision_id": "76c4ad16-b597-4f7b-9335-79be1e8e5a53",
+                "node_id": null,
+                "body_start": 0,
+                "body_end": 328
+              },
+              "label": "가상 학습자 지우는 함수가 정상 입력 한 개에서 동작하는 것과 충분히 확인된 것을 구별하는 설명을 Codex",
+              "capture_label": "[테스트] 정상 예제 하나로 함수 검증을 끝내지 않는 학습 메모",
+              "cited": false
+            }
+          ],
+          "truncated": false
+        }
+      },
+      "expected_capture_cited": true
+    }
+  ]
+}

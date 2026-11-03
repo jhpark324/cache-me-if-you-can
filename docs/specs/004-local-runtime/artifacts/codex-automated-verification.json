@@ -1,0 +1,21 @@
+{
+  "client": "actual Codex app-server",
+  "isolated_storage": true,
+  "skill_discovered": true,
+  "mcp_config_contains_credentials": false,
+  "create_update_read": "passed",
+  "decline_preserves_record": true,
+  "delete": "passed",
+  "confirmation_events": [
+    {
+      "action": "decline",
+      "source": "automated_test"
+    },
+    {
+      "action": "accept",
+      "source": "automated_test"
+    }
+  ],
+  "inventory_server_count": 1,
+  "desktop_native_form_rendering": "not_tested"
+}

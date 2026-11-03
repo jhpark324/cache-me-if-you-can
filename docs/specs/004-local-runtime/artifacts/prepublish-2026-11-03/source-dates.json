@@ -1,0 +1,81 @@
+{
+  "origin": "http://127.0.0.1:42039",
+  "timezone": "Asia/Seoul",
+  "checks": [
+    {
+      "name": "current_local_midnight",
+      "passed": true,
+      "times": [
+        {
+          "text": "2026. 11. 02. 23:59",
+          "datetime": "2026-11-02T14:59:45Z"
+        },
+        {
+          "text": "2026. 11. 03. 00:01",
+          "datetime": "2026-11-02T15:01:00Z"
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "name": "historical_revision_date",
+      "passed": true,
+      "times": [
+        {
+          "text": "2026. 11. 02. 23:59",
+          "datetime": "2026-11-02T14:59:45Z"
+        },
+        {
+          "text": "2026. 11. 03. 00:00",
+          "datetime": "2026-11-02T15:00:00Z"
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "name": "same_minute_deduplicated",
+      "passed": true,
+      "times": [
+        {
+          "text": "2026. 11. 03. 00:00",
+          "datetime": "2026-11-02T15:00:05Z"
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "name": "historical_missing_revision_has_no_current_fallback",
+      "passed": true,
+      "times": [
+        {
+          "text": "2026. 11. 02. 23:59",
+          "datetime": "2026-11-02T14:59:45Z"
+        }
+      ],
+      "no_horizontal_overflow": true
+    },
+    {
+      "name": "invalid_dates_hidden",
+      "passed": true,
+      "times": [],
+      "no_horizontal_overflow": true
+    },
+    {
+      "name": "mobile_historical_320px",
+      "passed": true,
+      "times": [
+        {
+          "text": "2026. 11. 02. 23:59",
+          "datetime": "2026-11-02T14:59:45Z"
+        },
+        {
+          "text": "2026. 11. 03. 00:00",
+          "datetime": "2026-11-02T15:00:00Z"
+        }
+      ],
+      "no_horizontal_overflow": true
+    }
+  ],
+  "page_errors": [],
+  "unexpected_requests": []
+}

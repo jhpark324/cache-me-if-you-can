@@ -1,0 +1,319 @@
+{
+  "batch": "cache-me-demo-2026-11-02-v1",
+  "target": "http://127.0.0.1:8000",
+  "synthetic": true,
+  "concepts": {
+    "demo": {
+      "id": "8be28d3b-6a4f-44cc-aa76-7bbe3b548ce5",
+      "name": "[테스트] 데모 데이터"
+    },
+    "learning": {
+      "id": "babf19cf-ef94-4e46-a4f9-151c72729d69",
+      "name": "[테스트] 학습과 기억"
+    },
+    "project": {
+      "id": "0934084a-c4fc-4caf-8cc8-deeaf148caeb",
+      "name": "[테스트] 프로젝트 설계"
+    },
+    "daily": {
+      "id": "7b7d3444-5e67-4592-8c96-9a35e1c9f6b3",
+      "name": "[테스트] 일상과 회고"
+    },
+    "ideas": {
+      "id": "0f59dd14-6900-4772-8fa1-272cec8e8fc6",
+      "name": "[테스트] 아이디어와 실험"
+    }
+  },
+  "records": {
+    "recall": {
+      "id": "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0",
+      "revision_id": "8ee8a7de-2327-467a-aef5-fa4174dddebe",
+      "state_version": 2,
+      "title": "[테스트] 능동 회상으로 개념 복습하기",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "261f71c6-6202-42de-a3be-023cc30acf58",
+          "label": "설명에서 질문으로",
+          "source": {
+            "capture_id": "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0",
+            "revision_id": "8ee8a7de-2327-467a-aef5-fa4174dddebe",
+            "node_id": "261f71c6-6202-42de-a3be-023cc30acf58",
+            "body_start": 116,
+            "body_end": 160
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "review_steps": {
+      "id": "e01a42b4-ba42-42f9-b283-b37dd156af28",
+      "revision_id": "ef456656-074a-44fb-81e6-f508a9464416",
+      "state_version": 2,
+      "title": "[테스트] 질문 카드로 복습하는 순서",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "da257291-7684-442b-8558-f2223ea85a0b",
+          "label": "질문 카드 작성",
+          "source": {
+            "capture_id": "e01a42b4-ba42-42f9-b283-b37dd156af28",
+            "revision_id": "ef456656-074a-44fb-81e6-f508a9464416",
+            "node_id": "da257291-7684-442b-8558-f2223ea85a0b",
+            "body_start": 256,
+            "body_end": 291
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "study_context": {
+      "id": "f80badeb-c6fd-4dc5-924a-b481b8d04670",
+      "revision_id": "4486a6e8-da8c-4291-b7ee-eb50aa9dff11",
+      "state_version": 2,
+      "title": "[테스트] 집중이 잘되는 학습 환경",
+      "topics_assigned": true,
+      "nodes": [],
+      "index_state": "ready"
+    },
+    "weekly_review": {
+      "id": "a759cc0d-3c3d-4574-98ea-3b7d288b9797",
+      "revision_id": "8c0774ba-2762-42ae-9aff-9b92717e34c4",
+      "state_version": 2,
+      "title": "[테스트] 일주일 학습을 돌아보며",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "47bec145-f13d-4788-8449-4be5e9859ae3",
+          "label": "회고에서 다음 행동으로",
+          "source": {
+            "capture_id": "a759cc0d-3c3d-4574-98ea-3b7d288b9797",
+            "revision_id": "8c0774ba-2762-42ae-9aff-9b92717e34c4",
+            "node_id": "47bec145-f13d-4788-8449-4be5e9859ae3",
+            "body_start": 203,
+            "body_end": 244
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "search_decision": {
+      "id": "4c0be562-b5f7-4bf6-abe1-aef9b9a8089d",
+      "revision_id": "68cf4461-b485-42b3-bd42-95b9dc7b4940",
+      "state_version": 2,
+      "title": "[테스트] 검색과 답변을 한 화면에 두기",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "d0a9bb36-6eee-4bbc-ba98-cf58575c6690",
+          "label": "답변과 근거 함께 읽기",
+          "source": {
+            "capture_id": "4c0be562-b5f7-4bf6-abe1-aef9b9a8089d",
+            "revision_id": "68cf4461-b485-42b3-bd42-95b9dc7b4940",
+            "node_id": "d0a9bb36-6eee-4bbc-ba98-cf58575c6690",
+            "body_start": 132,
+            "body_end": 166
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "chunking": {
+      "id": "c9e4ec8b-2e12-41d5-97b0-d0d832498e94",
+      "revision_id": "671403ac-1c69-488f-82f4-8d49a4150079",
+      "state_version": 2,
+      "title": "[테스트] 긴 기록을 검색하는 단위",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "430c995e-6fd4-4ed2-8946-659ed9876c42",
+          "label": "원문은 그대로 보존",
+          "source": {
+            "capture_id": "c9e4ec8b-2e12-41d5-97b0-d0d832498e94",
+            "revision_id": "671403ac-1c69-488f-82f4-8d49a4150079",
+            "node_id": "430c995e-6fd4-4ed2-8946-659ed9876c42",
+            "body_start": 124,
+            "body_end": 161
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "feedback": {
+      "id": "626a697b-3166-4ca1-8578-cf8c3b0524ae",
+      "revision_id": "168a90e8-0ab4-4a39-b638-3fab8fe4c8cb",
+      "state_version": 2,
+      "title": "[테스트] 검색 화면 사용성 피드백",
+      "topics_assigned": true,
+      "nodes": [],
+      "index_state": "ready"
+    },
+    "small_experiment": {
+      "id": "136b92ce-e473-40c4-b170-099dccc9e486",
+      "revision_id": "4d93a6b8-7fc8-4c92-a67c-895e287a6acc",
+      "state_version": 2,
+      "title": "[테스트] 작은 실험부터 시작하기",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "7f2dc31f-06a2-43c8-b1c3-430a72e7c020",
+          "label": "연결 목록에서 제목 찾기",
+          "source": {
+            "capture_id": "136b92ce-e473-40c4-b170-099dccc9e486",
+            "revision_id": "4d93a6b8-7fc8-4c92-a67c-895e287a6acc",
+            "node_id": "7f2dc31f-06a2-43c8-b1c3-430a72e7c020",
+            "body_start": 115,
+            "body_end": 160
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "experiment_plan": {
+      "id": "88f85a81-4eea-4222-be2d-4dda5579579a",
+      "revision_id": "f997b73c-d0ed-44cb-a9f9-49f75deacdc0",
+      "state_version": 2,
+      "title": "[테스트] 지식 탐색 실험 체크리스트",
+      "topics_assigned": true,
+      "nodes": [],
+      "index_state": "ready"
+    },
+    "walk": {
+      "id": "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+      "revision_id": "425f52f9-f87c-49c9-9704-5e271a4e787f",
+      "state_version": 2,
+      "title": "[테스트] 산책 중 떠오른 질문",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "a846e718-35f0-4191-92ad-a70ff2884bdc",
+          "label": "산책 뒤 질문 하나",
+          "source": {
+            "capture_id": "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+            "revision_id": "425f52f9-f87c-49c9-9704-5e271a4e787f",
+            "node_id": "a846e718-35f0-4191-92ad-a70ff2884bdc",
+            "body_start": 167,
+            "body_end": 193
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "emotion": {
+      "id": "53a0304f-f0ca-4fbd-965c-ff67c571f7f1",
+      "revision_id": "516c52e7-77be-4536-83cc-faacc871c860",
+      "state_version": 2,
+      "title": "[테스트] 하루의 감정을 말로 정리하기",
+      "topics_assigned": true,
+      "nodes": [
+        {
+          "id": "fa29cab1-beff-4143-b410-4f516da1753f",
+          "label": "조급함을 문장으로",
+          "source": {
+            "capture_id": "53a0304f-f0ca-4fbd-965c-ff67c571f7f1",
+            "revision_id": "516c52e7-77be-4536-83cc-faacc871c860",
+            "node_id": "fa29cab1-beff-4143-b410-4f516da1753f",
+            "body_start": 105,
+            "body_end": 158
+          }
+        }
+      ],
+      "index_state": "ready"
+    },
+    "connections": {
+      "id": "87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6",
+      "revision_id": "9821aa42-cf8c-4100-9b48-ca3c9f7172ac",
+      "state_version": 2,
+      "title": "[테스트] 배운 내용과 일상을 연결하는 질문",
+      "topics_assigned": true,
+      "nodes": [],
+      "index_state": "ready"
+    }
+  },
+  "relations": {
+    "review_steps:clarifies:recall": {
+      "id": "f3bbd963-1643-4635-a028-f9b060e1f216"
+    },
+    "weekly_review:supports:review_steps": {
+      "id": "0b75df26-4a86-4c94-a0f1-92e71715b57d"
+    },
+    "weekly_review:related_to:emotion": {
+      "id": "2c0119d1-4c69-4381-9883-f8b127fdce00"
+    },
+    "feedback:supports:search_decision": {
+      "id": "a8bef4a5-4cf4-466e-a66a-9aa89758e93b"
+    },
+    "small_experiment:related_to:feedback": {
+      "id": "dcbd4d61-71fd-4af9-b537-32ca27436584"
+    },
+    "experiment_plan:clarifies:small_experiment": {
+      "id": "db1e132d-c7db-495d-9c84-80422fecaf50"
+    },
+    "emotion:related_to:walk": {
+      "id": "e4e43621-3760-4ab8-83d8-b9cb16c6fa9a"
+    },
+    "connections:related_to:weekly_review": {
+      "id": "53d1a2f1-d311-46f6-bb01-8e5e6160909c"
+    },
+    "connections:related_to:walk": {
+      "id": "69e30dd8-fee1-421f-9dc7-a002e05169ba"
+    },
+    "connections:related_to:small_experiment": {
+      "id": "d5f6e4df-4a37-4f4f-881c-12e3f80afa90"
+    },
+    "chunking:related_to:recall": {
+      "id": "87ad95df-4d70-404e-9b09-8014ad940510"
+    },
+    "chunking:related_to:search_decision": {
+      "id": "cb1dc324-8d4c-403b-bf8a-eba63f456c0f"
+    }
+  },
+  "before_record_ids": [],
+  "before_has_more": false,
+  "verification": {
+    "records": 12,
+    "concepts_created": 5,
+    "nodes": 8,
+    "relations_created": 12,
+    "graph_nodes": 25,
+    "graph_edges": 63,
+    "truncated": false,
+    "index_ready_records": 12,
+    "sources_resolved": 20,
+    "searches": [
+      {
+        "query": "질문 카드 복습",
+        "hits": 5,
+        "capture_ids": [
+          "a759cc0d-3c3d-4574-98ea-3b7d288b9797",
+          "e01a42b4-ba42-42f9-b283-b37dd156af28",
+          "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0",
+          "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+          "87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6"
+        ]
+      },
+      {
+        "query": "산책 감정",
+        "hits": 5,
+        "capture_ids": [
+          "53a0304f-f0ca-4fbd-965c-ff67c571f7f1",
+          "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+          "87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6",
+          "136b92ce-e473-40c4-b170-099dccc9e486",
+          "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0"
+        ]
+      },
+      {
+        "query": "검색 출처 패널",
+        "hits": 5,
+        "capture_ids": [
+          "626a697b-3166-4ca1-8578-cf8c3b0524ae",
+          "c9e4ec8b-2e12-41d5-97b0-d0d832498e94",
+          "4c0be562-b5f7-4bf6-abe1-aef9b9a8089d",
+          "136b92ce-e473-40c4-b170-099dccc9e486",
+          "88f85a81-4eea-4222-be2d-4dda5579579a"
+        ]
+      }
+    ]
+  }
+}

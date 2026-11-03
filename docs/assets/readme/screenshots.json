@@ -1,0 +1,24 @@
+{
+  "captured_at": "2026-11-02T23:33:45.544Z",
+  "timezone": "Asia/Seoul",
+  "actual_product": true,
+  "synthetic_records_only": true,
+  "record_count": 52,
+  "desktop": {
+    "width": 1440,
+    "height": 1000
+  },
+  "mobile": {
+    "width": 390,
+    "height": 844
+  },
+  "actual_selected_model_answer": true,
+  "query": "지우는 왜 복습 범위를 줄였어?",
+  "answer_seconds": 24.98,
+  "cited_sources": 2,
+  "retrieved_chunks": 10,
+  "record_states_preserved": true,
+  "login_and_model_preserved": true,
+  "mutation_requests": [],
+  "page_errors": []
+}

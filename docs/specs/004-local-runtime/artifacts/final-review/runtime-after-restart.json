@@ -1,0 +1,13 @@
+{
+  "server_restarted": true,
+  "record_count": 12,
+  "record_revisions_and_state_unchanged": true,
+  "provider_login_and_selected_model_preserved": true,
+  "model_catalog_refreshed": true,
+  "index_ready": true,
+  "ready_records": 12,
+  "graph_nodes": 25,
+  "graph_edges": 63,
+  "search_hits": 5,
+  "new_ai_answers_generated": false
+}

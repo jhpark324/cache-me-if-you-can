@@ -1,0 +1,8 @@
+{
+  "name": "second-brain-graph-preview",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": { "build:vendor": "esbuild vendor-entry.js --bundle --minify --format=iife --legal-comments=linked --outfile=vendor/graph.bundle.js" },
+  "dependencies": { "3d-force-graph": "1.80.1", "three": "0.180.0", "three-spritetext": "1.10.0" },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

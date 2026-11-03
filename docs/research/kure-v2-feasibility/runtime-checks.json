@@ -1,0 +1,1118 @@
+{
+  "fixture_sha256": "73d6651d7dfc1c1005381e9d65cf3dfb5b679729f96b1b4ed32104e842d1a5ba",
+  "script_sha256": "8ef9a6270390d91a96d8bc6b68f1f6b06feb8c449d20a16001132932495ec5b3",
+  "baseline_script_sha256": "a132c0cc2ddb26209429782c1952659f144d83908bd481046e9455faf0453b35",
+  "query_input_lengths": {
+    "count": 27,
+    "min": 15.0,
+    "p50": 25.0,
+    "p95": 29.7,
+    "max": 33.0
+  },
+  "no_fixture_query_truncated": true,
+  "mask": {
+    "document_input_width": 155,
+    "padding_tokens": 146,
+    "punctuation_tokens_removed": 12,
+    "scoring_lengths": [
+      5,
+      147
+    ],
+    "matches_independent_id_mask": true,
+    "skiplist_words": [
+      "!",
+      "\"",
+      "#",
+      "$",
+      "%",
+      "&",
+      "'",
+      "(",
+      ")",
+      "*",
+      "+",
+      ",",
+      "-",
+      ".",
+      "/",
+      ":",
+      ";",
+      "<",
+      "=",
+      ">",
+      "?",
+      "@",
+      "[",
+      "\\",
+      "]",
+      "^",
+      "_",
+      "`",
+      "{",
+      "|",
+      "}",
+      "~"
+    ],
+    "encode_lengths_match_scoring_mask": true,
+    "solo_vs_padded_batch_max_abs_diff": 4.172325134277344e-07,
+    "query_attended_tokens": 7,
+    "query_scored_tokens": 64
+  },
+  "input_boundaries": {
+    "long_query_full_tokens": 363,
+    "long_query_processed_tokens": 64,
+    "empty_query_output_shape": [
+      64,
+      128
+    ],
+    "required_product_behavior": "Reject blank input; preserve or explicitly decompose/rewrite overlong questions before encoding. No silent truncation contract is implemented by this spike."
+  },
+  "index_stats": [
+    {
+      "name": "text_idx",
+      "config": "IndexConfig(name=\"text_idx\", index_type=\"FTS\", columns=[\"text\"], index_uuid=\"0f9f0d47-88ab-40fa-bd5b-7510d0eef4f7\", type_url=\"/lance.table.InvertedIndexDetails\", created_at=datetime.datetime(2026, 11, 2, 4, 0, 17, 737000, tzinfo=datetime.timezone.utc), num_indexed_rows=1_036, num_unindexed_rows=0, size_bytes=80_014, num_segments=1, index_version=2, index_details={'lance_tokenizer': 'text', 'base_tokenizer': 'icu', 'language': 'English', 'with_position': False, 'max_token_length': 40, 'lower_case': True, 'stem': False, 'remove_stop_words': False, 'custom_stop_words': None, 'ascii_folding': False, 'min_ngram_length': 3, 'max_ngram_length': 3, 'prefix_only': False, 'block_size': 128, 'split_identifiers': False, 'split_on_numerics': False, 'preserve_original': False, 'index_operators': False})",
+      "stats": "IndexStatistics(num_indexed_rows=1036, num_unindexed_rows=0, index_type='FTS', distance_type=None, num_indices=1)"
+    },
+    {
+      "name": "vector_idx",
+      "config": "IndexConfig(name=\"vector_idx\", index_type=\"IvfPq\", columns=[\"vector\"], index_uuid=\"59a1a36d-f274-40fe-afc1-f08eb31220ec\", type_url=\"/lance.index.pb.VectorIndexDetails\", created_at=datetime.datetime(2026, 11, 2, 4, 0, 31, 90000, tzinfo=datetime.timezone.utc), num_indexed_rows=1_036, num_unindexed_rows=0, size_bytes=1_403_663, num_segments=1, index_version=1, index_details={'metric_type': 'COSINE', 'compression': {'type': 'pq', 'num_bits': 8, 'num_sub_vectors': 16}, 'runtime_hints': {'lance.skip_transpose': 'false', 'lance.ivf.shuffle_partition_concurrency': '2', 'lance.ivf.sample_rate': '256', 'lance.ivf.shuffle_partition_batches': '10240', 'lance.pq.max_iters': '50', 'lance.pq.sample_rate': '256', 'lance.pq.kmeans_redos': '1', 'lance.ivf.max_iters': '50'}})",
+      "stats": "IndexStatistics(num_indexed_rows=1036, num_unindexed_rows=0, index_type='IVF_PQ', distance_type='cosine', num_indices=1)"
+    }
+  ],
+  "ann_plan": "ProjectionExec: expr=[id@3 as id, capture_id@4 as capture_id, revision@7 as revision, generation@8 as generation, profile@9 as profile, owner_id@5 as owner_id, visibility@6 as visibility, _distance@2 as _distance]\n  LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[id, capture_id, owner_id, visibility, revision, generation, profile], source=stream(_rowid)\n    GlobalLimitExec: skip=0, fetch=10\n      SortPreservingMergeExec: [_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST]\n        FilterExec: _distance@2 IS NOT NULL\n          RepartitionExec: partitioning=RoundRobinBatch(10), input_partitions=1, maintains_sort_order=true\n            SortExec: TopK(fetch=10), expr=[_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST], preserve_partitioning=[false]\n              KNNVectorDistance: metric=cosine\n                LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[vector], source=stream(_rowid)\n                  SortExec: TopK(fetch=50), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                    MultivectorScoring: k=10\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n",
+  "hybrid_ann_plan": "RRFReranker(K=60)\n    ProjectionExec: expr=[id@3 as id, capture_id@4 as capture_id, revision@7 as revision, generation@8 as generation, profile@9 as profile, owner_id@5 as owner_id, visibility@6 as visibility, _distance@2 as _distance]\n    LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[id, capture_id, owner_id, visibility, revision, generation, profile], source=stream(_rowid)\n      GlobalLimitExec: skip=0, fetch=10\n        SortPreservingMergeExec: [_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST]\n          FilterExec: _distance@2 IS NOT NULL\n            RepartitionExec: partitioning=RoundRobinBatch(10), input_partitions=1, maintains_sort_order=true\n              SortExec: TopK(fetch=10), expr=[_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST], preserve_partitioning=[false]\n                KNNVectorDistance: metric=cosine\n                  LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[vector], source=stream(_rowid)\n                    SortExec: TopK(fetch=50), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                      MultivectorScoring: k=10\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                        SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                          ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                            ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                              ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=4, maximum_nprobes=Some(4), deltas=1\n                              LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n    ProjectionExec: expr=[id@2 as id, capture_id@3 as capture_id, revision@6 as revision, generation@7 as generation, profile@8 as profile, owner_id@4 as owner_id, visibility@5 as visibility, _score@1 as _score]\n    LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[id, capture_id, owner_id, visibility, revision, generation, profile], source=stream(_rowid)\n      GlobalLimitExec: skip=0, fetch=10\n        MatchQuery: column=text, query=[돈을 보내다 받는 쪽 처리가 실패하면 먼저 빠져나간 돈도 취소해야 한다고 배운 설명을 찾아줘.]\n          LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")",
+  "ann_tuning": {
+    "scope": "Same synthetic development set; baseline is preserved in results.json",
+    "baseline_recall_at_5": 0.8583333333333334,
+    "candidates": [
+      {
+        "nprobes": 8,
+        "refine_factor": 10,
+        "mean_recall_at_5": 0.9083333333333333,
+        "search_ms": {
+          "count": 24,
+          "min": 59.890151000217884,
+          "p50": 73.3053124995422,
+          "p95": 83.12536154971895,
+          "max": 103.39538900007028
+        },
+        "queries": [
+          {
+            "id": "q01",
+            "ids": [
+              "l01",
+              "l03",
+              "l02",
+              "l04",
+              "l11"
+            ],
+            "search_ms": 103.39538900007028,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q02",
+            "ids": [
+              "l04",
+              "l01",
+              "l03",
+              "d03",
+              "d02"
+            ],
+            "search_ms": 78.87776700044924,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q03",
+            "ids": [
+              "l06",
+              "l05",
+              "l08",
+              "scale-0212",
+              "scale-0112"
+            ],
+            "search_ms": 78.61896700160287,
+            "recall_at_5": 0.6
+          },
+          {
+            "id": "q04",
+            "ids": [
+              "l05",
+              "l06",
+              "l08",
+              "scale-0954",
+              "scale-0964"
+            ],
+            "search_ms": 79.90126799995778,
+            "recall_at_5": 0.6
+          },
+          {
+            "id": "q05",
+            "ids": [
+              "l08",
+              "m06",
+              "m05",
+              "scale-0652",
+              "scale-0361"
+            ],
+            "search_ms": 78.00856700123404,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q06",
+            "ids": [
+              "l09",
+              "l11",
+              "l12",
+              "l10",
+              "l02"
+            ],
+            "search_ms": 75.73786499960988,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q07",
+            "ids": [
+              "l10",
+              "l09",
+              "l02",
+              "scale-0959",
+              "scale-0089"
+            ],
+            "search_ms": 70.97905999944487,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q08",
+            "ids": [
+              "l11",
+              "l12",
+              "d02",
+              "l03",
+              "scale-0114"
+            ],
+            "search_ms": 76.03226500032179,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q09",
+            "ids": [
+              "d02",
+              "d01",
+              "d04",
+              "d05",
+              "d11"
+            ],
+            "search_ms": 67.45945800139452,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q10",
+            "ids": [
+              "d01",
+              "d11",
+              "d02",
+              "d12",
+              "d07"
+            ],
+            "search_ms": 70.0732599998446,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q11",
+            "ids": [
+              "d03",
+              "d04",
+              "d02",
+              "d06",
+              "d09"
+            ],
+            "search_ms": 66.51505599984375,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q12",
+            "ids": [
+              "d05",
+              "d06",
+              "d04",
+              "d02",
+              "d03"
+            ],
+            "search_ms": 71.6321620002418,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q13",
+            "ids": [
+              "d07",
+              "d09",
+              "d08",
+              "d10",
+              "d02"
+            ],
+            "search_ms": 66.48085599954356,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q14",
+            "ids": [
+              "d10",
+              "d09",
+              "d02",
+              "d01",
+              "d03"
+            ],
+            "search_ms": 59.890151000217884,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q15",
+            "ids": [
+              "d12",
+              "d11",
+              "d02",
+              "d01",
+              "d06"
+            ],
+            "search_ms": 70.72996100032469,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q16",
+            "ids": [
+              "d12",
+              "d11",
+              "d02",
+              "d01",
+              "d04"
+            ],
+            "search_ms": 81.12666899978649,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q17",
+            "ids": [
+              "m02",
+              "m01",
+              "m12",
+              "m11",
+              "scale-0099"
+            ],
+            "search_ms": 72.5197619995015,
+            "recall_at_5": 0.8
+          },
+          {
+            "id": "q18",
+            "ids": [
+              "m04",
+              "m03",
+              "scale-0908",
+              "scale-0958",
+              "scale-0808"
+            ],
+            "search_ms": 76.18436499978998,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q19",
+            "ids": [
+              "m05",
+              "m06",
+              "m08",
+              "l08",
+              "scale-0134"
+            ],
+            "search_ms": 77.66696600083378,
+            "recall_at_5": 0.8
+          },
+          {
+            "id": "q20",
+            "ids": [
+              "m08",
+              "m07",
+              "m11",
+              "m04",
+              "d08"
+            ],
+            "search_ms": 83.47807199970703,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q21",
+            "ids": [
+              "m10",
+              "m09",
+              "d04",
+              "d10",
+              "d09"
+            ],
+            "search_ms": 69.5067589986138,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q22",
+            "ids": [
+              "m09",
+              "m10",
+              "d04",
+              "d10",
+              "d03"
+            ],
+            "search_ms": 71.08446100028232,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q23",
+            "ids": [
+              "m12",
+              "m11",
+              "m02",
+              "m01",
+              "scale-0499"
+            ],
+            "search_ms": 73.16976199945202,
+            "recall_at_5": 0.6
+          },
+          {
+            "id": "q24",
+            "ids": [
+              "m11",
+              "m12",
+              "m01",
+              "scale-0039",
+              "scale-0539"
+            ],
+            "search_ms": 73.44086299963237,
+            "recall_at_5": 0.4
+          }
+        ]
+      },
+      {
+        "nprobes": 16,
+        "refine_factor": 20,
+        "mean_recall_at_5": 0.9166666666666666,
+        "search_ms": {
+          "count": 24,
+          "min": 88.5588999990432,
+          "p50": 111.98051949941146,
+          "p95": 126.55272999991212,
+          "max": 129.1012999990926
+        },
+        "queries": [
+          {
+            "id": "q01",
+            "ids": [
+              "l01",
+              "l03",
+              "l02",
+              "l04",
+              "l11"
+            ],
+            "search_ms": 96.03478200006066,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q02",
+            "ids": [
+              "l04",
+              "l01",
+              "l03",
+              "d03",
+              "d02"
+            ],
+            "search_ms": 112.37323899877083,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q03",
+            "ids": [
+              "l06",
+              "l05",
+              "l08",
+              "scale-0212",
+              "scale-0112"
+            ],
+            "search_ms": 116.99770000086573,
+            "recall_at_5": 0.6
+          },
+          {
+            "id": "q04",
+            "ids": [
+              "l05",
+              "l06",
+              "l08",
+              "scale-0324",
+              "scale-0374"
+            ],
+            "search_ms": 124.06579999878886,
+            "recall_at_5": 0.6
+          },
+          {
+            "id": "q05",
+            "ids": [
+              "l08",
+              "m06",
+              "m05",
+              "scale-0652",
+              "scale-0361"
+            ],
+            "search_ms": 108.6144000000786,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q06",
+            "ids": [
+              "l09",
+              "l11",
+              "l12",
+              "l10",
+              "l02"
+            ],
+            "search_ms": 114.00140000114334,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q07",
+            "ids": [
+              "l10",
+              "l09",
+              "l02",
+              "scale-0959",
+              "scale-0089"
+            ],
+            "search_ms": 129.1012999990926,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q08",
+            "ids": [
+              "l11",
+              "l12",
+              "d02",
+              "l03",
+              "scale-0114"
+            ],
+            "search_ms": 110.34099999960745,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q09",
+            "ids": [
+              "d02",
+              "d01",
+              "d04",
+              "d05",
+              "d11"
+            ],
+            "search_ms": 114.96230000011565,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q10",
+            "ids": [
+              "d01",
+              "d11",
+              "d02",
+              "d12",
+              "d07"
+            ],
+            "search_ms": 108.77959999925224,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q11",
+            "ids": [
+              "d03",
+              "d04",
+              "d02",
+              "d06",
+              "d09"
+            ],
+            "search_ms": 126.99160000011034,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q12",
+            "ids": [
+              "d05",
+              "d06",
+              "d04",
+              "d02",
+              "d03"
+            ],
+            "search_ms": 110.1249999992433,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q13",
+            "ids": [
+              "d07",
+              "d09",
+              "d08",
+              "d10",
+              "d02"
+            ],
+            "search_ms": 96.97670000059588,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q14",
+            "ids": [
+              "d10",
+              "d09",
+              "d02",
+              "d01",
+              "d03"
+            ],
+            "search_ms": 88.5588999990432,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q15",
+            "ids": [
+              "d12",
+              "d11",
+              "d02",
+              "d01",
+              "d06"
+            ],
+            "search_ms": 122.40940000083356,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q16",
+            "ids": [
+              "d12",
+              "d11",
+              "d02",
+              "d01",
+              "d04"
+            ],
+            "search_ms": 113.69059999924502,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q17",
+            "ids": [
+              "m02",
+              "m01",
+              "m12",
+              "m11",
+              "scale-0359"
+            ],
+            "search_ms": 119.07260000043607,
+            "recall_at_5": 0.8
+          },
+          {
+            "id": "q18",
+            "ids": [
+              "m04",
+              "m03",
+              "scale-0908",
+              "scale-0958",
+              "scale-0808"
+            ],
+            "search_ms": 112.55290000008245,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q19",
+            "ids": [
+              "m05",
+              "m06",
+              "m08",
+              "l08",
+              "scale-0134"
+            ],
+            "search_ms": 114.24230000011448,
+            "recall_at_5": 0.8
+          },
+          {
+            "id": "q20",
+            "ids": [
+              "m08",
+              "m07",
+              "m11",
+              "m04",
+              "d08"
+            ],
+            "search_ms": 111.58780000005208,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q21",
+            "ids": [
+              "m10",
+              "m09",
+              "d04",
+              "d10",
+              "d09"
+            ],
+            "search_ms": 106.01300000053016,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q22",
+            "ids": [
+              "m09",
+              "m10",
+              "d04",
+              "d10",
+              "d03"
+            ],
+            "search_ms": 98.06250000110595,
+            "recall_at_5": 1.0
+          },
+          {
+            "id": "q23",
+            "ids": [
+              "m12",
+              "m11",
+              "m02",
+              "scale-0399",
+              "m01"
+            ],
+            "search_ms": 106.6726999997627,
+            "recall_at_5": 0.8
+          },
+          {
+            "id": "q24",
+            "ids": [
+              "m11",
+              "m12",
+              "scale-0137",
+              "scale-0187",
+              "m01"
+            ],
+            "search_ms": 107.96469999877445,
+            "recall_at_5": 0.4
+          }
+        ]
+      }
+    ]
+  },
+  "selected_ann_settings": {
+    "nprobes": 8,
+    "refine_factor": 10,
+    "scope": "First explored setting that passes this development set; no production default or held-out guarantee"
+  },
+  "selected_ann_plan": "ProjectionExec: expr=[id@3 as id, capture_id@4 as capture_id, revision@7 as revision, generation@8 as generation, profile@9 as profile, owner_id@5 as owner_id, visibility@6 as visibility, _distance@2 as _distance]\n  LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[id, capture_id, owner_id, visibility, revision, generation, profile], source=stream(_rowid)\n    GlobalLimitExec: skip=0, fetch=10\n      SortPreservingMergeExec: [_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST]\n        FilterExec: _distance@2 IS NOT NULL\n          RepartitionExec: partitioning=RoundRobinBatch(10), input_partitions=1, maintains_sort_order=true\n            SortExec: TopK(fetch=10), expr=[_distance@2 ASC NULLS LAST, _rowid@0 ASC NULLS LAST], preserve_partitioning=[false]\n              KNNVectorDistance: metric=cosine\n                LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[vector], source=stream(_rowid)\n                  SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                    MultivectorScoring: k=10\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n                      SortExec: TopK(fetch=100), expr=[_distance@0 ASC NULLS LAST, _rowid@1 ASC NULLS LAST], preserve_partitioning=[false]\n                        ProjectionExec: expr=[_distance@0 * 0.5 as _distance, _rowid@1 as _rowid]\n                          ANNSubIndex: name=vector_idx, k=100, deltas=1, metric=Cosine\n                            ANNIvfPartition: uuid=59a1a36d-f274-40fe-afc1-f08eb31220ec, minimum_nprobes=8, maximum_nprobes=Some(8), deltas=1\n                            LanceRead: uri=home/pjh/.cache/second-brain/kure-v2-feasibility/runs/20261102-125817/scale.lance/data, projection=[], num_fragments=1, range_before=None, range_after=None, row_id=true, row_addr=false, full_filter=owner_id = Utf8(\"local\"), refine_filter=owner_id = Utf8(\"local\")\n",
+  "hybrid_ann_requests": [
+    {
+      "id": "q01",
+      "encode_ms": 137.76460000008228,
+      "total_ms": 241.89560000013444,
+      "returned_ids": [
+        "l01",
+        "l04",
+        "m03",
+        "l11",
+        "l03",
+        "l02",
+        "l06",
+        "m08",
+        "l09",
+        "d03"
+      ]
+    },
+    {
+      "id": "q02",
+      "encode_ms": 120.55420000069716,
+      "total_ms": 209.75949999956356,
+      "returned_ids": [
+        "l04",
+        "l01",
+        "d05",
+        "l03",
+        "d03",
+        "d11",
+        "d02",
+        "l08",
+        "l02",
+        "l12"
+      ]
+    },
+    {
+      "id": "q03",
+      "encode_ms": 132.9375000004802,
+      "total_ms": 225.12540000025183,
+      "returned_ids": [
+        "l06",
+        "scale-0152",
+        "l05",
+        "d08",
+        "l08",
+        "d06",
+        "scale-0212",
+        "scale-0072",
+        "scale-0112",
+        "scale-0002"
+      ]
+    },
+    {
+      "id": "q04",
+      "encode_ms": 131.94109999858483,
+      "total_ms": 233.86499999833177,
+      "returned_ids": [
+        "l05",
+        "l06",
+        "l09",
+        "l08",
+        "d08",
+        "scale-0324",
+        "d07",
+        "scale-0474",
+        "l10",
+        "scale-0724"
+      ]
+    },
+    {
+      "id": "q05",
+      "encode_ms": 131.9057000000612,
+      "total_ms": 231.7086000002746,
+      "returned_ids": [
+        "l08",
+        "m06",
+        "scale-0792",
+        "m05",
+        "l06",
+        "scale-0652",
+        "l11",
+        "scale-0361",
+        "d03",
+        "scale-0712"
+      ]
+    },
+    {
+      "id": "q06",
+      "encode_ms": 135.18389999990177,
+      "total_ms": 233.66840000016964,
+      "returned_ids": [
+        "l09",
+        "l10",
+        "l12",
+        "d07",
+        "d08",
+        "l11",
+        "l02",
+        "m09",
+        "m08",
+        "m04"
+      ]
+    },
+    {
+      "id": "q07",
+      "encode_ms": 136.0566999992443,
+      "total_ms": 233.69160000038391,
+      "returned_ids": [
+        "l10",
+        "l02",
+        "l09",
+        "l12",
+        "scale-0959",
+        "scale-0089",
+        "d01",
+        "scale-0539",
+        "m10",
+        "scale-0949"
+      ]
+    },
+    {
+      "id": "q08",
+      "encode_ms": 132.92980000005628,
+      "total_ms": 227.7819000009913,
+      "returned_ids": [
+        "l11",
+        "l12",
+        "l03",
+        "d02",
+        "m06",
+        "m05",
+        "scale-0114",
+        "l06",
+        "scale-0160",
+        "m11"
+      ]
+    },
+    {
+      "id": "q09",
+      "encode_ms": 132.022899999356,
+      "total_ms": 219.8497999997926,
+      "returned_ids": [
+        "d02",
+        "d01",
+        "d04",
+        "d05",
+        "d11",
+        "d03",
+        "d06",
+        "d12",
+        "d10",
+        "d07"
+      ]
+    },
+    {
+      "id": "q10",
+      "encode_ms": 123.04340099944966,
+      "total_ms": 214.6101029993588,
+      "returned_ids": [
+        "d01",
+        "d11",
+        "d02",
+        "m11",
+        "d12",
+        "scale-0084",
+        "d07",
+        "scale-0034",
+        "d09",
+        "scale-0284"
+      ]
+    },
+    {
+      "id": "q11",
+      "encode_ms": 130.5048030008038,
+      "total_ms": 229.3859050005267,
+      "returned_ids": [
+        "d03",
+        "d01",
+        "d10",
+        "d04",
+        "d02",
+        "d06",
+        "l10",
+        "d09",
+        "d12",
+        "d08"
+      ]
+    },
+    {
+      "id": "q12",
+      "encode_ms": 156.1190029988211,
+      "total_ms": 253.31650599946443,
+      "returned_ids": [
+        "d05",
+        "d06",
+        "d04",
+        "d03",
+        "d02",
+        "d07",
+        "d11",
+        "d12",
+        "d09",
+        "d01"
+      ]
+    },
+    {
+      "id": "q13",
+      "encode_ms": 157.02740300002915,
+      "total_ms": 241.27770499944745,
+      "returned_ids": [
+        "d07",
+        "d09",
+        "d10",
+        "d08",
+        "d04",
+        "d02",
+        "m09",
+        "l09",
+        "d05",
+        "d01"
+      ]
+    },
+    {
+      "id": "q14",
+      "encode_ms": 124.7623030012619,
+      "total_ms": 191.20400400061044,
+      "returned_ids": [
+        "d10",
+        "d09",
+        "d02",
+        "d04",
+        "d06",
+        "d01",
+        "m04",
+        "d03",
+        "d12",
+        "m11"
+      ]
+    },
+    {
+      "id": "q15",
+      "encode_ms": 139.02100300038,
+      "total_ms": 235.51160500028345,
+      "returned_ids": [
+        "d12",
+        "d11",
+        "d01",
+        "d10",
+        "d02",
+        "d06",
+        "m11",
+        "d03",
+        "l10",
+        "d04"
+      ]
+    },
+    {
+      "id": "q16",
+      "encode_ms": 137.27470300000277,
+      "total_ms": 242.89660599970375,
+      "returned_ids": [
+        "d12",
+        "d11",
+        "d02",
+        "l08",
+        "d01",
+        "m11",
+        "d04",
+        "l10",
+        "d05",
+        "d07"
+      ]
+    },
+    {
+      "id": "q17",
+      "encode_ms": 136.36850300099468,
+      "total_ms": 238.30370500036224,
+      "returned_ids": [
+        "m02",
+        "m01",
+        "m11",
+        "m12",
+        "d08",
+        "m06",
+        "scale-0409",
+        "m05",
+        "scale-0319",
+        "l06"
+      ]
+    },
+    {
+      "id": "q18",
+      "encode_ms": 135.91710300170234,
+      "total_ms": 226.93150500163028,
+      "returned_ids": [
+        "m04",
+        "m03",
+        "d11",
+        "scale-0908",
+        "d08",
+        "scale-0958",
+        "scale-0808",
+        "l08",
+        "scale-0258",
+        "l03"
+      ]
+    },
+    {
+      "id": "q19",
+      "encode_ms": 123.3694029997423,
+      "total_ms": 221.8230050002603,
+      "returned_ids": [
+        "m05",
+        "m06",
+        "m08",
+        "l08",
+        "scale-0134",
+        "l12",
+        "scale-0138",
+        "l11",
+        "scale-0384",
+        "scale-0143"
+      ]
+    },
+    {
+      "id": "q20",
+      "encode_ms": 126.68160300017917,
+      "total_ms": 228.3445049997681,
+      "returned_ids": [
+        "m08",
+        "m07",
+        "d08",
+        "m04",
+        "m02",
+        "m11",
+        "d11",
+        "m01",
+        "scale-0104",
+        "m12"
+      ]
+    },
+    {
+      "id": "q21",
+      "encode_ms": 130.00740300049074,
+      "total_ms": 222.86950499983504,
+      "returned_ids": [
+        "m10",
+        "m09",
+        "d09",
+        "d04",
+        "l04",
+        "d10",
+        "l12",
+        "d03",
+        "m12",
+        "d08"
+      ]
+    },
+    {
+      "id": "q22",
+      "encode_ms": 136.57000300008804,
+      "total_ms": 239.12010500134784,
+      "returned_ids": [
+        "m09",
+        "m10",
+        "d04",
+        "d10",
+        "d09",
+        "d03",
+        "d01",
+        "l01",
+        "d12",
+        "m08"
+      ]
+    },
+    {
+      "id": "q23",
+      "encode_ms": 144.4133029999648,
+      "total_ms": 243.1265049999638,
+      "returned_ids": [
+        "m12",
+        "m02",
+        "m11",
+        "m06",
+        "scale-0399",
+        "m05",
+        "m01",
+        "scale-0129",
+        "scale-0249",
+        "scale-0009"
+      ]
+    },
+    {
+      "id": "q24",
+      "encode_ms": 157.83620399997744,
+      "total_ms": 254.62460600101622,
+      "returned_ids": [
+        "m11",
+        "m12",
+        "m01",
+        "m02",
+        "scale-0389",
+        "d08",
+        "scale-0039",
+        "m09",
+        "scale-0689",
+        "scale-0227"
+      ]
+    }
+  ],
+  "hybrid_ann_request_ms": {
+    "count": 24,
+    "min": 191.20400400061044,
+    "p50": 232.68850000022212,
+    "p95": 251.7880058495393,
+    "max": 254.62460600101622
+  },
+  "peak_rss_bytes": 1466335232
+}

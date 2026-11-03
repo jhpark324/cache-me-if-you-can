@@ -1,0 +1,70 @@
+.search-loading {
+  padding: 12px 0 14px;
+}
+.search-loading-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.search-loading-heading > svg {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  color: var(--accent);
+}
+.search-loading-elapsed {
+  margin-left: auto;
+  flex-shrink: 0;
+  min-width: 4ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 12px;
+}
+.search-loading-lines {
+  display: grid;
+  gap: 14px;
+  margin-top: 26px;
+}
+.search-loading-lines > span {
+  position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+.search-loading-lines > span:nth-child(2) {
+  width: 88%;
+}
+.search-loading-lines > span:nth-child(3) {
+  width: 61%;
+}
+.search-loading-lines > span::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 173, 102, 0.2),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: search-loading-shimmer 2s ease-in-out infinite;
+}
+@keyframes search-loading-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+/* Functional feedback stays active when decorative graph motion is paused.
+   The OS reduced-motion preference still disables all movement. */
+@media (prefers-reduced-motion: no-preference) {
+  .search-loading .search-loading-spinner,
+  .search-form .search-loading-spinner {
+    animation: spin 1s linear infinite !important;
+  }
+}

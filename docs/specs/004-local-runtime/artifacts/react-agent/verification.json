@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-02",
+  "implementation": "langchain.create_agent ReAct on LangGraph",
+  "langchain_version": "1.4.7",
+  "limits": {
+    "tool_calls_per_request": 8,
+    "agent_model_calls": 9,
+    "review_model_calls": 1,
+    "request_seconds": 90
+  },
+  "privacy": {
+    "library": "PIIMiddleware",
+    "strategy": "redact",
+    "types": [
+      "email",
+      "credit_card",
+      "ip"
+    ],
+    "canonical_records_modified": false,
+    "custom_regex_or_llm_filter": false
+  },
+  "backend_tests": {
+    "passed": 222,
+    "skipped": 0,
+    "seconds": 36.37,
+    "real_kure": true
+  },
+  "launcher_tests": {
+    "passed": 12
+  },
+  "dependency_lock_check": true,
+  "live": [
+    {
+      "real_account_request": true,
+      "elapsed_seconds": 25.58,
+      "events": [
+        "started",
+        "progress",
+        "answer_part",
+        "answer_part",
+        "completed"
+      ],
+      "completed": true,
+      "error_codes": [],
+      "parts": 2,
+      "sources": 2,
+      "evidence_status": "insufficient",
+      "record_revisions_and_state_unchanged": true
+    },
+    {
+      "real_account_request": true,
+      "elapsed_seconds": 29.79,
+      "events": [
+        "started",
+        "progress",
+        "answer_part",
+        "completed"
+      ],
+      "completed": true,
+      "error_codes": [],
+      "parts": 1,
+      "sources": 2,
+      "evidence_status": "insufficient",
+      "record_revisions_and_state_unchanged": true
+    }
+  ],
+  "retrieval_baseline": {
+    "cases": 15,
+    "hit_at_1": 1,
+    "macro_recall_at_5": 0.9666666666666667,
+    "macro_context_recall": 1.0,
+    "latency_median_seconds": 0.467,
+    "all_queries_within_64_tokens": true,
+    "unprocessed_question_cases": [],
+    "ranking": "RRF over per-source-unit retrieval ranks; top5 distinct captures",
+    "scope": "deterministic retrieval baseline on a small frozen synthetic corpus; no autonomous agent or production quality claim"
+  },
+  "runtime": {
+    "port": 8000,
+    "provider_login_and_selected_model_preserved": true,
+    "records": 12,
+    "record_revisions_and_state_unchanged": true,
+    "index_ready": true
+  },
+  "limits_validation": "deterministic provider doubles; real account tests use ordinary questions, not forced tool-limit exhaustion",
+  "remaining_scope": [
+    "Native OS installation gates unchanged",
+    "User-deferred real logout/relogin unchanged",
+    "Builtin PII detection does not cover all personal information",
+    "Small synthetic retrieval baseline is not general autonomous-agent quality"
+  ],
+  "repository_preflight": {
+    "findings": [],
+    "candidate_files": 303,
+    "markdown_files": 88,
+    "git_initialized": false
+  }
+}

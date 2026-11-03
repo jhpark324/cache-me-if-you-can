@@ -1,0 +1,13 @@
+{
+  "actual_api": {
+    "captures": 8,
+    "port": 8012
+  },
+  "answer": "UI contract fixture; source resolved via actual API",
+  "title": "Cache Me If You Can",
+  "stableCanvas": true,
+  "inputYStable": true,
+  "desktopNoOverlap": true,
+  "mobileNoOverflow": true,
+  "errors": []
+}

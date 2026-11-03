@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-02",
+  "authentication": {
+    "user_completed_login": true,
+    "plan_permission_confirmed": true,
+    "catalog_received": true,
+    "live_refresh_tested": false
+  },
+  "request_fix": {
+    "input": "user message array",
+    "unsupported_max_output_tokens_removed": true,
+    "local_output_limit_code_points": 32000,
+    "local_output_limit_utf8_bytes": 131072
+  },
+  "isolated_positive_case": {
+    "selected_model": "gpt-6.1-terra",
+    "storage": "temporary isolated SQLite and LanceDB",
+    "concept_status": "needs_review",
+    "concept_count": 1,
+    "body_preserved": true,
+    "elapsed_seconds": 23.44,
+    "source_resolution_verified": true,
+    "answer": {
+      "answer_id": "9b75c611-e23e-4fec-9d37-a1eb598a6eb0",
+      "parts": [
+        {
+          "part_id": "163c5a63-cc30-4ea2-a842-eb39752b4ce1",
+          "kind": "stored_knowledge",
+          "text": "검증용 유리숲 프로젝트의 배포 결정 기록에는 배포 전에 스냅샷을 2회 생성하고, 롤백 제한 시간을 7분으로 정했다고 되어 있습니다. 이 값은 다른 프로젝트에는 적용하지 않습니다.",
+          "sources": [
+            {
+              "capture_id": "9dc5fb2c-3aa6-4110-ac2f-c034176a41a1",
+              "revision_id": "c249172c-f2c0-4a7b-86b6-93bb0a3a49ba",
+              "node_id": null,
+              "body_start": 0,
+              "body_end": 91
+            }
+          ]
+        }
+      ],
+      "evidence_status": "insufficient",
+      "limitations": [
+        "자료가 합성 검증 자료로 표시되어 있으며, 결정 시점과 검증 상태는 확인되지 않습니다."
+      ],
+      "sources": [
+        {
+          "capture_id": "9dc5fb2c-3aa6-4110-ac2f-c034176a41a1",
+          "revision_id": "c249172c-f2c0-4a7b-86b6-93bb0a3a49ba",
+          "node_id": null,
+          "body_start": 0,
+          "body_end": 91
+        }
+      ]
+    }
+  },
+  "production_http_case": {
+    "model": "gpt-6-astra",
+    "elapsed_seconds": 22.62,
+    "initial_record_count": 0,
+    "events": [
+      "started",
+      "progress",
+      "answer_part",
+      "completed"
+    ],
+    "completed": true,
+    "errors": [],
+    "evidence_status": "none",
+    "source_count": 0,
+    "part_kinds": [
+      "general_explanation"
+    ]
+  },
+  "privacy": {
+    "synthetic_records_in_user_database": false,
+    "credential_contents_recorded": false,
+    "question_answer_persistence_enabled": false
+  },
+  "limitations": [
+    "Synthetic positive fixture only; not a representative quality benchmark",
+    "Real refresh/revocation/cancellation and native operating systems not tested"
+  ]
+}

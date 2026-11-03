@@ -1,0 +1,393 @@
+{
+  "fixture_version": "korean-quality-v1",
+  "fixture_sha256": "ffffddfcfe1a049478aa6aaa975ee6c83c7569b8548579c79043129a876f597b",
+  "script_sha256": "3966b68c78d31a1f7b40c8d692d3abd81116feb7b38090df212fdf260eb88701",
+  "evaluated_at": "2026-11-02T09:23:17.135513+00:00",
+  "data_kind": "synthetic",
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "python": "3.12.13",
+  "model_revision": "3431f86d399d666083890dbb882aced6708873bc",
+  "retrieval": [
+    {
+      "case_id": "study_atomicity",
+      "category": "study",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 36,
+      "top5": [
+        "learn_atomicity",
+        "learn_isolation",
+        "memo_intrusive",
+        "learn_index",
+        "learn_python"
+      ],
+      "expected": [
+        "learn_atomicity"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.34
+    },
+    {
+      "case_id": "study_isolation",
+      "category": "study",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 30,
+      "top5": [
+        "learn_isolation",
+        "learn_atomicity",
+        "memo_intrusive",
+        "learn_rag",
+        "learn_index"
+      ],
+      "expected": [
+        "learn_isolation"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.317
+    },
+    {
+      "case_id": "study_index",
+      "category": "study",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 24,
+      "top5": [
+        "learn_index",
+        "learn_python",
+        "day_other_person",
+        "learn_rag",
+        "learn_isolation"
+      ],
+      "expected": [
+        "learn_index"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.335
+    },
+    {
+      "case_id": "study_rag",
+      "category": "study",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 24,
+      "top5": [
+        "learn_rag",
+        "learn_index",
+        "learn_atomicity",
+        "memo_cpu",
+        "memo_presentation"
+      ],
+      "expected": [
+        "learn_rag"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.322
+    },
+    {
+      "case_id": "study_copy",
+      "category": "study",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 23,
+      "top5": [
+        "learn_python",
+        "learn_rag",
+        "learn_index",
+        "memo_intrusive",
+        "memo_cpu"
+      ],
+      "expected": [
+        "learn_python"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.331
+    },
+    {
+      "case_id": "daily_meeting",
+      "category": "daily",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 25,
+      "top5": [
+        "day_meeting",
+        "day_walk",
+        "day_proposal",
+        "memo_book",
+        "memo_completed"
+      ],
+      "expected": [
+        "day_meeting"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.317
+    },
+    {
+      "case_id": "daily_walk",
+      "category": "daily",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 26,
+      "top5": [
+        "day_walk",
+        "day_proposal",
+        "day_meeting",
+        "learn_rag",
+        "memo_presentation"
+      ],
+      "expected": [
+        "day_walk"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.329
+    },
+    {
+      "case_id": "daily_proposal",
+      "category": "daily",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 29,
+      "top5": [
+        "day_proposal",
+        "day_walk",
+        "day_meeting",
+        "day_other_person",
+        "memo_presentation"
+      ],
+      "expected": [
+        "day_proposal"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.334
+    },
+    {
+      "case_id": "daily_subject",
+      "category": "daily",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 20,
+      "top5": [
+        "day_other_person",
+        "memo_presentation",
+        "day_meeting",
+        "day_proposal",
+        "day_walk"
+      ],
+      "expected": [
+        "day_other_person"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.304
+    },
+    {
+      "case_id": "memo_wifi",
+      "category": "memo",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 17,
+      "top5": [
+        "memo_wifi",
+        "memo_intrusive",
+        "memo_book",
+        "memo_cpu",
+        "day_meeting"
+      ],
+      "expected": [
+        "memo_wifi"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.302
+    },
+    {
+      "case_id": "memo_library",
+      "category": "memo",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 27,
+      "top5": [
+        "memo_book",
+        "learn_index",
+        "learn_atomicity",
+        "memo_presentation",
+        "memo_wifi"
+      ],
+      "expected": [
+        "memo_book"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.354
+    },
+    {
+      "case_id": "memo_platform",
+      "category": "memo",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 37,
+      "top5": [
+        "memo_cpu",
+        "learn_python",
+        "memo_intrusive",
+        "day_proposal",
+        "memo_completed"
+      ],
+      "expected": [
+        "memo_cpu"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.328
+    },
+    {
+      "case_id": "memo_scope",
+      "category": "memo",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 36,
+      "top5": [
+        "memo_presentation",
+        "learn_rag",
+        "day_meeting",
+        "day_proposal",
+        "learn_index"
+      ],
+      "expected": [
+        "memo_presentation"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.35
+    },
+    {
+      "case_id": "memo_completion",
+      "category": "memo",
+      "query_count": 1,
+      "source_units": 1,
+      "all_original_units_searched": true,
+      "query_tokens_max": 28,
+      "top5": [
+        "memo_completed",
+        "learn_index",
+        "memo_cpu",
+        "day_meeting",
+        "learn_atomicity"
+      ],
+      "expected": [
+        "memo_completed"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 1.0,
+      "context_recall": 1.0,
+      "seconds": 0.349
+    },
+    {
+      "case_id": "long_multifacet",
+      "category": "mixed",
+      "query_count": 2,
+      "source_units": 2,
+      "all_original_units_searched": true,
+      "query_tokens_max": 51,
+      "top5": [
+        "learn_atomicity",
+        "learn_index",
+        "learn_isolation",
+        "learn_rag",
+        "memo_intrusive"
+      ],
+      "expected": [
+        "learn_atomicity",
+        "memo_presentation"
+      ],
+      "hit_at_1": true,
+      "recall_at_5": 0.5,
+      "context_recall": 1.0,
+      "seconds": 0.688
+    }
+  ],
+  "live": [],
+  "setup_seconds": 7.794,
+  "record_count": 15,
+  "runtime_profile": {
+    "representation": "multi_vector",
+    "token_dimension": 128,
+    "dtype": "float32",
+    "device": "cpu",
+    "metric": "cosine",
+    "scoring": "maxsim",
+    "normalization": "token_l2",
+    "query_tokens": 64,
+    "document_tokens": 512,
+    "overlap_tokens": 64,
+    "context_tokens": 64,
+    "chunk_rules_version": "markdown-v1",
+    "query_policy": "reject_over_budget-v1",
+    "sentence_boundary": "punctuation-v1",
+    "markdown_parser": "markdown-it-py/commonmark+table",
+    "model_id": "nlpai-lab/KURE-v2",
+    "model_revision": "3431f86d399d666083890dbb882aced6708873bc",
+    "prompts": {
+      "query": "[Q] ",
+      "document": "[D] "
+    },
+    "query_expansion": {
+      "strategy": "fixed",
+      "attend": false,
+      "token": null,
+      "length": 64
+    },
+    "runtime_versions": {
+      "sentence-transformers": "6.2.0",
+      "transformers": "5.22.1",
+      "torch": "2.15.0+cpu",
+      "markdown-it-py": "4.2.0",
+      "lancedb": "0.41.0"
+    }
+  },
+  "summary": {
+    "cases": 15,
+    "hit_at_1": 1,
+    "macro_recall_at_5": 0.9666666666666667,
+    "macro_context_recall": 1.0,
+    "latency_median_seconds": 0.331,
+    "all_queries_within_64_tokens": true,
+    "unprocessed_question_cases": [],
+    "ranking": "RRF over per-source-unit retrieval ranks; top5 distinct captures",
+    "scope": "small frozen synthetic corpus, no production quality claim"
+  }
+}

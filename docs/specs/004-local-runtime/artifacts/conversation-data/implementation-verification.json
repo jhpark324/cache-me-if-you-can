@@ -1,0 +1,64 @@
+{
+  "checked_at": "2026-11-02T14:30:38.147896+00:00",
+  "synthetic_conversations": true,
+  "actual_codex_model_sessions": false,
+  "actual_mcp_import": true,
+  "dataset_file_sha256": "bf596fd2d61f4fef644f61d56f66d9387d74bf329d88c0f6a06a662de43f1ee5",
+  "new_records": 40,
+  "previous_records": 12,
+  "total_records": 52,
+  "repeat_import": {
+    "new_records": 0,
+    "existing_entries_verified": 40
+  },
+  "backend_full": {
+    "passed": 260,
+    "seconds": 45.12
+  },
+  "backend_followup_neighbor_types": {
+    "passed": 31,
+    "seconds": 9.1
+  },
+  "frontend_full": {
+    "passed": 74,
+    "skipped": 3,
+    "skip_reason": "isolated real API integration tests run separately, not against the user store"
+  },
+  "frontend_build": "passed",
+  "scripts_tests": {
+    "passed": 20
+  },
+  "skill_validation": "passed",
+  "installed_skill_matches_source": true,
+  "server_restart": {
+    "existing_records_preserved": true,
+    "login_and_selected_model_preserved": true
+  },
+  "data_review": {
+    "cases": 40,
+    "nodes": 30,
+    "source_links": 37,
+    "queries": 40,
+    "independent_semantic_review": true,
+    "long_bodies_codepoints": [
+      1978,
+      1953
+    ]
+  },
+  "native_os_validation": "not_performed_this_change",
+  "logout_relogin": "deferred_by_user",
+  "login_and_selected_model_preserved_after_import": true,
+  "retrieval_final": {
+    "passed": true,
+    "passed_checks": 40,
+    "total_checks": 40,
+    "nodes_roundtripped": 30,
+    "index_states": {
+      "ready": 40
+    },
+    "concept_states": {
+      "ready": 35,
+      "needs_review": 5
+    }
+  }
+}

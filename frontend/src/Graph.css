@@ -1,0 +1,170 @@
+.graph-label-layer > span[data-selected="true"] {
+  color: #ffad66;
+  font-weight: 650;
+  background: rgba(22, 13, 6, 0.94);
+  box-shadow: 0 0 0 1px rgba(255, 173, 102, 0.45);
+  z-index: 3;
+}
+.graph-section .graph-list .chip[aria-pressed="true"] {
+  color: #ffad66;
+  background: rgba(255, 173, 102, 0.08);
+  border-color: rgba(255, 173, 102, 0.35);
+}
+.graph-list-search {
+  padding: 3px 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 4px;
+}
+.graph-list-search label {
+  display: block;
+}
+.graph-list-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.graph-list-search input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+.graph-list-search input:focus-visible {
+  outline: 2px solid #ffad66;
+  outline-offset: 2px;
+}
+.graph-result-count {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+}
+.graph-list-empty {
+  margin: 12px 10px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* Search evidence stays in a visible graph area below the answer. */
+.graph-stage.has-retrieval .graph-canvas,
+.graph-stage.has-retrieval .graph-label-layer {
+  opacity: 1;
+}
+.main-content.has-retrieval .search-dock {
+  max-height: min(52dvh, calc(100dvh - 310px));
+}
+.graph-label-layer > span[data-kind="retrieved_chunk"] {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: max-content;
+  max-width: 240px;
+  color: #b1f0f7;
+  background: rgba(5, 21, 25, 0.92);
+  box-shadow: 0 0 0 1px rgba(128, 220, 233, 0.3);
+  padding: 5px 8px;
+  font-weight: 550;
+}
+.graph-label-context {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 10px;
+  font-weight: 450;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.75);
+}
+.graph-label-context > span:first-child,
+.graph-label-excerpt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.graph-label-range {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.graph-label-layer > span[data-kind="retrieved_chunk"][data-cited="true"] {
+  color: #ffad66;
+  background: rgba(28, 16, 7, 0.94);
+  box-shadow: 0 0 0 1px rgba(255, 173, 102, 0.4);
+}
+.graph-label-layer > span[data-kind="retrieved_chunk"][data-selected="true"] {
+  color: #fff;
+  box-shadow: 0 0 0 2px #ffad66;
+}
+.legend-retrieved {
+  background: #80dce9;
+}
+.legend-cited {
+  background: #ffad66;
+}
+.graph-world .graph-list .chip[data-kind="retrieved_chunk"] {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+  border-left: 2px solid #80dce9;
+}
+.graph-world .graph-list .chip[data-cited="true"] {
+  border-left-color: #ffad66;
+}
+.graph-list .chip[data-kind="retrieved_chunk"] > small {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+  line-height: 1.6;
+}
+.graph-world .graph-list {
+  max-height: min(420px, calc(100% - 100px));
+}
+.graph-retrieval-note {
+  position: absolute;
+  left: 26px;
+  bottom: 80px;
+  max-width: calc(100% - 52px);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+.graph-retrieval-note ~ .graph-truncated {
+  bottom: 112px;
+}
+@media (max-width: 800px) {
+  .graph-label-layer > span[data-kind="retrieved_chunk"] {
+    max-width: 200px;
+  }
+  .graph-controls .rt-IconButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .stage-footer > span {
+    display: none;
+  }
+  .stage-footer .rt-IconButton {
+    min-width: 44px;
+    min-height: 44px;
+    margin: 0;
+  }
+  .stage-footer {
+    bottom: 23px;
+    left: 12px;
+  }
+  .graph-legend {
+    bottom: 86px;
+    font-size: 11px;
+  }
+  .graph-retrieval-note {
+    left: 18px;
+    bottom: 108px;
+  }
+}
+@media (max-height: 600px) {
+  .main-content.has-retrieval .search-dock {
+    max-height: max(150px, 45dvh);
+  }
+}

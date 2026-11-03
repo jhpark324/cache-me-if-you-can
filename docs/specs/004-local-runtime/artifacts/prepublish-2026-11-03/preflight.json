@@ -1,0 +1,10 @@
+{
+  "files": 371,
+  "bytes": 22535564,
+  "markdown_files": 95,
+  "findings": [],
+  "index_files": 0,
+  "index_bytes": 0,
+  "git_initialized": false,
+  "scope": "working-tree candidates and current Git index blobs; local Markdown links checked against working-tree candidates; excludes Git history, remote state, image contents and unknown secret formats"
+}

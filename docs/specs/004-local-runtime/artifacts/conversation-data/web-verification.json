@@ -1,0 +1,226 @@
+{
+  "record_count": 52,
+  "filter_options": [
+    {
+      "value": "",
+      "label": "모든 유형"
+    },
+    {
+      "value": "knowledge",
+      "label": "지식"
+    },
+    {
+      "value": "episode",
+      "label": "경험·회고"
+    },
+    {
+      "value": "context",
+      "label": "맥락"
+    },
+    {
+      "value": "idea",
+      "label": "아이디어·계획"
+    },
+    {
+      "value": "decision",
+      "label": "결정"
+    },
+    {
+      "value": "artifact",
+      "label": "자료"
+    }
+  ],
+  "filter_counts": {
+    "knowledge": 13,
+    "episode": 10,
+    "context": 8,
+    "idea": 10,
+    "decision": 7,
+    "artifact": 7
+  },
+  "graph_nodes": 50,
+  "graph_edges": 41,
+  "graph_truncated": true,
+  "query": "지우 복습 범위 줄인 이유",
+  "answer_seconds": 19.21,
+  "answer_result": {
+    "answer_id": "b968671b-2f15-4f00-9352-cd982cfdede3",
+    "parts": [
+      {
+        "part_id": "d5098fb0-7022-4f61-ad7f-0a71cb7d931a",
+        "kind": "stored_knowledge",
+        "text": "가상 학습자 지우가 복습 범위를 줄인 이유는 준비할 항목이 많으면 시작을 미룰 것 같았기 때문입니다. 그래서 보관해 둔 세 번의 복습 계획을 한꺼번에 진행하지 않고, `[[1], [2]]` 예제에서 내부 리스트를 수정하면 어떻게 되는지만 먼저 살펴보기로 했습니다. 깊은 복사와의 비교와 직접 예제 만들기는 나중에 판단하기로 했으며, 복습을 완료했다는 기록은 아닙니다.",
+        "sources": [
+          {
+            "capture_id": "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+            "revision_id": "510c33e8-97c5-4a09-bbeb-1d783f94536f",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 310
+          },
+          {
+            "capture_id": "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+            "revision_id": "523ac400-cf5b-4186-9002-fbbc72149d6d",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 317
+          }
+        ]
+      }
+    ],
+    "evidence_status": "insufficient",
+    "limitations": [
+      "기록·근거 구간·본문의 공유 예산을 넘어 일부 구간을 생략했습니다.",
+      "기록 수 예산으로 검색 결과의 일부만 포함했습니다.",
+      "변경·상충 관계의 양쪽 또는 근거가 예산에서 빠져 현재 조건을 확정할 수 없습니다.",
+      "검색 결과 일부는 표시 예산으로 생략되어, 확인된 기록을 기준으로 답했습니다."
+    ],
+    "sources": [
+      {
+        "capture_id": "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "revision_id": "510c33e8-97c5-4a09-bbeb-1d783f94536f",
+        "node_id": null,
+        "body_start": 0,
+        "body_end": 310
+      },
+      {
+        "capture_id": "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+        "revision_id": "523ac400-cf5b-4186-9002-fbbc72149d6d",
+        "node_id": null,
+        "body_start": 0,
+        "body_end": 317
+      }
+    ],
+    "retrieval": {
+      "items": [
+        {
+          "source": {
+            "capture_id": "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+            "revision_id": "510c33e8-97c5-4a09-bbeb-1d783f94536f",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 310
+          },
+          "label": "가상 학습자 지우는 보관해 둔 세 번의 복습 계획 전체를 바로 진행하는 대신 얕은 복사 예제 하나부터 확인하",
+          "capture_label": "[테스트] 전체 복습 계획 대신 얕은 복사 한 예제부터 선택",
+          "cited": true
+        },
+        {
+          "source": {
+            "capture_id": "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+            "revision_id": "523ac400-cf5b-4186-9002-fbbc72149d6d",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 317
+          },
+          "label": "가상 학습자 지우에게 Codex가 세 번에 나눠 진행하는 리스트 복습 계획을 제안했다. 지우는 계획을 보관해",
+          "capture_label": "[테스트] AI가 제안한 세 번의 리스트 복습 계획",
+          "cited": true
+        },
+        {
+          "source": {
+            "capture_id": "fdfcd038-be4f-4a06-b76c-a695070c2fd6",
+            "revision_id": "c0a4f928-0e46-4191-bbcb-d0524662a87f",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 315
+          },
+          "label": "가상 학습자 지우는 Python을 공부할 때 작은 실행 예제와 예상 출력을 먼저 보는 설명을 선호한다고 말했",
+          "capture_label": "[테스트] 지우의 Python 설명 선호와 현재 학습 범위",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "9b8a3cc2-9648-4d6b-8722-fe56cb2d6a11",
+            "revision_id": "76c4ad16-b597-4f7b-9335-79be1e8e5a53",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 328
+          },
+          "label": "가상 학습자 지우는 함수가 정상 입력 한 개에서 동작하는 것과 충분히 확인된 것을 구별하는 설명을 Codex",
+          "capture_label": "[테스트] 정상 예제 하나로 함수 검증을 끝내지 않는 학습 메모",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "1951b497-a37d-477d-a442-7c5bb218669f",
+            "revision_id": "0d0004f0-006f-4ce2-a1aa-de4e5750adb0",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 405
+          },
+          "label": "가상 학습자 지우는 Python 리스트의 얕은 복사와 깊은 복사를 Codex와 비교했다. AI에게 설명을 들",
+          "capture_label": "[테스트] 얕은 복사에서 내부 리스트가 함께 바뀌는 이유",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "a759cc0d-3c3d-4574-98ea-3b7d288b9797",
+            "revision_id": "8c0774ba-2762-42ae-9aff-9b92717e34c4",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 281
+          },
+          "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+          "capture_label": "[테스트] 일주일 학습을 돌아보며",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "e01a42b4-ba42-42f9-b283-b37dd156af28",
+            "revision_id": "ef456656-074a-44fb-81e6-f508a9464416",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 291
+          },
+          "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+          "capture_label": "[테스트] 질문 카드로 복습하는 순서",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "53a0304f-f0ca-4fbd-965c-ff67c571f7f1",
+            "revision_id": "516c52e7-77be-4536-83cc-faacc871c860",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 301
+          },
+          "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+          "capture_label": "[테스트] 하루의 감정을 말로 정리하기",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6",
+            "revision_id": "9821aa42-cf8c-4100-9b48-ca3c9f7172ac",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 318
+          },
+          "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+          "capture_label": "[테스트] 배운 내용과 일상을 연결하는 질문",
+          "cited": false
+        },
+        {
+          "source": {
+            "capture_id": "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0",
+            "revision_id": "8ee8a7de-2327-467a-aef5-fa4174dddebe",
+            "node_id": null,
+            "body_start": 0,
+            "body_end": 281
+          },
+          "label": "> 화면·검색 검증을 위해 만든 가상 기록입니다. 실제 사용자의 경험이나 확정된 프로젝트 문서가 아닙니다. ",
+          "capture_label": "[테스트] 능동 회상으로 개념 복습하기",
+          "cited": false
+        }
+      ],
+      "truncated": false
+    }
+  },
+  "question_requests": 1,
+  "separate_search_requests": 0,
+  "mobile_no_horizontal_overflow": true,
+  "preexisting_record_states_unchanged": true,
+  "screenshots_use_only_test_records": true,
+  "page_errors": []
+}

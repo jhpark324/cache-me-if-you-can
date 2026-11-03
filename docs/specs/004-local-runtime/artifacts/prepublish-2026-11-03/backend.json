@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-03",
+  "timezone": "Asia/Seoul",
+  "scope": "Backend/runtime prepublication review; isolated verification only.",
+  "evidence_basis": "Previously observed executions in this review; no tests repeated for this summary.",
+  "source_changes": false,
+  "live_server_modified": false,
+  "user_records_modified": false,
+  "account_state_modified": false,
+  "backend_regression": {
+    "command": "KURE_TEST_MODEL_PATH=<pinned-local-snapshot> backend/.venv/bin/python -m pytest backend/tests -q",
+    "passed": 260,
+    "failed": 0,
+    "skipped": 0,
+    "pytest_duration_seconds": 43.42,
+    "exit_code": 0,
+    "embedding_model": "nlpai-lab/KURE-v2",
+    "embedding_revision": "3431f86d399d666083890dbb882aced6708873bc",
+    "embedding_device": "cpu",
+    "isolation": [
+      "Temporary SQLite databases",
+      "Temporary LanceDB indexes",
+      "Isolated HTTP transport tests",
+      "Mock OAuth/provider responses"
+    ],
+    "relevant_coverage": [
+      "Six public record kinds and historical aliases",
+      "Immutable revisions and historical receipt replay",
+      "Deletion confirmation and session binding",
+      "Source revalidation",
+      "Eight-call read-only agent tool limit",
+      "PII model-boundary redaction",
+      "Codex installer configuration preservation and credential handling"
+    ]
+  },
+  "isolated_date_api_smoke": {
+    "result": "passed",
+    "exit_code": 0,
+    "transport": "In-process FastAPI TestClient with an isolated SQLite database",
+    "checks": [
+      "Capture created_at stays unchanged after automatic concept enrichment.",
+      "Changed concept assignments advance capture updated_at and revision_created_at.",
+      "Historical source_get returns is_current=false.",
+      "Historical source_get preserves the requested revision_created_at.",
+      "Historical source_get retains the capture created_at and current capture updated_at.",
+      "Month-precision event_time remains a month value."
+    ],
+    "durable_test_file_added": false,
+    "code_references": [
+      "backend/src/second_brain/records.py",
+      "backend/src/second_brain/api.py",
+      "backend/src/second_brain/outputs.py"
+    ]
+  },
+  "wheel_build_and_smoke": {
+    "build_command": "uv build --offline --wheel --out-dir <temporary-output>",
+    "build_working_directory": "backend",
+    "build_result": "passed",
+    "build_exit_code": 0,
+    "artifact_name": "second_brain-0.1.0-py3-none-any.whl",
+    "smoke_result": "passed",
+    "smoke_exit_code": 0,
+    "method": "Extracted the built wheel outside the checkout and imported that package in a subprocess using the existing dependency environment; this was not a fresh dependency installation.",
+    "checks": [
+      "Wheel contains second_brain/migrations/env.py.",
+      "Wheel contains second_brain/migrations/versions/0001_canonical_records.py.",
+      "Imported database module comes from the extracted wheel.",
+      "Packaged migrations initialize an isolated database.",
+      "Isolated application health, session issuance, CSRF-protected record creation succeed.",
+      "Packaged migration runs again successfully after application shutdown.",
+      "Frontend bundle is absent, consistent with documented source-checkout deployment."
+    ],
+    "code_references": [
+      "backend/pyproject.toml",
+      "backend/src/second_brain/db.py",
+      "backend/src/second_brain/main.py"
+    ]
+  },
+  "review_conclusion": "No new blocking functional or security regression was identified within the reviewed scope; this is not a general security certification.",
+  "limitations": [
+    "Native Windows/macOS and broader Linux hardware support were not exercised.",
+    "Real-account logout/login and hosted GitHub Actions were not exercised.",
+    "Wheel smoke reused existing dependencies and did not validate a clean-machine dependency install.",
+    "Wheel alone is not a complete web application distribution; frontend assets are not bundled.",
+    "PII redaction covers configured email, credit-card and IP detectors, not all personal or sensitive information.",
+    "Canonical storage is local, while answer generation and automatic concept classification send model inputs to the selected external provider.",
+    "Large-corpus performance, deep general source recursion and concept-classification input quality remain follow-up work."
+  ]
+}

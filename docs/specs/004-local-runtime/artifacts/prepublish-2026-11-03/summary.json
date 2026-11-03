@@ -1,0 +1,112 @@
+{
+  "date": "2026-11-03",
+  "environment": "WSL Linux x64, Python 3.12, CPU, Node.js 22, Chromium",
+  "frontend": {
+    "build": {
+      "typescript": "passed",
+      "vite": "passed",
+      "vite_seconds": 1.03
+    },
+    "fixture_suite": {
+      "passed": 74,
+      "skipped": 3,
+      "failed": 0,
+      "reported_duration": "2.4m"
+    },
+    "isolated_http_integration": {
+      "passed": 3,
+      "skipped": 0,
+      "failed": 0,
+      "seconds": 21.8,
+      "background_jobs": false,
+      "server_stopped": true
+    },
+    "source_date_checks": {
+      "passed": 6,
+      "failed": 0,
+      "persistent_regression_tests": false
+    },
+    "clean_install": {
+      "copied_source_files": 28,
+      "npm_ci": {
+        "exit_code": 0,
+        "seconds": 6.61
+      },
+      "build": {
+        "exit_code": 0,
+        "seconds": 2.52
+      },
+      "checkout_lock_unchanged": true,
+      "copy_lock_unchanged": true,
+      "lock_sha256": "c0531677edf5c1728625421fb02b746b58ba7e2b723357a54daf23c96ed652da"
+    }
+  },
+  "scripts": {
+    "unit_tests_passed": 20,
+    "failed": 0
+  },
+  "dependencies": {
+    "npm_product": {
+      "dependencies": 292,
+      "known_vulnerabilities": 0
+    },
+    "npm_prototype": {
+      "dependencies": 108,
+      "known_vulnerabilities": 0
+    },
+    "archived_graph_vendor": {
+      "components": 36,
+      "known_advisories": 0,
+      "scope": "name/version query to npm advisory service, not binary/provenance analysis"
+    },
+    "python": {
+      "public_packages": 107,
+      "known_vulnerabilities": 0,
+      "tool": "pip-audit 2.10.1"
+    },
+    "torch": {
+      "installed": "2.15.0+cpu",
+      "queried_public_version": "2.15.0",
+      "known_vulnerabilities": 0,
+      "binary_provenance_audited": false
+    },
+    "excluded_local_project": "second-brain 0.1.0",
+    "all_three_lockfiles_unchanged": true
+  },
+  "publication": {
+    "git_initialized": false,
+    "remote_created": false,
+    "pushed": false,
+    "project_license": "not selected",
+    "user_login_preserved": true,
+    "user_record_states_preserved": true
+  },
+  "not_verified": [
+    "native Windows/macOS/Linux matrix",
+    "actual account logout and relogin (user deferred)",
+    "hosted GitHub Actions",
+    "all secrets or past Git history",
+    "large-scale performance or binary/model supply-chain security"
+  ],
+  "backend": {
+    "passed": 260,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 43.42,
+    "actual_cpu_embedding": true,
+    "wheel_build": "passed",
+    "wheel_smoke": "passed with existing dependencies"
+  },
+  "readme": {
+    "local_references_checked": 25,
+    "broken_references": 0,
+    "viewports": [
+      1280,
+      390,
+      320
+    ],
+    "mermaid_rendered": true,
+    "horizontal_overflow": false,
+    "actual_product_screenshots": 4
+  }
+}

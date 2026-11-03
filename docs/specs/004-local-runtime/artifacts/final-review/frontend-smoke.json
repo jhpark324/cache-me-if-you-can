@@ -1,0 +1,17 @@
+{
+  "scope": "read-only actual runtime; no auth or record mutation",
+  "url": "http://127.0.0.1:8000/#capture/87e09f0e-d83d-4b4c-bc6b-ac50ef0257f6",
+  "title": [
+    "Cache Me If You Can — 지식 공간",
+    "[테스트] 배운 내용과 일상을 연결하는 질문"
+  ],
+  "desktop": {
+    "body": 1440,
+    "viewport": 1440
+  },
+  "mobile": {
+    "body": 390,
+    "viewport": 390
+  },
+  "errors": []
+}

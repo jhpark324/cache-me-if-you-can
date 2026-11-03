@@ -1,0 +1,884 @@
+{
+  "batch": "codex-conversations-2026-11-02-v1",
+  "checked_at": "2026-11-02T14:38:59.604219+00:00",
+  "answer_quality": "not_evaluated",
+  "synthetic_conversations": true,
+  "index_states": {
+    "ready": 40
+  },
+  "concept_states": {
+    "ready": 35,
+    "needs_review": 5
+  },
+  "checks": [
+    {
+      "case": "python-copy-concept",
+      "query": "얕은 복사 내부 리스트 원본",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우가 깊은 복사 실험을 완료했다"
+      ],
+      "search_capture_ids": [
+        "38566971-1188-4364-9e37-f4bc99a22743",
+        "1951b497-a37d-477d-a442-7c5bb218669f",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "2a31a997-9c69-4d50-88ae-b66f80ab0a0f",
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f"
+      ],
+      "rank": 2,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-study-context",
+      "query": "지우 Python 설명 선호 범위",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우는 모든 상황에서 긴 설명을 싫어한다"
+      ],
+      "search_capture_ids": [
+        "fdfcd038-be4f-4a06-b76c-a695070c2fd6",
+        "2a31a997-9c69-4d50-88ae-b66f80ab0a0f",
+        "1c92470b-80f7-4b84-af7c-636e1d6d49c6",
+        "f80badeb-c6fd-4dc5-924a-b481b8d04670",
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-plan-proposal",
+      "query": "지우 복습 계획 채택 여부",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "세 번의 복습을 완료했다",
+        "복습 일정이 예약되었다"
+      ],
+      "search_capture_ids": [
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4",
+        "9c8b959d-70d9-4e75-8a2e-9b8b3f8686b0"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-one-example-decision",
+      "query": "지우 복습 범위 줄인 이유",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우가 전체 복습 계획을 채택했다",
+        "얕은 복사 실험을 완료했다"
+      ],
+      "search_capture_ids": [
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+        "fdfcd038-be4f-4a06-b76c-a695070c2fd6",
+        "9b8a3cc2-9648-4d6b-8722-fe56cb2d6a11",
+        "1951b497-a37d-477d-a442-7c5bb218669f"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-copy-trial",
+      "query": "지우 직접 실행 얕은 복사 결과",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "AI가 실제 코드를 실행해 검증했다",
+        "깊은 복사 비교까지 완료했다"
+      ],
+      "search_capture_ids": [
+        "38566971-1188-4364-9e37-f4bc99a22743",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "1951b497-a37d-477d-a442-7c5bb218669f",
+        "2a31a997-9c69-4d50-88ae-b66f80ab0a0f",
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-reusable-snippet",
+      "query": "복사 비교 재사용 Python 코드",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "비교 코드 전체의 실행이 검증되었다"
+      ],
+      "search_capture_ids": [
+        "2a31a997-9c69-4d50-88ae-b66f80ab0a0f",
+        "1951b497-a37d-477d-a442-7c5bb218669f",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "38566971-1188-4364-9e37-f4bc99a22743",
+        "c22c42af-3c63-4ae0-b6e9-f18a978ec6f4"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "python-boundary-tests",
+      "query": "함수 테스트 빈 리스트 기대 결과",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우의 함수가 모든 경계값에서 검증되었다"
+      ],
+      "search_capture_ids": [
+        "9b8a3cc2-9648-4d6b-8722-fe56cb2d6a11",
+        "fd81e4e3-a1b1-4fcb-a10a-0f4e343e338f",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+        "4c0be562-b5f7-4bf6-abe1-aef9b9a8089d",
+        "88f85a81-4eea-4222-be2d-4dda5579579a"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-project-context",
+      "query": "별빛 노트 CPU 외부 공유 제약",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "실제 Cache Me If You Can의 지원 OS를 두 개로 변경했다",
+        "별빛 노트의 배포가 완료되었다"
+      ],
+      "search_capture_ids": [
+        "8577f138-f51a-4eca-b4dd-96aed4ff7690",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "7f55b8ba-a6f3-4586-8103-3caa941d43d5",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-event-state-lesson",
+      "query": "저장 버튼 클릭 저장 완료 구분",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "별빛 노트가 이미 모든 재시도를 처리한다"
+      ],
+      "search_capture_ids": [
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f",
+        "1c206345-3e44-4425-a932-b085d20a20fd",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "c22c42af-3c63-4ae0-b6e9-f18a978ec6f4",
+        "88f85a81-4eea-4222-be2d-4dda5579579a"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-retry-long-notes",
+      "query": "이중 클릭 재전송 성공 기준",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "재시도 검증을 이미 통과했다",
+        "다른 창의 편집은 마지막 요청으로 덮어쓴다"
+      ],
+      "search_capture_ids": [
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f",
+        "cd2e6967-0c76-42aa-8942-aaed238627a3",
+        "1c206345-3e44-4425-a932-b085d20a20fd"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-cache-proposal",
+      "query": "별빛 노트 캐시 도입 확정",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "운영자가 캐시 도입을 확정했다",
+        "캐시로 응답 속도가 향상됐다"
+      ],
+      "search_capture_ids": [
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "8577f138-f51a-4eca-b4dd-96aed4ff7690",
+        "7f55b8ba-a6f3-4586-8103-3caa941d43d5",
+        "cd2e6967-0c76-42aa-8942-aaed238627a3"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-explicit-save-decision",
+      "query": "별빛 노트 전체 대화 자동 저장 선택",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "모든 대화가 자동 저장된다"
+      ],
+      "search_capture_ids": [
+        "7f55b8ba-a6f3-4586-8103-3caa941d43d5",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4",
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f",
+        "cd2e6967-0c76-42aa-8942-aaed238627a3"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-duplicate-report",
+      "query": "별빛 노트 버튼 색 중복 저장 결과",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "원인이 서버에만 있다고 확정했다",
+        "중복 저장 문제가 해결되었다"
+      ],
+      "search_capture_ids": [
+        "1c206345-3e44-4425-a932-b085d20a20fd",
+        "c22c42af-3c63-4ae0-b6e9-f18a978ec6f4",
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-retry-checklist",
+      "query": "별빛 노트 재시도 체크리스트 생성 ID",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "체크리스트가 모두 완료되었다"
+      ],
+      "search_capture_ids": [
+        "c22c42af-3c63-4ae0-b6e9-f18a978ec6f4",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-stable-id-decision",
+      "query": "내용 변경 재전송 요청 ID 결정",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "새 요청 식별자를 모든 저장에서 금지했다",
+        "구현 검증이 끝났다"
+      ],
+      "search_capture_ids": [
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "cd2e6967-0c76-42aa-8942-aaed238627a3",
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+        "4c0be562-b5f7-4bf6-abe1-aef9b9a8089d",
+        "6f37eebc-fc95-4f04-9d1e-50cfdc170d7f"
+      ],
+      "rank": 2,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "starlight-retry-test-result",
+      "query": "별빛 노트 재전송 통과 미검증 범위",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "모든 재시도와 충돌 처리가 검증되었다"
+      ],
+      "search_capture_ids": [
+        "2c5642e9-f305-4ccc-bc92-2ae261c82f19",
+        "29c24257-b8ca-4f24-86b2-4bd29d28e06d",
+        "cd2e6967-0c76-42aa-8942-aaed238627a3",
+        "8577f138-f51a-4eca-b4dd-96aed4ff7690",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-tone-context",
+      "query": "지우 뉴스레터 브리핑 문체 차이",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우는 모든 글에서 짧은 문장을 선호한다"
+      ],
+      "search_capture_ids": [
+        "1c92470b-80f7-4b84-af7c-636e1d6d49c6",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01",
+        "6d0ba1c0-0fb7-4460-a984-994a8b9f5195",
+        "0b5f53ac-735a-4232-923b-5983583f29ac",
+        "fdfcd038-be4f-4a06-b76c-a695070c2fd6"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-opening-proposals",
+      "query": "작은 실험 편지 도입부 채택 여부",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "A안은 독자 반응이 좋아 채택되었다"
+      ],
+      "search_capture_ids": [
+        "dadcd0fd-3395-451a-bde2-1e8fc8ca8cd5",
+        "6d0ba1c0-0fb7-4460-a984-994a8b9f5195",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01",
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "ca932af4-11e9-4584-8c25-4d30eadeb7d4"
+      ],
+      "rank": 3,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-opening-decision",
+      "query": "작은 실험 편지 A안 선택 이유",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "뉴스레터가 이미 발행되었다",
+        "모든 글은 반드시 장면으로 시작한다"
+      ],
+      "search_capture_ids": [
+        "dadcd0fd-3395-451a-bde2-1e8fc8ca8cd5",
+        "6d0ba1c0-0fb7-4460-a984-994a8b9f5195",
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "1c92470b-80f7-4b84-af7c-636e1d6d49c6",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-draft-artifact",
+      "query": "작은 실험 편지 미발행 도입부 문구",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "뉴스레터 본문에 묘사된 사건은 실제 사용자 경험이다"
+      ],
+      "search_capture_ids": [
+        "6d0ba1c0-0fb7-4460-a984-994a8b9f5195",
+        "dadcd0fd-3395-451a-bde2-1e8fc8ca8cd5",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01",
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "1c92470b-80f7-4b84-af7c-636e1d6d49c6"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-feedback-episode",
+      "query": "지우 초안 피드백 조급함 실제 내용",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "독자는 글 전체를 버리라고 했다",
+        "연결 문장 수정으로 반응이 개선되었다"
+      ],
+      "search_capture_ids": [
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "6d0ba1c0-0fb7-4460-a984-994a8b9f5195",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9",
+        "38566971-1188-4364-9e37-f4bc99a22743",
+        "53a0304f-f0ca-4fbd-965c-ff67c571f7f1"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "writing-observation-claim",
+      "query": "피드백 관찰 해석 구분 글쓰기",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "관찰과 해석을 구분하면 조급함이 치료된다"
+      ],
+      "search_capture_ids": [
+        "fb7942ad-0e84-4303-a1ec-66aa120d2a2d",
+        "8ac3e236-b730-41ec-acc5-eef24679fdd9",
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "626a697b-3166-4ca1-8578-cf8c3b0524ae",
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-club-context",
+      "query": "모래책장 인원 시간 발표 조건",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "모래책장 참석자는 발표를 싫어한다고 조사되었다"
+      ],
+      "search_capture_ids": [
+        "25e3012b-c74f-4320-8155-9157c2d03168",
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-proposal-result-long",
+      "query": "모래책장 후반 질문 제안 결과",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "하린의 도서관 연장 운영이 실제로 시행되었다",
+        "모래책장 참가자들이 질문에 이미 답했다"
+      ],
+      "search_capture_ids": [
+        "9c61cddc-494a-4d59-8d65-6cd5674f28a4",
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6",
+        "fc588d4b-efc4-44ea-90b4-86539ef74a56"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-one-question-plan",
+      "query": "모래책장 질문 하나 실험 진행 상태",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "모래책장 첫 모임을 완료했다",
+        "참가자에게 알림을 보냈다"
+      ],
+      "search_capture_ids": [
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+        "25e3012b-c74f-4320-8155-9157c2d03168",
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6",
+        "fc588d4b-efc4-44ea-90b4-86539ef74a56"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-short-opening-decision",
+      "query": "모래책장 도입 질문 하나 선택 이유",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "질문 수를 줄이면 모든 독서모임의 만족도가 높아진다"
+      ],
+      "search_capture_ids": [
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6",
+        "fc588d4b-efc4-44ea-90b4-86539ef74a56",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "5e257195-a0a2-4edf-9552-e0e765a4ace9"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-first-session-episode",
+      "query": "모래책장 첫 모임 차례 넘긴 이유",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "모든 참석자가 편안해했다",
+        "차례를 넘긴 사람은 관심이 없었다"
+      ],
+      "search_capture_ids": [
+        "fc588d4b-efc4-44ea-90b4-86539ef74a56",
+        "25e3012b-c74f-4320-8155-9157c2d03168",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "4bf5ad74-a1cb-461e-902c-a9d6df1fc6e8",
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "reading-facilitator-card",
+      "query": "모래책장 질문 카드 차례 건너뛰기",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "진행 카드의 모든 질문을 실제로 사용했다"
+      ],
+      "search_capture_ids": [
+        "3bd7381d-2bd3-4e43-a82e-9d3df80c55d6",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075",
+        "25e3012b-c74f-4320-8155-9157c2d03168",
+        "e01a42b4-ba42-42f9-b283-b37dd156af28",
+        "9c61cddc-494a-4d59-8d65-6cd5674f28a4"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "daily-weekday-context",
+      "query": "지우 평일 주말 일기 길이 선호",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우는 매일 일기를 쓰기로 약속했다"
+      ],
+      "search_capture_ids": [
+        "0b5f53ac-735a-4232-923b-5983583f29ac",
+        "ee6e2da8-3f85-4c90-9c15-302007f54e5d",
+        "1c92470b-80f7-4b84-af7c-636e1d6d49c6",
+        "271a3a31-200f-4105-bf11-353dca2aa808",
+        "f80badeb-c6fd-4dc5-924a-b481b8d04670"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "daily-rain-walk-episode",
+      "query": "지우 비 온 뒤 산책 남은 걱정",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "산책으로 걱정이 완전히 해결되었다"
+      ],
+      "search_capture_ids": [
+        "f1ef3de7-0bb0-4e58-8703-5b557390fba2",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "bbb1bab3-b8ab-42f4-b3f5-60fe33eabe51",
+        "fc588d4b-efc4-44ea-90b4-86539ef74a56",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "daily-two-sentence-plan",
+      "query": "지우 두 문장 일기 시간 고정 채택",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "매일 같은 시간에 일기 알림을 설정했다"
+      ],
+      "search_capture_ids": [
+        "ee6e2da8-3f85-4c90-9c15-302007f54e5d",
+        "271a3a31-200f-4105-bf11-353dca2aa808",
+        "0b5f53ac-735a-4232-923b-5983583f29ac",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01",
+        "9c61cddc-494a-4d59-8d65-6cd5674f28a4"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "daily-journal-prompt",
+      "query": "두 문장 일기 질문 잘 모르겠음",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "일기에는 반드시 교훈과 다음 행동을 작성해야 한다"
+      ],
+      "search_capture_ids": [
+        "271a3a31-200f-4105-bf11-353dca2aa808",
+        "ee6e2da8-3f85-4c90-9c15-302007f54e5d",
+        "0b5f53ac-735a-4232-923b-5983583f29ac",
+        "e46810f0-9ca2-485d-b1b0-ee3c7f921d01",
+        "1e2a8b14-94a8-4a3d-9986-276f451c3075"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "trip-harbor-context",
+      "query": "항구 오후 두 사람 예산 비 조건",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "실제 여행 경비가 12만 원으로 확정되었다",
+        "지우에게 보행 장애가 있다"
+      ],
+      "search_capture_ids": [
+        "ab5e4070-c391-4df3-84b1-260629d7f280",
+        "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+        "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "30cc69c2-7763-4a91-9ffb-6caedcd0866b"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "trip-indoor-proposal",
+      "query": "항구 오후 실내 동선 예약 여부",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "실내 전시와 카페 예약을 완료했다"
+      ],
+      "search_capture_ids": [
+        "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "ab5e4070-c391-4df3-84b1-260629d7f280",
+        "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+        "30cc69c2-7763-4a91-9ffb-6caedcd0866b"
+      ],
+      "rank": 2,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "trip-afternoon-decision",
+      "query": "항구 오후 새벽 일출 거절 이유",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "지우는 모든 여행에서 일출을 싫어한다",
+        "실내 여행 예약이 완료되었다"
+      ],
+      "search_capture_ids": [
+        "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+        "ab5e4070-c391-4df3-84b1-260629d7f280",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "30cc69c2-7763-4a91-9ffb-6caedcd0866b",
+        "d9c82ea3-c472-4a05-b0f3-6979008176d8"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "trip-past-cancellation-episode",
+      "query": "10월 29일 나들이 취소 안도 항구 오후",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "항구 오후 여행이 취소되었다",
+        "지우는 상대방을 만나고 싶지 않았다"
+      ],
+      "search_capture_ids": [
+        "30cc69c2-7763-4a91-9ffb-6caedcd0866b",
+        "ab5e4070-c391-4df3-84b1-260629d7f280",
+        "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "d9c82ea3-c472-4a05-b0f3-6979008176d8"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "trip-candidate-checklist",
+      "query": "항구 오후 장소 확인표 예산 예약",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "여행 일정이나 예약을 등록했다"
+      ],
+      "search_capture_ids": [
+        "d9c82ea3-c472-4a05-b0f3-6979008176d8",
+        "ab5e4070-c391-4df3-84b1-260629d7f280",
+        "c57486f9-d2b0-43fa-977f-ff27fa0e9067",
+        "458da2db-fa1d-4a75-a919-3d7a4bd84529",
+        "30cc69c2-7763-4a91-9ffb-6caedcd0866b"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "side-project-estimate-lesson",
+      "query": "달팽이 보드 두 번 작업 마감 약속",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "달팽이 보드는 두 번의 작업으로 반드시 완성된다"
+      ],
+      "search_capture_ids": [
+        "4e047b2f-407b-4e02-abf0-51f43e120dcf",
+        "050b501e-89ad-4acc-83bd-0cffa1050203",
+        "8ac3e236-b730-41ec-acc5-eef24679fdd9",
+        "1c206345-3e44-4425-a932-b085d20a20fd",
+        "a759cc0d-3c3d-4574-98ea-3b7d288b9797"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "side-project-drawer-note",
+      "query": "달팽이 보드 종이 스케치 서랍 위치",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "종이 스케치를 디지털화해야 하는 할 일이 생성되었다"
+      ],
+      "search_capture_ids": [
+        "050b501e-89ad-4acc-83bd-0cffa1050203",
+        "8ac3e236-b730-41ec-acc5-eef24679fdd9",
+        "4e047b2f-407b-4e02-abf0-51f43e120dcf",
+        "dadcd0fd-3395-451a-bde2-1e8fc8ca8cd5",
+        "88f85a81-4eea-4222-be2d-4dda5579579a"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    },
+    {
+      "case": "side-project-unread-link",
+      "query": "달팽이 보드 미확인 피드백 링크",
+      "search_found": true,
+      "search_evidence": true,
+      "context_evidence": true,
+      "source_roundtrip": true,
+      "avoid_claims": [
+        "해당 페이지가 특정 피드백 방법을 권장한다"
+      ],
+      "search_capture_ids": [
+        "8ac3e236-b730-41ec-acc5-eef24679fdd9",
+        "4e047b2f-407b-4e02-abf0-51f43e120dcf",
+        "050b501e-89ad-4acc-83bd-0cffa1050203",
+        "9b98c587-9c4a-4fa7-8273-60e9ee86402c",
+        "626a697b-3166-4ca1-8578-cf8c3b0524ae"
+      ],
+      "rank": 1,
+      "context_status": "insufficient",
+      "passed": true
+    }
+  ],
+  "current_records_checked": 40,
+  "nodes_roundtripped": 30,
+  "preservation": {
+    "before_count": 12,
+    "changed_ids": [],
+    "missing_ids": [],
+    "passed": true
+  },
+  "total_records_after": 52,
+  "passed_checks": 40,
+  "total_checks": 40,
+  "index_ready": true,
+  "passed": true
+}

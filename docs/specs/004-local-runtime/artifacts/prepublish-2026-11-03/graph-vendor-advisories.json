@@ -1,0 +1,115 @@
+{
+  "scope": "archived graph vendor component versions listed in THIRD-PARTY-LICENSES.md; not bundle binary or provenance analysis",
+  "registry": "https://registry.npmjs.org/-/npm/v1/security/advisories/bulk",
+  "packages": {
+    "3d-force-graph": [
+      "1.80.1"
+    ],
+    "@babel/runtime": [
+      "7.29.10"
+    ],
+    "@tweenjs/tween.js": [
+      "25.0.0"
+    ],
+    "accessor-fn": [
+      "1.5.3"
+    ],
+    "d3-array": [
+      "3.2.4"
+    ],
+    "d3-binarytree": [
+      "1.0.2"
+    ],
+    "d3-color": [
+      "3.1.0"
+    ],
+    "d3-dispatch": [
+      "3.0.1"
+    ],
+    "d3-force-3d": [
+      "3.0.6"
+    ],
+    "d3-format": [
+      "3.1.2"
+    ],
+    "d3-interpolate": [
+      "3.0.1"
+    ],
+    "d3-octree": [
+      "1.1.0"
+    ],
+    "d3-quadtree": [
+      "3.0.1"
+    ],
+    "d3-scale": [
+      "4.0.2"
+    ],
+    "d3-scale-chromatic": [
+      "3.1.0"
+    ],
+    "d3-selection": [
+      "3.0.0"
+    ],
+    "d3-time": [
+      "3.1.0"
+    ],
+    "d3-time-format": [
+      "4.1.0"
+    ],
+    "d3-timer": [
+      "3.0.1"
+    ],
+    "data-bind-mapper": [
+      "1.0.3"
+    ],
+    "float-tooltip": [
+      "1.7.5"
+    ],
+    "internmap": [
+      "2.0.3"
+    ],
+    "kapsule": [
+      "1.16.3"
+    ],
+    "lodash-es": [
+      "4.18.1"
+    ],
+    "ngraph.events": [
+      "1.4.0"
+    ],
+    "ngraph.forcelayout": [
+      "3.3.1"
+    ],
+    "ngraph.graph": [
+      "20.1.2"
+    ],
+    "ngraph.merge": [
+      "1.0.0"
+    ],
+    "ngraph.random": [
+      "1.2.0"
+    ],
+    "polished": [
+      "4.3.1"
+    ],
+    "preact": [
+      "10.29.8"
+    ],
+    "three": [
+      "0.180.0"
+    ],
+    "three-forcegraph": [
+      "1.43.6"
+    ],
+    "three-render-objects": [
+      "1.43.0"
+    ],
+    "three-spritetext": [
+      "1.10.0"
+    ],
+    "tinycolor2": [
+      "1.6.0"
+    ]
+  },
+  "advisories": {}
+}
