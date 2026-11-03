@@ -81,6 +81,7 @@ export type CaptureSummary = Pick<
   | "kinds"
   | "visibility"
   | "updated_at"
+  | "created_at"
   | "index_state"
   | "review_state"
 > & { excerpt?: string; body_excerpt?: string; preview?: string };

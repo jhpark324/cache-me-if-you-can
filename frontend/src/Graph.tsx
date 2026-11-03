@@ -7,25 +7,28 @@ import type {
   LinkObject,
   NodeObject,
 } from "3d-force-graph";
-import {
-  KIND_LABELS,
-  type GraphData,
-  type RecordKind,
-  type SourceRef,
-} from "./types";
+import { KIND_LABELS, type GraphData, type SourceRef } from "./types";
 type GraphNode = NodeObject & GraphData["nodes"][number];
 type GraphLink = LinkObject<GraphNode> &
   Omit<GraphData["edges"][number], "source" | "target">;
-const colors: Record<RecordKind, string> = {
-  knowledge: "#83e5be",
-  idea: "#e7bb72",
-  decision: "#8cbbf7",
-  artifact: "#b3c5cd",
-  episode: "#f1a7ab",
-  context: "#d9b8f4",
-};
-const recordColor = (kinds?: RecordKind[]) =>
-  (kinds?.[0] && colors[kinds[0]]) || "#ffad66";
+const nodeColor = (
+  node: GraphData["nodes"][number],
+  selected: string | null,
+  hasRetrieval: boolean,
+) =>
+  node.id === selected
+    ? "#ffffff"
+    : node.kind === "retrieved_chunk"
+      ? node.cited
+        ? "#ededed"
+        : "#b3b3b3"
+      : hasRetrieval
+        ? "#686868"
+        : node.kind === "concept"
+          ? "#ededed"
+          : node.kind === "node"
+            ? "#858585"
+            : "#b3b3b3";
 const typeName = (n: GraphData["nodes"][number]) =>
   n.kind === "retrieved_chunk"
     ? n.cited
@@ -45,6 +48,7 @@ export default function Graph({
   onPreview,
   selectedId,
   reduced,
+  active: isActive = true,
   fullStage = false,
   onToggleMotion,
   motionDisabled = false,
@@ -55,6 +59,7 @@ export default function Graph({
   onPreview?: (node: GraphData["nodes"][number]) => void;
   selectedId?: string | null;
   reduced: boolean;
+  active?: boolean;
   fullStage?: boolean;
   onToggleMotion?: () => void;
   motionDisabled?: boolean;
@@ -64,6 +69,7 @@ export default function Graph({
   const dataRef = useRef(data);
   dataRef.current = data;
   const updateData = useRef<((next: GraphData) => void) | null>(null);
+  const fitGraph = useRef<((duration: number) => void) | null>(null);
   const hasRetrieval = data.nodes.some(
     (node) => node.kind === "retrieved_chunk",
   );
@@ -83,6 +89,9 @@ export default function Graph({
   actions.current = { onSource, onConcept, onPreview };
   const reducedRef = useRef(reduced);
   reducedRef.current = reduced;
+  const isActiveRef = useRef(isActive);
+  isActiveRef.current = isActive;
+  const syncActivity = useRef<(() => void) | null>(null);
   const [failed, setFailed] = useState(false),
     [listOpen, setListOpen] = useState(false),
     [ready, setReady] = useState(false);
@@ -148,6 +157,7 @@ export default function Graph({
         const el = host.current;
         let previousView = "",
           layoutVersion = 0;
+        const degree = new Map<string, number>();
         const measurements = new Map<
           string,
           { width: number; height: number }
@@ -162,12 +172,12 @@ export default function Graph({
           .width(el.clientWidth)
           .height(el.clientHeight || 340)
           .nodeLabel(() => "")
-          .nodeColor((n) =>
-            n.kind === "concept"
-              ? "#c4b5fd"
-              : n.kind === "node"
-                ? "#7dd3fc"
-                : recordColor(n.kinds),
+          .nodeColor((node) =>
+            nodeColor(
+              node,
+              selection.current,
+              dataRef.current.nodes.some((n) => n.kind === "retrieved_chunk"),
+            ),
           )
           .nodeVal((n) =>
             n.kind === "concept"
@@ -180,7 +190,7 @@ export default function Graph({
           )
           .nodeRelSize(2.3)
           .nodeOpacity(0.95)
-          .linkColor(() => "rgba(193,207,228,.28)")
+          .linkColor(() => "rgba(179,179,179,.5)")
           .linkWidth(0.65)
           .linkOpacity(0.55)
           .enableNodeDrag(!reducedRef.current)
@@ -224,6 +234,11 @@ export default function Graph({
             graph.graphData().nodes.map((node) => [node.id, node]),
           );
           measurements.clear();
+          degree.clear();
+          for (const edge of next.edges) {
+            degree.set(edge.source, (degree.get(edge.source) || 0) + 1);
+            degree.set(edge.target, (degree.get(edge.target) || 0) + 1);
+          }
           previousView = "";
           layoutVersion++;
           fitted = false;
@@ -260,7 +275,10 @@ export default function Graph({
           y: 0,
           z: dataRef.current.nodes.length < 3 ? 170 : 300,
         });
-        function fitView() {
+        function fitView(focusEvidence = true, duration = 0) {
+          if (!el.clientWidth || !el.clientHeight) return;
+          const before = { ...graph.cameraPosition() };
+          const beforeTarget = { ...(controls.target || { x: 0, y: 0, z: 0 }) };
           const chunks = dataRef.current.nodes.filter(
             (node) => node.kind === "retrieved_chunk",
           );
@@ -271,12 +289,31 @@ export default function Graph({
             0,
             fullStage ? Math.min(el.clientWidth, el.clientHeight) * 0.2 : 55,
             (node) =>
+              !focusEvidence ||
               !chunks.length ||
               node.kind === "retrieved_chunk" ||
               (node.kind === "capture" &&
                 parents.has(node.source?.capture_id || node.id)),
           );
+          const position = { ...graph.cameraPosition() };
+          const target = { ...(controls.target || { x: 0, y: 0, z: 0 }) };
+          const distance = Math.hypot(
+            position.x - target.x,
+            position.y - target.y,
+            position.z - target.z,
+          );
+          // Sparse evidence should stay legible without filling the stage with spheres.
+          const minimum = Math.max(170, el.clientHeight * 0.8);
+          if (distance > 0 && distance < minimum) {
+            const scale = minimum / distance;
+            position.x = target.x + (position.x - target.x) * scale;
+            position.y = target.y + (position.y - target.y) * scale;
+            position.z = target.z + (position.z - target.z) * scale;
+          }
+          if (duration) graph.cameraPosition(before, beforeTarget, 0);
+          graph.cameraPosition(position, target, duration);
         }
+        fitGraph.current = (duration) => fitView(false, duration);
         graph.onEngineStop(() => {
           if (!active || fitted) return;
           fitted = true;
@@ -309,7 +346,8 @@ export default function Graph({
           }
         });
         function positionLabels() {
-          if (!active) return;
+          labelFrame = 0;
+          if (!active || !isActiveRef.current || document.hidden) return;
           const camera = graph.camera();
           const view =
             camera.matrixWorld.elements.join(",") +
@@ -332,31 +370,27 @@ export default function Graph({
               measuredSelection = selection.current;
             }
             const boxes: { x: number; y: number; w: number; h: number }[] = [];
-            const nodes = [...graph.graphData().nodes].sort((a, b) =>
-              a.id === selection.current
-                ? -1
-                : b.id === selection.current
+            const priority = (node: GraphNode) =>
+              node.id === selection.current
+                ? 0
+                : node.id === hovered.current
                   ? 1
-                  : a.id === hovered.current
-                    ? -1
-                    : b.id === hovered.current
-                      ? 1
-                      : a.kind === "retrieved_chunk" &&
-                          b.kind !== "retrieved_chunk"
-                        ? -1
-                        : b.kind === "retrieved_chunk" &&
-                            a.kind !== "retrieved_chunk"
-                          ? 1
-                          : a.cited && !b.cited
-                            ? -1
-                            : b.cited && !a.cited
-                              ? 1
-                              : a.kind === "concept"
-                                ? -1
-                                : b.kind === "concept"
-                                  ? 1
-                                  : 0,
+                  : node.kind === "retrieved_chunk"
+                    ? node.cited
+                      ? 2
+                      : 3
+                    : node.kind === "concept"
+                      ? 4
+                      : 5;
+            const nodes = [...graph.graphData().nodes].sort(
+              (a, b) =>
+                priority(a) - priority(b) ||
+                (degree.get(b.id) || 0) - (degree.get(a.id) || 0) ||
+                a.id.localeCompare(b.id),
             );
+            // Keep the map quiet without limiting selected, hovered or search evidence.
+            const ordinaryLimit = el.clientWidth < 600 ? 3 : 6;
+            let ordinaryCount = 0;
             for (const node of nodes) {
               const label = labelElements.current.get(node.id);
               if (!label) continue;
@@ -372,8 +406,21 @@ export default function Graph({
               };
               measurements.set(node.id, size);
               const { width, height } = size;
-              const x = point.x - width / 2,
-                y = point.y - height - 8;
+              const important = priority(node) < 4;
+              const centeredX = Math.max(
+                6,
+                Math.min(el.clientWidth - width - 6, point.x - width / 2),
+              );
+              const positions = [
+                { x: centeredX, y: point.y - height - 10 },
+                { x: centeredX, y: point.y + 10 },
+                ...(important
+                  ? [
+                      { x: point.x + 12, y: point.y - height / 2 },
+                      { x: point.x - width - 12, y: point.y - height / 2 },
+                    ]
+                  : []),
+              ];
               label.dataset.screenX = String(point.x);
               label.dataset.screenY = String(point.y);
               const inverse = camera.matrixWorldInverse.elements;
@@ -382,31 +429,66 @@ export default function Graph({
                 inverse[6] * (node.y || 0) +
                 inverse[10] * (node.z || 0) +
                 inverse[14];
-              const visible =
+              const eligible =
+                (important || ordinaryCount < ordinaryLimit) &&
                 cameraDepth < 0 &&
-                Number.isFinite(x) &&
-                Number.isFinite(y) &&
-                x >= 6 &&
-                x + width <= el.clientWidth - 6 &&
-                y >= 10 &&
-                y + height < el.clientHeight - 80 &&
-                !boxes.some(
-                  (box) =>
-                    y < box.y + box.h + 6 &&
-                    y + height + 6 > box.y &&
-                    x < box.x + box.w + 10 &&
-                    x + width + 10 > box.x,
-                );
-              label.style.opacity = visible ? "1" : "0";
+                point.x >= 0 &&
+                point.x <= el.clientWidth &&
+                point.y >= 0 &&
+                point.y <= el.clientHeight;
+              const placement = eligible
+                ? positions.find(
+                    ({ x, y }) =>
+                      Number.isFinite(x) &&
+                      Number.isFinite(y) &&
+                      x >= 6 &&
+                      x + width <= el.clientWidth - 6 &&
+                      y >= 10 &&
+                      y + height < el.clientHeight - 80 &&
+                      !boxes.some(
+                        (box) =>
+                          y < box.y + box.h + 6 &&
+                          y + height + 6 > box.y &&
+                          x < box.x + box.w + 10 &&
+                          x + width + 10 > box.x,
+                      ),
+                  )
+                : undefined;
+              const { x, y } = placement || positions[0];
+              label.style.opacity = placement ? "1" : "0";
               label.style.transform = `translate3d(${x}px,${y}px,0)`;
               label.dataset.highlighted = String(node.id === hovered.current);
               label.dataset.selected = String(node.id === selection.current);
-              if (visible) boxes.push({ x, y, w: width, h: height });
+              if (placement) {
+                boxes.push({ x, y, w: width, h: height });
+                if (!important) ordinaryCount++;
+              }
             }
           }
           labelFrame = requestAnimationFrame(positionLabels);
         }
-        labelFrame = requestAnimationFrame(positionLabels);
+        let animationRunning = true;
+        const updateActivity = () => {
+          if (!active) return;
+          if (isActiveRef.current && !document.hidden) {
+            if (!animationRunning) {
+              graph.resumeAnimation();
+              animationRunning = true;
+            }
+            previousView = "";
+            if (!labelFrame) labelFrame = requestAnimationFrame(positionLabels);
+          } else {
+            if (animationRunning) {
+              graph.pauseAnimation();
+              animationRunning = false;
+            }
+            cancelAnimationFrame(labelFrame);
+            labelFrame = 0;
+          }
+        };
+        syncActivity.current = updateActivity;
+        document.addEventListener("visibilitychange", updateActivity);
+        updateActivity();
 
         const contextLost = (event: Event) => {
           event.preventDefault();
@@ -419,11 +501,15 @@ export default function Graph({
           cancelAnimationFrame(readyFrame);
           cancelAnimationFrame(labelFrame);
           resize.disconnect();
+          document.removeEventListener("visibilitychange", updateActivity);
+          if (syncActivity.current === updateActivity)
+            syncActivity.current = null;
           canvas?.removeEventListener("webglcontextlost", contextLost);
           graph._destructor();
           if (instance.current === graph) {
             instance.current = null;
             updateData.current = null;
+            fitGraph.current = null;
           }
         };
       } catch {
@@ -435,6 +521,9 @@ export default function Graph({
       destroy?.();
     };
   }, [fullStage]);
+  useEffect(() => {
+    syncActivity.current?.();
+  }, [isActive]);
   useEffect(() => {
     updateData.current?.(data);
   }, [data]);
@@ -448,29 +537,15 @@ export default function Graph({
     const graph = instance.current;
     if (!graph) return;
     graph
-      .nodeColor((node) =>
-        node.id === selection.current
-          ? "#ffad66"
-          : node.kind === "retrieved_chunk"
-            ? node.cited
-              ? "#ffad66"
-              : "#80dce9"
-            : hasRetrieval
-              ? "#68727e"
-              : node.kind === "concept"
-                ? "#c4b5fd"
-                : node.kind === "node"
-                  ? "#7dd3fc"
-                  : recordColor(node.kinds),
-      )
+      .nodeColor((node) => nodeColor(node, selection.current, hasRetrieval))
       .linkColor((link) =>
         activeLinks(link)
-          ? "rgba(255,173,102,.85)"
+          ? "rgba(237,237,237,.9)"
           : link.kind === "retrieval"
-            ? "rgba(128,220,233,.6)"
+            ? "rgba(179,179,179,.7)"
             : selection.current || hasRetrieval
-              ? "rgba(193,207,228,.12)"
-              : "rgba(193,207,228,.28)",
+              ? "rgba(133,133,133,.2)"
+              : "rgba(179,179,179,.5)",
       )
       .linkWidth((link) =>
         activeLinks(link) ? 1.5 : link.kind === "retrieval" ? 1 : 0.65,
@@ -526,7 +601,10 @@ export default function Graph({
               {node.kind === "retrieved_chunk" ? (
                 <>
                   <small className="graph-label-context">
-                    <span>{node.capture_label}</span>
+                    <span className="graph-label-state">{typeName(node)}</span>
+                    <span className="graph-label-capture">
+                      {node.capture_label}
+                    </span>
                     {node.source?.body_start != null &&
                       node.source.body_end != null && (
                         <span className="graph-label-range">
@@ -581,7 +659,7 @@ export default function Graph({
               </>
             )}
           </div>
-          <div className="graph-controls glass" aria-label="그래프 보기 조절">
+          <div className="graph-controls" aria-label="그래프 보기 조절">
             {onToggleMotion && (
               <Tooltip content={reduced ? "모션 켜기" : "모션 일시정지"}>
                 <IconButton
@@ -619,17 +697,7 @@ export default function Graph({
                 variant="ghost"
                 aria-label="그래프 화면 맞추기"
                 disabled={!ready || failed}
-                onClick={() =>
-                  instance.current?.zoomToFit(
-                    reduced ? 0 : 300,
-                    host.current
-                      ? Math.min(
-                          host.current.clientWidth,
-                          host.current.clientHeight,
-                        ) * 0.2
-                      : 80,
-                  )
-                }
+                onClick={() => fitGraph.current?.(reduced ? 0 : 300)}
               >
                 <Crosshair />
               </IconButton>
@@ -651,7 +719,7 @@ export default function Graph({
       )}
       {(!fullStage || listOpen) && (
         <div
-          className={`graph-list ${fullStage ? "glass" : ""}`}
+          className="graph-list"
           aria-label="연결된 지식"
           id={listId}
           role="region"

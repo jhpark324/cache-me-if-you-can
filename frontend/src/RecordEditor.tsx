@@ -170,7 +170,7 @@ export default function RecordEditor({
               opener.current?.isConnected &&
               !opener.current.closest('[role="dialog"][data-state="closed"]')
                 ? opener.current
-                : document.getElementById("create-record");
+                : document.getElementById("main");
             target?.focus();
           }
         }}
@@ -281,6 +281,8 @@ export default function RecordEditor({
               <label className="field">
                 공개 범위
                 <select
+                  aria-label="공개 범위"
+                  aria-describedby="visibility-hint"
                   disabled={busy}
                   value={visibility}
                   onChange={(e) =>
@@ -290,13 +292,14 @@ export default function RecordEditor({
                   <option value="public">공개</option>
                   <option value="private">비공개</option>
                 </select>
-                <span className="field-hint">
+                <span className="field-hint" id="visibility-hint">
                   현재는 내 기기에서만 사용합니다.
                 </span>
               </label>
               <label className="field">
                 완료 상태
                 <select
+                  aria-label="완료 상태"
                   disabled={busy}
                   value={completion}
                   onChange={(e) => setCompletion(e.target.value)}

@@ -40,7 +40,7 @@ def main():
         execute(base + ['second-brain'])
     elif args.action == 'install-codex':
         execute(base + ['python', '-m', 'second_brain.codex_integration', 'install',
-                        '--skill-source', str(ROOT / 'docs/skills/second-brain/SKILL.md')]
+                        '--skill-source', str(ROOT / 'docs/skills/cache-me/SKILL.md')]
                 + (['--replace'] if args.replace else []))
     elif args.action == 'check':
         execute([sys.executable, str(ROOT / 'scripts' / 'preflight.py')])

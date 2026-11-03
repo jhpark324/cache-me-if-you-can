@@ -1,10 +1,10 @@
 # MCP·웹 서비스 계약
 
-- 상태: 002·004 구현에 반영한 공통 계약. 실제 검증 범위는 [004 검증](../specs/004-local-runtime/validation.md) 참조
+- 상태: 현재 공통 서비스 계약. 검증 절차는 [검증 안내](../guides/testing.md) 참조
 - 작성일: 2026-11-02
 - 기준: [데이터 스키마](data-schema.md), [지식 계층](knowledge-layer.md), [검색과 맥락 선택](retrieval-and-context.md), [MCP v2 채택](../decisions/ADR-005-mcp-python-sdk-v2.md)
 
-MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 사용한다. 별도 구현마다 삭제·버전·공개 범위 규칙을 다르게 만들지 않는다. 생성된 OpenAPI와 MCP 입출력 스키마, 자동·실제 연결 검증은 004에서 관리한다.
+MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 사용한다. 별도 구현마다 삭제·버전·공개 범위 규칙을 다르게 만들지 않는다. 생성된 OpenAPI와 MCP 입출력 스키마는 서버 구현이 기준이며, 자동·실제 연결 확인 절차는 검증 안내에서 관리한다.
 
 ## MCP 실행 기준
 
@@ -13,7 +13,7 @@ MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 �
 - `from mcp.server import MCPServer`와 Streamable HTTP를 사용한다. MCP endpoint는 `/mcp`, 웹 API는 `/api/v1`을 기준으로 분리한다.
 - `streamable_http_app()`로 만든 ASGI 앱을 FastAPI에 통합하고 최상위 lifespan에서 `mcp.session_manager.run()`을 실행한다. 경로가 `/mcp/mcp`가 되거나 하위 lifespan이 누락되지 않게 한다.
 - SDK는 현재 규격과 이전 클라이언트 규격을 지원한다. 실제 Codex 연결에서 사용한 규격과 도구·사용자 확인 기능을 검증한다. SDK v2 설치만으로 Codex의 기능 지원을 보장하지 않는다.
-- 삭제 확인을 위해 HTTP 응답은 SSE를 사용한다. Codex 0.164.0 폼 호환을 위해 선택적인 루트 스키마 title은 제거하며 필수 확인 값은 유지한다. [호환성 근거와 검증](../specs/004-local-runtime/codex-integration.md)을 따른다.
+- 삭제 확인을 위해 HTTP 응답은 SSE를 사용한다. Codex 0.164.0 폼 호환을 위해 선택적인 루트 스키마 title은 제거하며 필수 확인 값은 유지한다. [호환성 근거와 검증](../specs/cache-me.md)을 따른다.
 
 프로토콜 세부 메시지·호환 처리는 SDK에 맡긴다. 현재 규격의 stateless 요청 구조를 저장소 트랜잭션이나 단일 검색의 실행 중 메모리 상태가 없어야 한다는 뜻으로 해석하지 않는다. [공식 v2 안내](https://py.sdk.modelcontextprotocol.io/whats-new/), [ASGI 통합](https://py.sdk.modelcontextprotocol.io/run/asgi/), [규격 호환](https://py.sdk.modelcontextprotocol.io/protocol-versions/)
 
@@ -143,7 +143,7 @@ review_state는 서버가 전체 현재 출처로 계산하며 클라이언트�
 
 관계 승계·철회와 supersedes 적용은 [검색과 맥락 선택](retrieval-and-context.md)을 따른다.
 
-실패한 자동 주제 작업의 명시적 재시도는 MCP `capture_retry_concepts`와 `POST /api/v1/captures/{id}/concept-retry`로 제공한다. `RetryConceptsInput`은 `request_id`, `capture_id`, `ExpectedVersion`, `job_id`를 받으며 현재 failed 작업만 pending으로 전환한다. 본문/revision/state_version은 유지하고 `MutationResult`를 반환한다. 같은 요청은 영수증으로 재생하며 `JOB_NOT_RETRYABLE`은 HTTP 409다. [운영 후속 계약](../specs/004-local-runtime/operations-followup.md)에 lease·경합·취소·로그인 시도 취소 API의 상세를 둔다.
+실패한 자동 주제 작업의 명시적 재시도는 MCP `capture_retry_concepts`와 `POST /api/v1/captures/{id}/concept-retry`로 제공한다. `RetryConceptsInput`은 `request_id`, `capture_id`, `ExpectedVersion`, `job_id`를 받으며 현재 failed 작업만 pending으로 전환한다. 본문/revision/state_version은 유지하고 `MutationResult`를 반환한다. 같은 요청은 영수증으로 재생하며 `JOB_NOT_RETRYABLE`은 HTTP 409다. [운영 후속 계약](../specs/runtime.md)에 lease·경합·취소·로그인 시도 취소 API의 상세를 둔다.
 
 ## 도구와 웹 경로
 
@@ -202,7 +202,7 @@ Codex의 실제 확인 지원과 Skill 재질문 응답의 연결은 연동 시�
 
 `GraphView`는 `nodes[]`, `edges[]`, `truncated: bool`을 갖는다. 홈 개요와 선택 기록의 1홉 탐색 모두 최대 50개 노드/100개 관계로 제한하고 상한으로 잘렸음을 표시한다. 노드는 `kind: capture | concept | node`, 안정적인 도메인 ID, 표시 이름, 필요한 SourceRef로 구성한다. Capture 노드에는 표시용 기록 유형 `kinds[]`도 반환한다. 관계는 끝점 ID·종류·방향·근거 참조를 갖는다. 표시할 수 없는 기록의 이름·연결을 우회 노출하지 않는다. 3D 좌표·색상·패널 위치는 지식 스키마의 필수 필드로 만들지 않고 별도 화면 설계에서 다룬다.
 
-홈의 `GET /api/v1/graph`는 반복 쿼리 매개변수 `kinds`, `concept_ids`를 받는다. 최근 현재 기록을 시작점으로 SQLite의 실제 주제 연결·Node·명시적 관계를 반환하며 임베딩 준비 상태와 독립적으로 동작한다. 후보·출처 검증에도 예산을 적용하고 생략이 있으면 `truncated=true`로 알린다. 필터를 벗어난 기록을 관계 확장으로 되살리지 않는다. 페이지 커서나 전체 개수는 반환하지 않으며 필터·검색·선택 기록 주변 탐색으로 범위를 좁힌다. 상세 동작과 화면 수용 기준은 [홈 그래프 개선](../specs/004-local-runtime/home-graph-refresh.md)을 따른다.
+홈의 `GET /api/v1/graph`는 반복 쿼리 매개변수 `kinds`, `concept_ids`를 받는다. 최근 현재 기록을 시작점으로 SQLite의 실제 주제 연결·Node·명시적 관계를 반환하며 임베딩 준비 상태와 독립적으로 동작한다. 후보·출처 검증에도 예산을 적용하고 생략이 있으면 `truncated=true`로 알린다. 필터를 벗어난 기록을 관계 확장으로 되살리지 않는다. 페이지 커서나 전체 개수는 반환하지 않으며 필터·검색·선택 기록 주변 탐색으로 범위를 좁힌다. 상세 동작과 화면 수용 기준은 [홈 그래프 개선](../specs/workspace.md)을 따른다.
 
 `ContextInput`은 검색용 query·동일 필터, 선택적 subject_hint/situation_hint/as_of, limit(기본 10, 최대 10개 기록)을 받는다. 힌트는 검증된 사실이나 권한이 아니다. knowledge_context도 64토큰을 넘는 query를 거부한다.
 
@@ -218,7 +218,7 @@ Codex의 실제 확인 지원과 Skill 재질문 응답의 연결은 연동 시�
 
 최종 전송 전 미인용 근거도 현재 revision·삭제·검토 상태·버전을 다시 확인한다. 무효 미인용 근거는 제외하고 `truncated=true`로 표시한다. 인용된 근거가 바뀌면 기존 답변 실패/무효화 처리를 유지한다. 본문 범위는 검색 시 맥락 확장으로 원래 임베딩 청크보다 넓을 수 있다.
 
-웹은 완료된 답변에 묶인 임시 청크 노드와 부모 연결을 기존 홈 그래프에 겹쳐 표시한다. 정본 그래프의 50노드/100간선에 최대 20개 청크·10개 부모 기록·20개 연결만 추가한다. 데이터베이스에 Node나 Relation을 저장하지 않으며 새 질문·닫기·실패·취소·필터/기록 변경 시 제거한다. 이전 응답에 이 필드가 없으면 홈 그래프만 유지한다. [화면·정확한 구간 선택 수용 기준](../specs/004-local-runtime/retrieval-graph.md)
+웹은 완료된 답변에 묶인 임시 청크 노드와 부모 연결을 기존 홈 그래프에 겹쳐 표시한다. 정본 그래프의 50노드/100간선에 최대 20개 청크·10개 부모 기록·20개 연결만 추가한다. 데이터베이스에 Node나 Relation을 저장하지 않으며 새 질문·닫기·실패·취소·필터/기록 변경 시 제거한다. 이전 응답에 이 필드가 없으면 홈 그래프만 유지한다. [화면·정확한 구간 선택 수용 기준](../specs/workspace.md)
 
 ## 오류와 재시도
 

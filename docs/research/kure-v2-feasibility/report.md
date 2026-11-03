@@ -137,4 +137,4 @@ snapshot_download(
 "$HOME/.cache/second-brain/kure-v2-feasibility/venv/bin/python" docs/research/kure-v2-feasibility/check_runtime.py
 ```
 
-실행 로그에는 기존 `create_fts_index` 및 score column 자동 포함 API의 deprecated 경고가 있다. 이번 고정 버전에서는 동작했으며 제품 구현에서는 `create_index(config=FTS(...))`와 명시적 score projection을 사용해 다시 검증한다. 로그 원문은 [본 실행](run.log)과 [보완 실행](runtime-checks.log)에 보존했다.
+연구 스크립트는 고정한 패키지의 `create_fts_index`와 score column 자동 포함 API를 사용한다. 새 버전으로 재현할 때는 deprecation과 API 차이를 확인해야 한다. 현재 제품의 구현·성능을 이 연구 실행 결과로 대신하지 않는다.

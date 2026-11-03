@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -18,6 +19,13 @@ from .brand import PRODUCT_NAME
 
 START = '# BEGIN SECOND BRAIN MANAGED MCP\n'
 END = '# END SECOND BRAIN MANAGED MCP\n'
+SKILL_NAME = 'cache-me'
+SKILL_SLUG = 'cache-me'
+# Only this project's unmodified previous releases are eligible for automatic migration.
+LEGACY_SKILLS_SHA256 = {
+    'second-brain': frozenset({'7fedb37a9057bcc7fa0f9b5b36893d5ae52dc23cf6c48de5a07fe9257e416590'}),
+    'cacheme': frozenset({'e585fd63752ddf758a45d0cf5a77db338a0c22d7a40c40ee6a89b018baa3f96c'}),
+}
 
 
 def header_value(data_dir: Path) -> dict[str, str]:
@@ -90,19 +98,70 @@ def atomic_write(path: Path, value: str) -> None:
 
 def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool = False) -> dict:
     config = codex_home / 'config.toml'
-    skill = codex_home / 'skills' / 'second-brain' / 'SKILL.md'
-    canonical = skill_source.read_text(encoding='utf-8')
+    package = codex_home / 'skills' / SKILL_SLUG
+    skill = package / 'SKILL.md'
+    artifacts = {skill: skill_source.read_text(encoding='utf-8')}
+    metadata_source = skill_source.parent / 'agents' / 'openai.yaml'
+    metadata = package / 'agents' / 'openai.yaml'
+    if metadata_source.exists():
+        artifacts[metadata] = metadata_source.read_text(encoding='utf-8')
     codex_home.mkdir(parents=True, exist_ok=True)
     with FileLock(str(codex_home / '.second-brain-install.lock')):
         original = config.read_text(encoding='utf-8') if config.exists() else ''
         result = updated_config(original, server, replace=replace)
-        if skill.exists() and skill.read_text(encoding='utf-8') != canonical and not replace:
-            raise ValueError(f'설치된 {PRODUCT_NAME} 스킬이 다릅니다. 확인 후 --replace를 사용하세요.')
-        # Check all conflicts before writing either artifact.
-        atomic_write(skill, canonical)
+
+        def check_directory(path: Path) -> None:
+            for parent in (path, *path.parents):
+                if parent == codex_home:
+                    break
+                if parent.is_symlink() or (parent.exists() and not parent.is_dir()):
+                    raise ValueError(f'설치 경로가 일반 디렉터리가 아닙니다: {parent}')
+
+        writes = {}
+        for path, canonical in artifacts.items():
+            check_directory(path.parent)
+            installed = path.read_text(encoding='utf-8') if path.exists() else None
+            if installed != canonical:
+                if path.exists() and not replace:
+                    raise ValueError(f'설치된 {SKILL_NAME} 파일이 다릅니다: {path}. 확인 후 --replace를 사용하세요.')
+                writes[path] = canonical
+
+        legacy_statuses = {}
+        migrations = []
+        for slug, known_fingerprints in LEGACY_SKILLS_SHA256.items():
+            legacy = codex_home / 'skills' / slug
+            legacy_skill = legacy / 'SKILL.md'
+            legacy_status = {'status': 'absent', 'path': str(legacy)}
+            legacy_statuses[slug] = legacy_status
+            if legacy.exists() or legacy.is_symlink():
+                legacy_status['status'] = 'preserved'
+                if legacy.is_dir() and not legacy.is_symlink() and legacy_skill.is_file() and not legacy_skill.is_symlink():
+                    fingerprint = hashlib.sha256(legacy_skill.read_bytes()).hexdigest()
+                    if fingerprint in known_fingerprints:
+                        backups = codex_home / '.skill-backups'
+                        check_directory(backups)
+                        stem = f'{slug}-{fingerprint[:12]}'
+                        backup = backups / stem
+                        suffix = 1
+                        while backup.exists() or backup.is_symlink():
+                            backup = backups / f'{stem}-{suffix}'
+                            suffix += 1
+                        migrations.append((legacy, backup, legacy_status))
+
+        # Preflight the whole package, config, and migration before changing any of them.
+        for path, canonical in writes.items():
+            atomic_write(path, canonical)
         if result != original:
             atomic_write(config, result)
+        for legacy, backup, legacy_status in migrations:
+            backup.parent.mkdir(parents=True, exist_ok=True)
+            legacy.rename(backup)
+            legacy_status.update(status='backed_up', backup=str(backup))
     return {'config': str(config), 'skill': str(skill), 'server': 'second_brain',
+            'skill_name': SKILL_NAME, 'skill_slug': SKILL_SLUG,
+            'metadata': str(metadata) if metadata in artifacts else None,
+            'legacy_skill': legacy_statuses['second-brain'],
+            'legacy_skills': legacy_statuses,
             'restart_required': True}
 
 
@@ -122,7 +181,7 @@ def main() -> None:
             print(json.dumps(header_value(data_dir)))
             return
         home = args.codex_home or Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
-        source = args.skill_source or Path(__file__).resolve().parents[3] / 'docs/skills/second-brain/SKILL.md'
+        source = args.skill_source or Path(__file__).resolve().parents[3] / 'docs/skills' / SKILL_SLUG / 'SKILL.md'
         header_value(data_dir)  # Validate existence without printing or copying the secret.
         result = install(home, source, server_config(Path(sys.executable), data_dir, settings.port), replace=args.replace)
         print(json.dumps(result, ensure_ascii=False))

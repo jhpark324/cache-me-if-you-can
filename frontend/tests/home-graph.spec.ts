@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openHome, openLibrary } from "./navigation";
 const stamp = "2026-11-02T00:00:00Z";
 const titles = [
   "트랜잭션과 원자성",
@@ -73,13 +74,22 @@ async function fixture(page: Page, empty = false) {
     if (path === "/session") return send({ csrf_token: "csrf" });
     if (path === "/concepts")
       return send({ items: concepts, next_cursor: null });
-    if (path === "/captures")
+    if (path === "/captures") {
+      if (u.searchParams.get("kinds") === "knowledge")
+        await new Promise((resolve) => setTimeout(resolve, 350));
       return send({
         items: empty
           ? []
-          : records.map((r) => ({ ...r, excerpt: r.body_markdown })),
+          : records
+              .filter(
+                (r) =>
+                  !u.searchParams.get("kinds") ||
+                  r.kinds.includes(u.searchParams.get("kinds")!),
+              )
+              .map((r) => ({ ...r, excerpt: r.body_markdown })),
         next_cursor: null,
       });
+    }
     if (path === "/graph") {
       if (u.searchParams.get("kinds") === "knowledge")
         await new Promise((resolve) => setTimeout(resolve, 350));
@@ -188,16 +198,26 @@ test("홈 canvas가 검색·출처에서 유지되고 검색 위치·키보드 �
   await expect(page.locator(".source-panel")).toContainText(records[0].title);
   expect(errors).toEqual([]);
 });
-test("빠른 필터 변경은 이전 그래프 결과를 무시한다", async ({ page }) => {
+test("빠른 목록 필터는 이전 결과를 무시하고 홈 그래프와 질문은 전체 범위를 유지한다", async ({
+  page,
+}) => {
   const calls = await fixture(page);
   await page.goto("/");
   await ready(page);
+  await openLibrary(page);
   await page
     .getByRole("combobox", { name: "기록 유형", exact: true })
     .selectOption("knowledge");
   await page
     .getByRole("combobox", { name: "기록 유형", exact: true })
     .selectOption("episode");
+  await expect(page.locator(".rb-record")).toHaveCount(3);
+  await expect(page.locator(".record-browser")).toContainText(records[1].title);
+  await page.waitForTimeout(500);
+  await expect(page.locator(".record-browser")).not.toContainText(
+    records[0].title,
+  );
+  await openHome(page);
   await ready(page);
   await page
     .getByRole("button", { name: "연결 목록 보기", exact: true })
@@ -205,9 +225,27 @@ test("빠른 필터 변경은 이전 그래프 결과를 무시한다", async ({
   await expect(
     page.getByRole("region", { name: "지식 연결 지도" }),
   ).toContainText(records[1].title);
-  await page.waitForTimeout(500);
-  await expect(page.locator(".graph-list")).not.toContainText(records[0].title);
-  expect(calls.some((c) => c.includes("kinds=episode"))).toBe(true);
+  await expect(page.locator(".graph-list")).toContainText(records[0].title);
+  expect(
+    calls.some(
+      (c) => c.startsWith("/captures?") && c.includes("kinds=episode"),
+    ),
+  ).toBe(true);
+  expect(
+    calls
+      .filter((c) => c.startsWith("/graph"))
+      .every((c) => !c.includes("kinds=")),
+  ).toBe(true);
+  const question = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/v1/questions",
+  );
+  await page
+    .getByRole("textbox", { name: "저장된 지식 검색 또는 질문" })
+    .fill("전체 저장소에 질문");
+  await page.getByRole("button", { name: "검색", exact: true }).click();
+  const payload = (await question).postDataJSON();
+  expect(payload.kinds).toBeUndefined();
+  expect(payload.concept_ids).toBeUndefined();
 });
 test("빈 저장소는 무대를 유지하고 목데이터 없이 첫 기록을 시작한다", async ({
   page,
@@ -248,7 +286,12 @@ test("모바일 그래프·메뉴·출처는 가로 넘침 없이 열리고 축�
   ).toHaveCount(0);
   await page.screenshot({ path: "test-results/home-graph-mobile.png" });
   await page.getByRole("button", { name: "메뉴 열기" }).click();
-  await expect(page.getByRole("heading", { name: "최근 기록" })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "모든 기록", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "타임라인", exact: true }),
+  ).toBeVisible();
   await page.keyboard.press("Escape");
   await page
     .getByRole("textbox", { name: "저장된 지식 검색 또는 질문" })
@@ -341,8 +384,9 @@ test("기록을 바꾸면 이전 주변 그래프 응답이 새 상세에 나타
   await page
     .getByRole("button", { name: "주변 지식 보기", exact: true })
     .click();
+  await openLibrary(page);
   await page
-    .locator(".record-row")
+    .locator(".rb-record")
     .filter({ hasText: records[1].title })
     .click();
   await expect(page.locator(".record-detail h1")).toHaveText(records[1].title);

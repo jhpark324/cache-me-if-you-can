@@ -61,7 +61,7 @@ class Codex:
 
     async def turn(self, thread_id, prompt, skill):
         await self.call('turn/start', {'threadId': thread_id, 'input': [
-            {'type': 'text', 'text': prompt}, {'type': 'skill', 'name': 'second-brain', 'path': str(skill)}]})
+            {'type': 'text', 'text': prompt}, {'type': 'skill', 'name': 'cache-me', 'path': str(skill)}]})
         while True:
             line = await asyncio.wait_for(self.process.stdout.readline(), 180)
             if not line:
@@ -115,7 +115,7 @@ async def run(args):
                         await asyncio.sleep(.25)
                     else:
                         raise RuntimeError('Isolated server did not start')
-                install(home, ROOT / 'docs/skills/second-brain/SKILL.md',
+                install(home, ROOT / 'docs/skills/cache-me/SKILL.md',
                         server_config(Path(sys.executable), data, args.port))
                 command = [shutil.which('codex'), 'app-server']
                 codex_env = dict(env, CODEX_HOME=str(home))
@@ -143,7 +143,7 @@ async def run(args):
                 inventory = await codex.call('mcpServerStatus/list', {'threadId': thread_id,
                     'serverName': 'second_brain', 'detail': 'toolsAndAuthOnly'})
                 skills = await codex.call('skills/list', {'cwds': [str(temp)], 'forceReload': True})
-                assert any(skill.get('name') == 'second-brain' and skill.get('enabled') is True
+                assert any(skill.get('name') == 'cache-me' and skill.get('enabled') is True
                            for group in skills.get('data', []) for skill in group.get('skills', [])), 'Installed skill not discovered'
 
                 async def tool(name, arguments):
@@ -180,14 +180,16 @@ async def run(args):
                 assert len(codex.confirmations) == 1 and codex.confirmations[0]['action'] == 'decline'
                 assert (await tool('capture_get', {'capture_id': record['id']}))['ok']
                 if args.model_turn:
-                    skill_path = ROOT / 'docs/skills/second-brain/SKILL.md'
+                    skill_path = ROOT / 'docs/skills/cache-me/SKILL.md'
                     model_thread = await codex.call('thread/start', {'cwd': str(temp), 'ephemeral': True,
                         'approvalPolicy': 'on-request', 'sandbox': 'workspace-write'})
                     model_thread_id = model_thread['thread']['id']
-                    await codex.turn(model_thread_id, '$second-brain 격리된 검증 저장소의 기록 ' + record['id'] +
+                    await codex.turn(model_thread_id, 'cache-me, 격리된 검증 저장소의 기록 ' + record['id'] +
                         '을 삭제해줘. 도구의 삭제 재확인으로 처리해. 다른 기록은 건드리지 마.', skill_path)
                     read_after = await tool('capture_get', {'capture_id': record['id']})
                     deleted = {'ok': not read_after['ok']}
+                elif args.decline_only:
+                    deleted = {'ok': False}
                 else:
                     deleted = await tool('capture_delete', {'input': deletion})
                 read_after = await tool('capture_get', {'capture_id': record['id']})
@@ -199,7 +201,7 @@ async def run(args):
                 summary = {'client': 'actual Codex app-server', 'isolated_storage': True,
                     'skill_discovered': True, 'mcp_config_contains_credentials': False,
                     'create_update_read': 'passed', 'decline_preserves_record': True,
-                    'delete': 'passed' if deleted['ok'] else 'human_declined',
+                    'delete': 'not_executed_decline_only' if args.decline_only else ('passed' if deleted['ok'] else 'human_declined'),
                     'confirmation_events': codex.confirmations,
                     'inventory_server_count': len(inventory.get('data', [])),
                     'desktop_native_form_rendering': 'not_tested'}
@@ -220,7 +222,11 @@ async def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=0, help='기본값은 사용 가능한 임시 포트')
+    parser.add_argument('--decline-only', action='store_true', help='삭제 거부와 원문 보존까지만 확인; 삭제를 승인하지 않음')
     parser.add_argument('--human', action='store_true', help='삭제 승인에 실제 stdin 응답 사용')
     parser.add_argument('--model-turn', action='store_true', help='실제 Codex 모델 turn에서 스킬과 삭제 재확인 검증')
     parser.add_argument('--output', type=Path, default=Path(tempfile.gettempdir()) / 'second-brain-codex-check.json')
-    asyncio.run(run(parser.parse_args()))
+    args = parser.parse_args()
+    if args.decline_only and args.model_turn:
+        parser.error('--decline-only는 --model-turn과 함께 사용할 수 없습니다.')
+    asyncio.run(run(args))

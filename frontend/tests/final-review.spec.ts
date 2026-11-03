@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLibrary } from "./navigation";
 
 const record = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -37,7 +38,7 @@ async function baseFixture(page: Page) {
   });
 }
 
-test("home concepts include all pages and disambiguate duplicate names", async ({
+test("library concepts include all pages and disambiguate duplicate names", async ({
   page,
 }) => {
   await baseFixture(page);
@@ -65,6 +66,7 @@ test("home concepts include all pages and disambiguate duplicate names", async (
     });
   });
   await page.goto("/");
+  await openLibrary(page);
   const select = page.getByRole("combobox", { name: "주제", exact: true });
   await expect(select.locator("option")).toHaveCount(102);
   await expect(select.locator('option[value="last"]')).toHaveText(
@@ -109,6 +111,7 @@ test("concept load failures are visible and recoverable without reloading record
     ),
   );
   await page.goto("/");
+  await openLibrary(page);
   await expect(page.getByRole("alert")).toContainText(
     "주제를 불러오지 못했습니다",
   );
@@ -122,7 +125,7 @@ test("concept load failures are visible and recoverable without reloading record
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
-test("saving a record refreshes its new concepts in the home filter", async ({
+test("saving a record refreshes its new concepts in the library filter", async ({
   page,
 }) => {
   await baseFixture(page);
@@ -149,12 +152,14 @@ test("saving a record refreshes its new concepts in the home filter", async ({
     });
   });
   await page.goto("/");
+  await openLibrary(page);
   await page.getByRole("button", { name: "새 기록", exact: true }).click();
   await page.getByLabel("내용", { exact: true }).fill(record.body_markdown);
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: record.title, exact: true }),
   ).toBeVisible();
+  await openLibrary(page);
   await expect(
     page
       .getByRole("combobox", { name: "주제", exact: true })
@@ -186,7 +191,14 @@ test("completed automatic classification refreshes the concept filter", async ({
     return route.fulfill({ json: success(capture) });
   });
   await page.goto("/");
+  await openLibrary(page);
   await page.getByRole("button", { name: new RegExp(record.title) }).click();
+  await expect(page.locator(".record-detail h1")).toHaveText(record.title);
+  await expect(page.locator(".record-detail")).not.toContainText(
+    "저장한 기록의 주제를 연결하고 있어요.",
+    { timeout: 8000 },
+  );
+  await openLibrary(page);
   await expect(
     page
       .getByRole("combobox", { name: "주제", exact: true })
@@ -207,6 +219,7 @@ test("back during a detail request clears loading and ignores the late record", 
     await route.fulfill({ json: success(record) });
   });
   await page.goto("/");
+  await openLibrary(page);
   await page.getByRole("button", { name: new RegExp(record.title) }).click();
   await expect(page).toHaveURL(new RegExp(`#capture/${record.id}`));
   await expect(page.getByRole("main")).toContainText("기록을 불러오는 중");
@@ -374,6 +387,7 @@ test("a late delete preview cannot reopen after navigating home", async ({
     });
   });
   await page.goto("/");
+  await openLibrary(page);
   await page.getByRole("button", { name: new RegExp(record.title) }).click();
   await page.getByRole("button", { name: "기록 삭제", exact: true }).click();
   await page

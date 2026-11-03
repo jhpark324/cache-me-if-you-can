@@ -13,6 +13,18 @@ spec.loader.exec_module(manage)
 
 
 class ManageTests(unittest.TestCase):
+    def test_install_codex_passes_canonical_package_and_optional_replace(self):
+        for replace in (False, True):
+            with self.subTest(replace=replace), \
+                    patch.object(sys, 'argv', ['manage.py', 'install-codex'] + (['--replace'] if replace else [])), \
+                    patch.object(manage, 'executable', return_value='/tools bin/uv'), \
+                    patch.object(manage, 'execute') as execute:
+                manage.main()
+                command = execute.call_args.args[0]
+                self.assertEqual(command[command.index('--skill-source') + 1], str(manage.ROOT / 'docs/skills/cache-me/SKILL.md'))
+                self.assertEqual('--replace' in command, replace)
+                self.assertIn('second_brain.codex_integration', command)
+
     def test_setup_preserves_spaced_posix_and_windows_paths_and_locked_install(self):
         # PureWindowsPath checks argument construction on any host, not whether
         # Windows can execute npm.cmd or its native embedding dependencies.

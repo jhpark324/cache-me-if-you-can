@@ -2,10 +2,10 @@
 
 에이전트가 짧은 검색 결과에서 출발해 필요한 기록과 연결만 읽을 수 있도록 구성한다. 사용자가 저장한 정리본을 중심에 두고, 세부 지식·주제·관계와 검색 색인을 분리한다.
 
-- 상태: 002·004에 구현한 지식 계층 기준. 실제 검증과 잔여 관문은 [004 최종 점검](../specs/004-local-runtime/final-review.md) 참조
-- 기준: [현재 제품 기획](../project/product-brief.md), [초기 보고서의 데이터 모델](../research/second-brain-report-v1.html#data-model)과 [검색 설계](../research/second-brain-report-v1.html#retrieval)
+- 상태: 현재 지식 계층의 공통 의미와 불변 조건. 검증 절차는 [검증 안내](../guides/testing.md) 참조
+- 기준: [현재 제품 개요](../project/product-brief.md), [데이터 스키마](data-schema.md), [검색 설계](search-and-embedding.md)
 
-계층을 실제 필드·타입·제약으로 옮긴 문서는 [데이터 스키마 초안](data-schema.md), MCP·웹에서 사용하는 입력·출력은 [공통 서비스 계약](service-contracts.md)에 둔다. 실제 ORM·마이그레이션·서비스는 구현되어 있다. 아래는 공통 의미와 불변 조건이며, 현재 모듈·저장 관계는 [구현 구조](current-system.md), 검증 범위는 004가 기준이다.
+계층을 실제 필드·타입·제약으로 옮긴 문서는 [데이터 스키마](data-schema.md), MCP·웹에서 사용하는 입력·출력은 [공통 서비스 계약](service-contracts.md)에 둔다. 실제 ORM·마이그레이션·서비스는 구현되어 있다. 아래는 공통 의미와 불변 조건이며, 현재 모듈·저장 관계는 [구현 구조](current-system.md), 실행 검증은 [검증 안내](../guides/testing.md)를 따른다.
 
 ## 계층과 역할
 

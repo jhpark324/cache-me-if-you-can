@@ -1,6 +1,6 @@
 # 기록 유형과 에이전트의 활용 맥락
 
-- 상태: 2026-11-02 사용자 결정으로 9종에서 6종으로 단순화, 구현·검증은 [후속 명세](../specs/004-local-runtime/record-kinds-and-scenarios.md)에서 관리
+- 상태: 현재 여섯 RecordKind의 의미와 분류 기준. [기록 명세](../specs/records.md), [고정 합성 예제](../examples/conversations/index.md) 참조
 - 관련: [제품 기획](product-brief.md), [저장 스키마](../architecture/data-schema.md), [본문 작성 규칙](../architecture/record-body-format.md)
 
 기록 유형은 정리본을 나중에 어떤 목적으로 꺼내 쓸지 나타내는 큰 분류다. 주제·진실성·채택 여부·현재 유효성·실행 권한을 유형 하나로 결정하지 않는다. 업무·공부·여행 같은 분야는 Concept로 다루고, 문장/구간의 의미는 선택적 Node로 표현한다.
@@ -18,18 +18,18 @@
 
 유형 없이 `[]`로 저장하는 짧은 메모도 정상 경로다. `memo`·`other`를 별도 값으로 늘리지 않는다. 주된 목적과 분명한 부목적만 붙이고 복수 유형을 허용한다. 예를 들어 오류 원인과 실행 경험을 함께 정리하면 `knowledge + episode`가 가능하다. 같은 내용을 유형마다 복제 저장하지 않는다.
 
-## 단순화한 이유와 호환
+## 분류 기준과 입력 정규화
 
-초기 9종은 다양한 재사용 목적을 구별하려는 설계였다. 현재 MVP에서는 개념과 방법, 사건과 성찰, 구상과 계획이 한 기록에 자주 함께 있어 선택·필터·작성 템플릿의 복잡도를 줄이기로 했다. 결정과 맥락, 원문 재사용 자료는 후속 에이전트가 다르게 읽어야 하므로 유지한다. 6종이 모든 사용자에게 최적이라는 실험 결과를 주장하지 않는다.
+개념과 방법, 사건과 성찰, 구상과 계획은 한 기록에서 함께 사용할 수 있도록 같은 유형으로 묶는다. 결정과 맥락, 원문 재사용 자료는 후속 에이전트가 다르게 읽어야 하므로 유지한다. 6종이 모든 사용자에게 최적이라는 실험 결과를 주장하지 않는다.
 
-| 과거 값 | 현재 해석 |
+| 호환 입력 별칭 | 정규화한 값 |
 | --- | --- |
 | `procedure` | `knowledge` |
 | `reflection` | `episode` |
 | `plan` | `idea` |
 | 나머지 여섯 값 | 같은 값 유지 |
 
-이전 값은 불변 저장 이력과 호환 입력에서만 다룬다. 새 입력 스키마·화면·스킬·응답은 6개를 기준으로 하며 새 저장도 canonical 값만 쓴다. 과거 조합 `knowledge + procedure`는 현재 `knowledge` 하나로 해석한다. 과거 revision의 본문·Node·출처·관계를 직접 고쳐 이관하지 않는다. 과거 유형 필터를 사용할 때도 같은 그룹 의미로 해석한다.
+별칭은 입력·조회·필터의 호환 계층에서 정규화한다. 스키마·화면·스킬·응답과 새 저장은 여섯 canonical 값을 사용한다. `knowledge + procedure`는 `knowledge` 하나로 해석한다. 불변 revision의 본문·Node·출처·관계는 정규화를 위해 재작성하지 않는다.
 
 본문 템플릿은 유형과 일대일 관계가 아니다. 같은 지식이어도 개념 학습은 개념·예시·질문, 문제 해결은 환경·시도·해결·결과로 작성할 수 있다. 같은 경험·회고도 사건 중심 또는 감정 중심으로 구성한다. 모든 칸을 의무적으로 채우지 않는다.
 
@@ -60,6 +60,6 @@
 - 다시 쓸 메일·코드·프롬프트: `artifact`, 원문과 용도를 보존.
 - 링크나 떠오른 짧은 문장: `[]` 또는 명확한 목적에 맞는 유형.
 
-[Codex 대화 저장 시나리오](../specs/004-local-runtime/record-kinds-and-scenarios.md)로 유형·조건·제안/선택·출처의 보존을 검사한다. 자유형 기록도 계속 저장·검색되어야 하며 분류 정확도와 검색 품질 향상은 별도로 평가한다.
+[Codex 대화 저장 시나리오](../examples/conversations/index.md)로 유형·조건·제안/선택·출처의 보존을 검사한다. 자유형 기록도 계속 저장·검색되어야 하며 분류 정확도와 검색 품질 향상은 별도로 평가한다.
 
-초기 분류는 대화 사용 연구와 제품 요구를 참고했다. 이는 저장 수요 비율이나 현 제품의 품질을 증명하는 자료가 아니다: [OpenAI 사용 연구](https://openai.com/index/how-people-are-using-chatgpt/), [Anthropic 대화 사용 연구](https://www.anthropic.com/research/how-people-use-claude-for-support-advice-and-companionship), [LongMemEval](https://arxiv.org/abs/2410.10813). 최초 5종과 이후 9종을 사용한 과거 실험 자료는 그 당시 증거로 보존한다.
+분류의 배경 자료로 대화 사용 연구와 장기 기억 평가를 참고할 수 있다. 이는 저장 수요 비율이나 현 제품의 품질을 증명하는 자료가 아니다: [OpenAI 사용 연구](https://openai.com/index/how-people-are-using-chatgpt/), [Anthropic 대화 사용 연구](https://www.anthropic.com/research/how-people-use-claude-for-support-advice-and-companionship), [LongMemEval](https://arxiv.org/abs/2410.10813).

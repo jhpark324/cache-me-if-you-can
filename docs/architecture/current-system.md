@@ -1,6 +1,6 @@
 # 현재 구현 구조
 
-2026-11-02 코드 기준이다. 이 문서는 현재 실행 구조를 설명한다. 선택 이유는 ADR, API 제약은 [서비스 계약](service-contracts.md), 종전 통합 결과는 [최종 점검](../specs/004-local-runtime/final-review.md), 이후 실행 변경은 [ReAct·PII 후속 기록](../specs/004-local-runtime/react-agent.md)이 기준이다. Windows·macOS·Linux 전체 지원 완료를 의미하지 않는다.
+이 문서는 현재 실행 구조를 설명한다. 선택 이유는 [ADR](../decisions/index.md), API 제약은 [서비스 계약](service-contracts.md), 질문 처리 계약은 [실행 명세](../specs/runtime.md), 재현 가능한 검증은 [검증 안내](../guides/testing.md)를 따른다. 전체 운영체제 지원 완료를 의미하지 않는다.
 
 ## 시스템과 신뢰 경계
 
@@ -74,10 +74,10 @@ flowchart TB
 | 공통 선택 | [record_filters.py](../../backend/src/second_brain/record_filters.py) | 여러 유형은 OR, 여러 주제는 OR, 두 그룹은 AND. 현재 Node의 주제도 부모 기록 선택에 반영 |
 | 파생 색인 | [search.py](../../backend/src/second_brain/search.py), [embedding.py](../../backend/src/second_brain/embedding.py) | 색인 세대, 모델 프로필, 검색 후 SQLite 재검증. 현재 제품은 정확 벡터 검색이며 ANN 실험과 구분 |
 | 질문 실행 | [questions.py](../../backend/src/second_brain/questions.py), [question_agent.py](../../backend/src/second_brain/question_agent.py), [question_tools.py](../../backend/src/second_brain/question_tools.py) | ReAct 읽기 도구 총 8회, 에이전트 모델 9회와 별도 검토 1회, 요청 90초. 근거 ID·버전·필터는 서버 소유 |
-| 모델 연결·PII | [chat_model.py](../../backend/src/second_brain/chat_model.py), [auth.py](../../backend/src/second_brain/auth.py), [privacy.py](../../backend/src/second_brain/privacy.py) | 기존 OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
-| 자동 분류 | [enrichment.py](../../backend/src/second_brain/enrichment.py) | 기존 LangGraph 분류·커밋 흐름 유지. 본문 저장·로그인·임베딩과 독립 실패 가능 |
+| 모델 연결·PII | [chat_model.py](../../backend/src/second_brain/chat_model.py), [auth.py](../../backend/src/second_brain/auth.py), [privacy.py](../../backend/src/second_brain/privacy.py) | OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
+| 자동 분류 | [enrichment.py](../../backend/src/second_brain/enrichment.py) | LangGraph 분류·커밋 흐름. 본문 저장·로그인·임베딩과 독립 실패 가능 |
 | 데이터 수명 | [db.py](../../backend/src/second_brain/db.py), [마이그레이션](../../backend/alembic/versions/0001_canonical_records.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
-| 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
+| 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordBrowser.tsx](../../frontend/src/RecordBrowser.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 기록 라이브러리·타임라인, 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
 
 한 로컬 서버 프로세스에서 동작한다. 분산 큐·별도 벡터 서버·그래프 DB·LangSmith·영구 대화 체크포인터는 필수가 아니다. 두 DB의 작업을 하나의 원자적 트랜잭션으로 간주하지 않는다.
 

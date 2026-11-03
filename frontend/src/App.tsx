@@ -12,6 +12,7 @@ import { Badge, Button, Dialog, IconButton, Tooltip } from "@radix-ui/themes";
 import {
   ArrowLeft,
   ArrowUp,
+  Clock3,
   Check,
   ChevronRight,
   FileText,
@@ -37,6 +38,7 @@ import { RecordDates } from "./RecordDates";
 import { exampleGraph } from "./exampleGraph";
 import { sourceGraphNodeId, withRetrievalGraph } from "./retrievalGraph";
 import RecordEditor from "./RecordEditor";
+import { RecordBrowser, monthBounds } from "./RecordBrowser";
 import SettingsPanel from "./SettingsPanel";
 import { Tool, ErrorMessage, Loading } from "./ui";
 import { useConceptCatalog } from "./useConceptCatalog";
@@ -79,7 +81,6 @@ const VERIFICATION_LABELS: Record<string, string> = {
   unverified: "검증하지 않음",
   verified: "검증됨",
 };
-const kinds = Object.entries(KIND_LABELS) as [RecordKind, string][];
 const date = (value: string) =>
   new Date(value).toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -125,17 +126,26 @@ export default function App() {
     loading: conceptsLoading,
     refresh: refreshConcepts,
   } = useConceptCatalog();
-  const duplicateConceptNames = useMemo(() => {
-    const seen = new Set<string>(),
-      duplicates = new Set<string>();
-    for (const item of concepts) {
-      if (seen.has(item.name)) duplicates.add(item.name);
-      seen.add(item.name);
-    }
-    return duplicates;
-  }, [concepts]);
+  type View = "home" | "library" | "timeline";
+  const [view, setView] = useState<View>(() =>
+    location.hash === "#timeline"
+      ? "timeline"
+      : location.hash === "#library"
+        ? "library"
+        : "home",
+  );
+  const viewRef = useRef<View>(view);
+  const recordOrigin = useRef<View>(view === "home" ? "library" : view);
+  const recordTrigger = useRef<string | null>(null);
   const [kind, setKind] = useState(""),
     [concept, setConcept] = useState("");
+  const [month, setMonth] = useState("");
+  const [sort, setSort] = useState<"created_desc" | "title_asc">(
+    "created_desc",
+  );
+  const activeMonth = view === "timeline" ? month : "";
+  const activeSort = view === "timeline" ? "created_desc" : sort;
+  const listController = useRef<AbortController | null>(null);
   const [query, setQuery] = useState(""),
     [answer, setAnswer] = useState<AnswerResult | null>(null),
     [searching, setSearching] = useState(false),
@@ -210,8 +220,6 @@ export default function App() {
     setHomeGraphLoading(true);
     setHomeGraphError("");
     const params = new URLSearchParams();
-    if (kind) params.set("kinds", kind);
-    if (concept) params.set("concept_ids", concept);
     api<GraphData>("/graph?" + params, { signal: controller.signal })
       .then((data) => {
         if (version === homeGraphVersion.current) setHomeGraph(data);
@@ -224,11 +232,11 @@ export default function App() {
         if (version === homeGraphVersion.current) setHomeGraphLoading(false);
       });
     return () => controller.abort();
-  }, [kind, concept, graphRefresh]);
+  }, [graphRefresh]);
   const systemReduced = useMedia("(prefers-reduced-motion: reduce)"),
     reduced = systemReduced || paused,
-    mobile = useMedia("(max-width: 800px)"),
-    compactNav = useMedia("(max-width: 1200px)");
+    mobile = useMedia("(max-width: 1279px)"),
+    compactNav = useMedia("(max-width: 800px)");
   const searchArea = useRef<HTMLElement>(null);
   const [searchBottom, setSearchBottom] = useState(96);
   const displayGraph = useMemo(
@@ -269,30 +277,55 @@ export default function App() {
   const loadRecords = useCallback(
     async (more = false) => {
       const version = ++listVersion.current;
+      listController.current?.abort();
+      const controller = new AbortController();
+      listController.current = controller;
+      if (!more) {
+        setRecords([]);
+        setCursor(null);
+      }
       setListLoading(true);
       setListError("");
       try {
-        const p = new URLSearchParams({ limit: "20" });
+        const p = new URLSearchParams({ limit: "20", sort: activeSort });
+        const bounds = monthBounds(activeMonth);
+        if (bounds) {
+          p.set("created_from", bounds.created_from);
+          p.set("created_before", bounds.created_before);
+        }
         if (kind) p.set("kinds", kind);
         if (concept) p.set("concept_ids", concept);
         if (more && cursor) p.set("cursor", cursor);
-        const result = await api<Page<CaptureSummary>>("/captures?" + p);
+        const result = await api<Page<CaptureSummary>>("/captures?" + p, {
+          signal: controller.signal,
+        });
         if (version !== listVersion.current) return;
         setRecords((prev) =>
-          more ? [...prev, ...result.items] : result.items,
+          more
+            ? [
+                ...new Map(
+                  [...prev, ...result.items].map((item) => [item.id, item]),
+                ).values(),
+              ]
+            : result.items,
         );
         setCursor(result.next_cursor);
       } catch (e) {
-        if (version === listVersion.current) setListError(errorText(e));
+        if (!controller.signal.aborted && version === listVersion.current)
+          setListError(errorText(e));
       } finally {
         if (version === listVersion.current) setListLoading(false);
       }
     },
-    [kind, concept, cursor],
+    [kind, concept, cursor, activeMonth, activeSort],
   );
   useEffect(() => {
     void loadRecords();
-  }, [kind, concept]);
+    return () => {
+      listController.current?.abort();
+      listVersion.current++;
+    };
+  }, [kind, concept, activeMonth, activeSort]);
   useEffect(() => {
     if (new URLSearchParams(location.search).has("login")) {
       setSettingsOpen(true);
@@ -323,6 +356,18 @@ export default function App() {
   }, []);
   const openCapture = useCallback(async (id: string, updateHash = true) => {
     const version = ++detailVersion.current;
+    if (updateHash) {
+      recordOrigin.current =
+        viewRef.current === "home" ? "library" : viewRef.current;
+      recordTrigger.current = id;
+    } else {
+      const origin =
+        history.state?.recordOrigin === "timeline" ? "timeline" : "library";
+      recordOrigin.current = origin;
+      recordTrigger.current = id;
+      viewRef.current = origin;
+      setView(origin);
+    }
     menuDestination.current = "record";
     setRequestedRecordId(id);
     searchController.current?.abort();
@@ -341,7 +386,11 @@ export default function App() {
     setGraphLoading(false);
     setNavOpen(false);
     if (updateHash)
-      history.pushState(null, "", "#capture/" + encodeURIComponent(id));
+      history.pushState(
+        { recordOrigin: recordOrigin.current },
+        "",
+        "#capture/" + encodeURIComponent(id),
+      );
     try {
       const r = await api<Capture>("/captures/" + id);
       if (version === detailVersion.current) setSelected(r);
@@ -360,9 +409,56 @@ export default function App() {
     setGraph(null);
     setGraphLoading(false);
     closeSource();
-    history.pushState(null, "", location.pathname);
+    viewRef.current = "home";
+    setView("home");
+    history.pushState(null, "", location.pathname + location.search);
     setNavOpen(false);
   }, [closeSource]);
+  const navigateView = useCallback(
+    (target: View, push = true) => {
+      detailVersion.current++;
+      searchController.current?.abort();
+      searchVersion.current++;
+      setRequestedRecordId(null);
+      setSelected(null);
+      setDetailLoading(false);
+      setDetailError("");
+      setGraph(null);
+      setGraphLoading(false);
+      setSearched(false);
+      setSearching(false);
+      setAnswer(null);
+      setSearchError("");
+      setExampleMode(false);
+      closeSource();
+      viewRef.current = target;
+      setView(target);
+      setNavOpen(false);
+      menuDestination.current = "record";
+      if (push)
+        history.pushState(
+          null,
+          "",
+          location.pathname +
+            location.search +
+            (target === "home" ? "" : "#" + target),
+        );
+      requestAnimationFrame(() =>
+        document.getElementById("main")?.focus({ preventScroll: true }),
+      );
+    },
+    [closeSource],
+  );
+  const returnToRecords = useCallback(() => {
+    navigateView(recordOrigin.current);
+    requestAnimationFrame(() => {
+      const id = recordTrigger.current;
+      if (id)
+        document
+          .querySelector<HTMLElement>(`[data-record-id="${CSS.escape(id)}"]`)
+          ?.focus({ preventScroll: true });
+    });
+  }, [navigateView]);
   useEffect(() => {
     const navigate = () => {
       const m = location.hash.match(/^#capture\/([^/]+)$/);
@@ -379,20 +475,20 @@ export default function App() {
           );
         }
       } else {
-        detailVersion.current++;
-        setRequestedRecordId(null);
-        setSelected(null);
-        setDetailLoading(false);
-        setDetailError("");
-        setGraph(null);
-        setGraphLoading(false);
-        closeSource();
+        navigateView(
+          location.hash === "#timeline"
+            ? "timeline"
+            : location.hash === "#library"
+              ? "library"
+              : "home",
+          false,
+        );
       }
     };
     navigate();
     addEventListener("popstate", navigate);
     return () => removeEventListener("popstate", navigate);
-  }, [openCapture, closeSource]);
+  }, [openCapture, navigateView]);
   useEffect(() => {
     const f = (e: KeyboardEvent) => {
       if (
@@ -466,16 +562,12 @@ export default function App() {
       setSearchStatus("");
       return;
     }
-    const filters = {
-      ...(kind ? { kinds: [kind] } : {}),
-      ...(concept ? { concept_ids: [concept] } : {}),
-    };
     let answerError = "";
     const requestId = uid();
     let completed = false;
     try {
       await streamQuestion(
-        { request_id: requestId, question: query, ...filters },
+        { request_id: requestId, question: query },
         controller.signal,
         (event, data) => {
           if (version !== searchVersion.current) return;
@@ -574,7 +666,18 @@ export default function App() {
     setSelected(result.capture);
     setRequestedRecordId(result.capture.id);
     setDetailError("");
-    history.replaceState(null, "", "#capture/" + result.capture.id);
+    if (editor && !editor.record)
+      history.pushState(
+        { recordOrigin: recordOrigin.current },
+        "",
+        "#capture/" + result.capture.id,
+      );
+    else
+      history.replaceState(
+        { recordOrigin: recordOrigin.current },
+        "",
+        "#capture/" + result.capture.id,
+      );
     setToast("저장한 내용을 확인해 주세요.");
     requestAnimationFrame(() =>
       recordHeading.current?.focus({ preventScroll: true }),
@@ -774,7 +877,10 @@ export default function App() {
       ) : (
         source && (
           <>
-            <RecordDates capture={source.capture} isCurrent={source.is_current} />
+            <RecordDates
+              capture={source.capture}
+              isCurrent={source.is_current}
+            />
             <div className="metadata">
               <KindBadges values={source.capture.kinds} />
               <span>
@@ -822,22 +928,11 @@ export default function App() {
   useEffect(() => {
     if (!compactNav) setNavOpen(false);
   }, [compactNav]);
-  useEffect(() => {
-    searchController.current?.abort();
-    searchVersion.current++;
-    setExampleMode(false);
-    setExampleSelection("");
-    setSearched(false);
-    setSearching(false);
-    setAnswer(null);
-    setSearchError("");
-    closeSource();
-  }, [kind, concept, closeSource]);
   const sidebarContent = (
     <>
       <button
         className="brand"
-        onClick={goHome}
+        onClick={() => navigateView("home")}
         aria-label="Cache Me If You Can 홈"
       >
         <span>
@@ -850,139 +945,25 @@ export default function App() {
           <X />
         </Tool>
       )}
-      <nav>
-        <button className="nav-button active" onClick={goHome}>
-          <Network />
-          지식 공간
-        </button>
-        <button
-          className="nav-button"
-          id={compactNav ? undefined : "create-record"}
-          onClick={() => {
-            menuDestination.current = "editor";
-            setEditor({});
-            setNavOpen(false);
-          }}
-        >
-          <Plus />새 기록
-        </button>
-      </nav>
-      <section
-        className="records-section sidebar-records"
-        aria-label="기록 목록"
-      >
-        <div className="section-heading">
-          <h2>최근 기록</h2>
-          <div className="filters">
-            <label>
-              <span className="sr-only">기록 유형</span>
-              <select value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="">모든 유형</option>
-                {kinds.map(([k, l]) => (
-                  <option value={k} key={k}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span className="sr-only">주제</span>
-              <select
-                value={concept}
-                aria-busy={conceptsLoading}
-                onChange={(e) => setConcept(e.target.value)}
-              >
-                <option value="">
-                  {conceptsLoading && !concepts.length
-                    ? "주제 불러오는 중…"
-                    : "모든 주제"}
-                </option>
-                {concepts.map((c) => (
-                  <option value={c.id} key={c.id}>
-                    {duplicateConceptNames.has(c.name) && c.description
-                      ? `${c.name} — ${c.description}`
-                      : c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-        {conceptError && (
-          <div className="concept-catalog-error">
-            <ErrorMessage
-              error={"주제를 불러오지 못했습니다. " + conceptError}
-            />
-            <Button
-              variant="soft"
-              onClick={refreshConcepts}
-              disabled={conceptsLoading}
-            >
-              <RefreshCw />
-              주제 다시 불러오기
-            </Button>
-          </div>
-        )}
-        <ErrorMessage error={listError} />
-        {listError && (
-          <Button variant="soft" onClick={() => void loadRecords()}>
-            <RefreshCw />
-            다시 불러오기
-          </Button>
-        )}
-        {!listLoading && !records.length && !listError ? (
-          <p className="sidebar-empty">
-            {kind || concept
-              ? "이 조건의 기록이 없어요"
-              : "아직 저장한 기록이 없어요"}
-          </p>
-        ) : (
-          <div className="record-list">
-            {records.map((r) => (
-              <button
-                className={`record-row ${selected?.id === r.id ? "is-selected" : ""}`}
-                aria-current={selected?.id === r.id ? "true" : undefined}
-                key={r.id}
-                onClick={() => void openCapture(r.id)}
-              >
-                <span className="record-symbol">
-                  <FileText />
-                </span>
-                <span className="record-row-main">
-                  <span className="record-row-title">
-                    {r.title || "제목 없는 기록"}
-                    {r.visibility === "private" && <Lock aria-label="비공개" />}
-                  </span>
-                  <span className="record-preview">
-                    {r.excerpt || r.body_excerpt || r.preview || "기록 열기"}
-                  </span>
-                  <span className="record-row-meta">
-                    <KindBadges values={r.kinds} />
-                    {r.review_state === "needs_review" && (
-                      <span>검토 필요</span>
-                    )}
-                    {r.index_state.status !== "ready" && (
-                      <span>{indexLabel(r.index_state.status)}</span>
-                    )}
-                  </span>
-                </span>
-                <span className="record-date">{date(r.updated_at)}</span>
-                <ChevronRight />
-              </button>
-            ))}
-          </div>
-        )}
-        {listLoading && <Loading text="기록을 불러오는 중" />}
-        {cursor && !listLoading && (
-          <Button
-            variant="ghost"
-            className="load-more"
-            onClick={() => void loadRecords(true)}
+      <nav aria-label="공간 탐색">
+        {(
+          [
+            ["home", "지식 공간", Network],
+            ["library", "모든 기록", FileText],
+            ["timeline", "타임라인", Clock3],
+          ] as const
+        ).map(([target, label, Icon]) => (
+          <button
+            key={target}
+            className={`nav-button ${view === target ? "active" : ""}`}
+            aria-current={view === target ? "page" : undefined}
+            onClick={() => navigateView(target)}
           >
-            더 보기
-          </Button>
-        )}
-      </section>
+            <Icon aria-hidden="true" />
+            {label}
+          </button>
+        ))}
+      </nav>
       <div className="sidebar-space" />
       <button
         className="nav-button"
@@ -995,20 +976,25 @@ export default function App() {
         <SettingsIcon />
         설정
       </button>
-      <div className="local-label">
-        <span />내 기기에 저장
-      </div>
+      <div className="local-label">내 기기에 저장</div>
     </>
   );
   return (
     <div
       className={`app-shell ${sourceOpen ? "has-source" : ""}`}
+      data-view={view}
       data-reduced-motion={reduced}
     >
-      <a href="#main" className="skip-link">
+      <a
+        href="#main"
+        className="skip-link"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus({ preventScroll: true });
+        }}
+      >
         본문으로 이동
       </a>
-      <div className="ambient" aria-hidden="true" />
       {!compactNav && (
         <aside className="sidebar glass" aria-label="주 메뉴">
           {sidebarContent}
@@ -1037,7 +1023,7 @@ export default function App() {
       <div className="workspace" inert={Boolean(sourceOpen && mobile)}>
         <main
           id="main"
-          className={`main-content ${selected || detailLoading || detailError ? "has-detail" : ""} ${searched ? "is-searching" : ""} ${hasRetrieval ? "has-retrieval" : ""}`}
+          className={`main-content ${view !== "home" ? "is-browsing" : ""} ${selected || detailLoading || detailError ? "has-detail" : ""} ${searched ? "is-searching" : ""} ${hasRetrieval ? "has-retrieval" : ""}`}
           tabIndex={-1}
         >
           <section
@@ -1052,7 +1038,7 @@ export default function App() {
                   <span className="nav-toggle" ref={menuToggle}>
                     <Tooltip content="메뉴 열기">
                       <IconButton
-                        id="create-record"
+                        id="menu-toggle"
                         type="button"
                         variant="ghost"
                         aria-label="메뉴 열기"
@@ -1108,34 +1094,6 @@ export default function App() {
               <p className="sr-only" role="status" aria-atomic="true">
                 {searching ? searchStatus || "답변을 준비하고 있어요" : ""}
               </p>
-              {(kind || concept) && (
-                <div className="active-filters" aria-label="적용된 검색 조건">
-                  <span>필터</span>
-                  {kind && (
-                    <button
-                      type="button"
-                      onClick={() => setKind("")}
-                      aria-label="기록 유형 필터 해제"
-                    >
-                      {KIND_LABELS[kind as RecordKind]}
-                      <X aria-hidden="true" />
-                    </button>
-                  )}
-                  {concept && (
-                    <button
-                      type="button"
-                      onClick={() => setConcept("")}
-                      aria-label="주제 필터 해제"
-                    >
-                      <span>
-                        {concepts.find((c) => c.id === concept)?.name ||
-                          "선택한 주제"}
-                      </span>
-                      <X aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-              )}
               {searched && (
                 <section
                   className="answer-area"
@@ -1165,12 +1123,14 @@ export default function App() {
                       />
                       <Button
                         variant="ghost"
-                        onClick={() =>
+                        onClick={() => {
+                          recordOrigin.current = "library";
+                          recordTrigger.current = null;
                           setEditor({
                             body: buildAnswerDraft(answer),
                             sources: answer.sources,
-                          })
-                        }
+                          });
+                        }}
                       >
                         <Plus />
                         답변을 기록으로 저장
@@ -1186,13 +1146,55 @@ export default function App() {
               )}
             </div>
           </section>
+          {view !== "home" && (
+            <div
+              className="record-browser-host"
+              hidden={Boolean(selected || detailLoading || detailError)}
+            >
+              <RecordBrowser
+                view={view}
+                records={records}
+                loading={listLoading}
+                error={listError}
+                cursor={cursor}
+                kind={kind}
+                concept={concept}
+                month={month}
+                sort={sort}
+                concepts={concepts}
+                conceptLoading={conceptsLoading}
+                conceptError={conceptError}
+                onKindChange={setKind}
+                onConceptChange={setConcept}
+                onMonthChange={setMonth}
+                onSortChange={setSort}
+                onLoadMore={() => void loadRecords(true)}
+                onRetry={() => void loadRecords()}
+                onRetryConcepts={refreshConcepts}
+                onOpen={(id) => void openCapture(id)}
+                onCreate={() => {
+                  recordOrigin.current = view;
+                  recordTrigger.current = null;
+                  setEditor({});
+                }}
+                onReset={() => {
+                  setKind("");
+                  setConcept("");
+                  setMonth("");
+                }}
+              />
+            </div>
+          )}
           {detailLoading ? (
             <Loading text="기록을 불러오는 중" />
           ) : selected ? (
             <article className="record-detail glass">
               <div className="section-heading">
-                <button className="text-button" onClick={goHome}>
-                  <ArrowLeft />내 기록
+                <button className="text-button" onClick={returnToRecords}>
+                  <ArrowLeft />
+                  {recordOrigin.current === "timeline"
+                    ? "타임라인"
+                    : "모든 기록"}
                 </button>
                 <div className="row">
                   <Tool
@@ -1375,6 +1377,9 @@ export default function App() {
           className={`graph-stage ${searched || selected ? "is-reading" : ""} ${hasRetrieval ? "has-retrieval" : ""}`}
           style={hasRetrieval ? { top: searchBottom } : undefined}
           aria-label="내 지식 그래프"
+          hidden={
+            view !== "home" || Boolean(selected || detailLoading || detailError)
+          }
         >
           {(exampleMode ||
             displayGraph.nodes.length > 0 ||
@@ -1387,10 +1392,17 @@ export default function App() {
                     ? undefined
                     : (sourceOpen && sourceSelection
                         ? sourceGraphNodeId(displayGraph, sourceSelection)
-                        : selected?.id || concept) || null
+                        : selected?.id) || null
                 }
                 onSource={openSource}
-                onConcept={exampleMode ? undefined : setConcept}
+                onConcept={
+                  exampleMode
+                    ? undefined
+                    : (id) => {
+                        setConcept(id);
+                        navigateView("library");
+                      }
+                }
                 onPreview={
                   exampleMode
                     ? (node) =>
@@ -1402,13 +1414,16 @@ export default function App() {
                 reduced={reduced}
                 onToggleMotion={toggleMotion}
                 motionDisabled={systemReduced}
+                active={
+                  view === "home" && !selected && !detailLoading && !detailError
+                }
                 fullStage
               />
             </Suspense>
           )}
           {exampleMode && (
             <div className="example-banner">
-              <Badge color="orange">예시 · 읽기 전용</Badge>
+              <Badge color="gray">예시 · 읽기 전용</Badge>
               <button
                 className="text-button"
                 onClick={() => {
@@ -1457,33 +1472,20 @@ export default function App() {
                     <Layers3 />
                   </span>
                 </div>
-                <h2>
-                  {kind || concept
-                    ? "이 조건에 연결된 지식이 없어요"
-                    : "첫 번째 생각을 남겨보세요"}
-                </h2>
-                <p>
-                  {kind || concept
-                    ? "다른 유형이나 주제로 공간을 살펴보세요."
-                    : "기록한 생각이 연결되고, 나만의 지식이 됩니다."}
-                </p>
-                {kind || concept ? (
-                  <Button
-                    variant="soft"
-                    onClick={() => {
-                      setKind("");
-                      setConcept("");
-                    }}
-                  >
-                    필터 초기화
-                  </Button>
-                ) : (
-                  <Button variant="soft" onClick={() => setEditor({})}>
-                    <Plus />
-                    기록 시작하기
-                  </Button>
-                )}
-                {!kind && !concept && (
+                <h2>첫 번째 생각을 남겨보세요</h2>
+                <p>기록한 생각이 연결되고, 나만의 지식이 됩니다.</p>
+                <Button
+                  variant="soft"
+                  onClick={() => {
+                    recordOrigin.current = "library";
+                    recordTrigger.current = null;
+                    setEditor({});
+                  }}
+                >
+                  <Plus />
+                  기록 시작하기
+                </Button>
+                {
                   <button
                     className="example-start text-button"
                     onClick={() => {
@@ -1493,7 +1495,7 @@ export default function App() {
                   >
                     예시 보기 <ChevronRight />
                   </button>
-                )}
+                }
               </div>
             )}
           <div className="stage-footer">

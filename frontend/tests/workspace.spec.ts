@@ -1,4 +1,5 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
+import { openLibrary } from "./navigation";
 const captureId = "11111111-1111-4111-8111-111111111111",
   revisionId = "22222222-2222-4222-8222-222222222222";
 const ref = { capture_id: captureId, revision_id: revisionId };
@@ -228,6 +229,7 @@ async function fixture(page: Page, initial = false) {
   };
 }
 async function openEditor(page: Page) {
+  await openLibrary(page);
   await page
     .getByRole("button", { name: "새 기록", exact: true })
     .last()
@@ -246,6 +248,7 @@ test("빈 화면에서 실제 저장 응답을 보여 주며 세션과 CSRF를 �
   const f = await fixture(page);
   await page.goto("/");
   await expect(page.getByText("첫 번째 생각을 남겨보세요")).toBeVisible();
+  await openLibrary(page);
   const filter = page.getByRole("combobox", { name: "기록 유형", exact: true });
   await expect(filter.locator("option")).toHaveText([
     "모든 유형",
@@ -270,7 +273,9 @@ test("빈 화면에서 실제 저장 응답을 보여 주며 세션과 CSRF를 �
     await expect(
       page.getByRole("checkbox", { name, exact: true }),
     ).not.toBeChecked();
-  await page.getByLabel("제목").fill("오늘 배운 원자성");
+  await page
+    .getByRole("textbox", { name: "제목 선택", exact: true })
+    .fill("오늘 배운 원자성");
   await page.getByLabel("내용", { exact: true }).fill(base.body_markdown);
   await page.getByRole("button", { name: "저장", exact: true }).click();
   await expect(page.locator(".record-detail h1")).toHaveText(
@@ -477,7 +482,9 @@ test("편집과 설정 모달은 첫 Escape로 닫힌다", async ({ page }) => {
   await fixture(page);
   await page.goto("/");
   await openEditor(page);
-  await expect(page.getByLabel("제목")).toBeFocused();
+  await expect(
+    page.getByRole("textbox", { name: "제목 선택", exact: true }),
+  ).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "설정", exact: true }).click();

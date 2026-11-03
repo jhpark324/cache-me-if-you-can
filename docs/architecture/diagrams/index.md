@@ -1,6 +1,6 @@
 # 아키텍처 다이어그램
 
-[전체 보기](../overview.html)에서 도식과 원문을 함께 탐색한다. 각 문서의 Mermaid가 수정 원본이며 아래 SVG는 렌더링 결과다. 구현·수정 완료와 제안을 구분한다.
+[전체 보기](../overview.html)에서 도식과 원문을 함께 탐색한다. 각 문서의 Mermaid가 수정 원본이며 아래 SVG는 렌더링 결과다. 현재 구현과 제안을 구분한다.
 
 | 도식 | 상태 | 수정 원본 |
 | --- | --- | --- |
@@ -16,12 +16,12 @@
 | [리팩토링 순서](maintenance-review-rendered-1.svg) | 개선 방향 | [원문](../../architecture/maintenance-review.md) |
 | [차별화 기능의 연결](evolution-proposals-rendered-1.svg) | 제품 제안 | [원문](../../project/evolution-proposals.md) |
 | [로컬 저장과 외부 추론](second-brain-comparison-2026-11-rendered-1.svg) | 구현·조사 | [원문](../../research/second-brain-comparison-2026-11.md) |
-| [공통 필터 의미](backend-final-review-rendered-1.svg) | 수정 완료 | [원문](../../specs/004-local-runtime/backend-final-review.md) |
-| [웹 컴포넌트 경계](frontend-final-review-rendered-1.svg) | 수정 완료 | [원문](../../specs/004-local-runtime/frontend-final-review.md) |
+| [공통 필터 의미](component-boundaries-rendered-1.svg) | 구현 | [원문](../../architecture/component-boundaries.md) |
+| [웹 컴포넌트 경계](component-boundaries-rendered-2.svg) | 구현 | [원문](../../architecture/component-boundaries.md) |
 
 ## 다시 생성
 
-Mermaid CLI를 별도 도구 환경에 설치한 뒤 프로젝트 루트에서 실행한다. 제품 의존성에는 포함하지 않는다. 이 회차는 CLI 12.0.0과 Chromium으로 렌더링했다. 브라우저·한글 글꼴과 OS 실행 의존성이 필요하다.
+Mermaid CLI를 별도 도구 환경에 준비한 뒤 프로젝트 루트에서 실행한다. 제품 의존성에는 포함하지 않는다. CLI 12 계열과 Chromium을 기준으로 하며 브라우저·한글 글꼴과 OS 실행 의존성이 필요하다.
 
 ```sh
 python scripts/render_diagrams.py --mermaid-cli <mmdc 실행 경로>

@@ -1,0 +1,13 @@
+interface:
+  display_name: "cache-me"
+  short_description: "기억할 내용을 저장하고 출처와 함께 찾아 정정하는 개인 지식 도우미"
+  default_prompt: "$cache-me 방금 배운 내용을 정리해서 저장해줘."
+
+policy:
+  allow_implicit_invocation: true
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "second_brain"
+      description: "cache-me 로컬 기록 저장·검색·출처 관리 서버"

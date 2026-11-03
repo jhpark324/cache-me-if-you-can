@@ -1,0 +1,454 @@
+/* Workspace UI contract: docs/specs/workspace.md. */
+:root {
+  --canvas: #000;
+  --ink: #f2f2f2;
+  --muted: #b4b4b4;
+  --quiet: #a2a2a2;
+  --accent: #eee;
+  --line: #292929;
+  --edge: #666;
+}
+.radix-themes {
+  --default-font-family:
+    Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-panel-solid: #101010;
+  --color-panel-translucent: #101010;
+  --gray-1: #080808;
+  --gray-2: #111;
+  --gray-3: #1b1b1b;
+  --gray-4: #262626;
+  --gray-5: #333;
+  --gray-6: #454545;
+  --gray-11: #c7c7c7;
+  --gray-12: #f2f2f2;
+}
+body {
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #444 transparent;
+}
+::selection {
+  background: #444;
+  color: #fff;
+}
+a {
+  text-underline-offset: 3px;
+}
+[hidden] {
+  display: none !important;
+}
+.glass {
+  background: #101010;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.glass::before,
+.search-dock::before {
+  display: none;
+}
+.app-shell {
+  padding: 0;
+  gap: 0;
+}
+.app-shell .sidebar {
+  flex: 0 0 208px;
+  width: 208px;
+  padding: 28px 14px 18px;
+  background: #0c0c0c;
+  border: 0;
+  border-right: 1px solid #252525;
+  border-radius: 0;
+  box-shadow: none;
+}
+.sidebar .brand,
+.nav-drawer .brand {
+  padding: 0 12px;
+  margin: 0 0 34px;
+}
+.sidebar .brand-first,
+.nav-drawer .brand-first {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.35;
+}
+.sidebar .brand-second,
+.nav-drawer .brand-second {
+  font-size: 13px;
+  font-weight: 400;
+  color: #a2a2a2;
+  letter-spacing: 0;
+  margin-top: 2px;
+}
+.sidebar nav {
+  display: grid;
+  gap: 5px;
+}
+.nav-button {
+  position: relative;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  border-radius: 6px;
+  padding: 10px 12px;
+  gap: 11px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #aaa;
+}
+.nav-button:hover {
+  color: #eee;
+  background: #191919;
+}
+.nav-button.active {
+  color: #f2f2f2;
+  background: #242424;
+  font-weight: 500;
+  box-shadow: none;
+}
+.nav-button.active::before {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 16px;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #eee;
+  border-radius: 2px;
+}
+.nav-button svg {
+  width: 17px;
+  height: 17px;
+  color: inherit;
+}
+.sidebar-space {
+  flex: 1;
+}
+.local-label {
+  padding: 18px 12px 0;
+  color: #a2a2a2;
+  font-size: 12px;
+}
+.main-content {
+  padding: 24px 32px 24px;
+  gap: 24px;
+}
+.search-area {
+  width: min(100%, 680px);
+  min-height: 64px;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+.search-dock {
+  background: #101010;
+  border: 1px solid #666;
+  border-radius: 12px;
+  box-shadow: none;
+  backdrop-filter: none;
+  max-height: min(520px, calc(100dvh - 210px));
+}
+.search-dock:focus-within {
+  border-color: #ddd;
+  box-shadow: 0 0 0 1px #ddd;
+}
+.search-form {
+  min-height: 62px;
+  padding: 10px 11px 10px 18px;
+  gap: 12px;
+}
+.search-form > svg {
+  width: 19px;
+  height: 19px;
+  color: #aaa;
+}
+.search-form input {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  color: #eee;
+}
+.search-form input::placeholder {
+  color: #a2a2a2;
+  opacity: 1;
+}
+.search-form .rt-Button {
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 7px;
+  box-shadow: none;
+}
+.rt-BaseButton.rt-variant-solid {
+  background: #eee;
+  color: #111;
+}
+.rt-BaseButton.rt-variant-solid:hover {
+  background: #fff;
+}
+.rt-BaseButton.rt-variant-soft {
+  background: #242424;
+  color: #eee;
+  box-shadow: inset 0 0 0 1px #444;
+}
+.rt-BaseButton.rt-variant-soft:hover {
+  background: #303030;
+}
+.rt-BaseButton.rt-variant-ghost:hover {
+  background: #242424;
+  color: #fff;
+}
+.rt-Badge {
+  background: #262626;
+  color: #c7c7c7;
+}
+.rt-DialogContent {
+  background: #101010;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 24px 70px #0008;
+}
+.answer-area {
+  padding: 12px 24px 24px;
+  max-height: 420px;
+  border-top: 1px solid #292929;
+}
+.answer-area > .section-heading {
+  position: sticky;
+  top: -12px;
+  background: #101010;
+  padding: 8px 0;
+  margin: 0 0 10px;
+  z-index: 2;
+}
+.answer-area .markdown {
+  font-size: 16px;
+  line-height: 1.85;
+}
+.section-kicker {
+  color: #b4b4b4;
+  font-size: 12px;
+  font-weight: 400;
+}
+.section-kicker > svg {
+  display: none;
+}
+.graph-stage {
+  background: #000;
+}
+.graph-stage.is-reading .graph-canvas {
+  opacity: 0.75;
+}
+.record-browser-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  pointer-events: auto;
+}
+.main-content.is-browsing {
+  background: #000;
+}
+.record-detail {
+  background: #0e0e0e;
+  width: min(100%, 860px);
+  padding: 28px 32px;
+  border-radius: 12px;
+}
+.record-detail > h1 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+}
+.record-detail > .markdown {
+  max-width: 72ch;
+  font-size: 16px;
+  line-height: 1.9;
+}
+.source-panel {
+  flex: 0 0 408px;
+  width: 408px;
+  padding: 24px;
+  border: 0;
+  border-left: 1px solid #292929;
+  border-radius: 0;
+  background: #0e0e0e;
+  box-shadow: none;
+}
+.source-panel h2,
+.source-mobile h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: -0.025em;
+}
+.source-panel .markdown,
+.source-mobile .markdown {
+  font-size: 16px;
+  line-height: 1.9;
+}
+.source-excerpt {
+  border-color: #888;
+  background: transparent;
+}
+.source-mobile {
+  background: #0e0e0e;
+}
+.eyebrow,
+.part-label {
+  color: #b4b4b4;
+  letter-spacing: 0;
+}
+.chip,
+.notice {
+  color: #ddd;
+  border-color: #444;
+  background: #1b1b1b;
+}
+input,
+textarea,
+select {
+  accent-color: #ccc;
+}
+select,
+.field input,
+.field textarea {
+  border-color: #666;
+  background: #141414;
+  color: #eee;
+}
+.editor-dialog .dialog-actions {
+  background: #101010;
+}
+.graph-empty .empty-orbits {
+  display: none;
+}
+.graph-empty h2 {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.graph-empty p {
+  font-size: 14px;
+  color: #a2a2a2;
+}
+.example-banner .rt-Badge {
+  background: #262626;
+  color: #ddd;
+}
+.stage-footer {
+  color: #a2a2a2;
+}
+.nav-drawer.sidebar {
+  background: #0c0c0c;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: min(280px, calc(100vw - 32px));
+  padding: 24px 14px;
+}
+.nav-drawer .sidebar-space {
+  min-height: 32px;
+}
+@media (min-width: 801px) {
+  .app-shell .sidebar {
+    transform: none;
+    position: relative;
+    inset: auto;
+  }
+}
+@media (max-width: 1279px) {
+  .main-content {
+    padding-right: 24px;
+    padding-left: 24px;
+  }
+}
+@media (max-width: 800px) {
+  .main-content {
+    padding: 16px 16px 20px;
+    gap: 24px;
+  }
+  .search-area {
+    min-height: 58px;
+  }
+  .search-form {
+    min-height: 58px;
+    gap: 6px;
+    padding: 7px;
+  }
+  .search-dock {
+    border-radius: 10px;
+    max-height: calc(100dvh - 210px);
+  }
+  .search-form input {
+    font-size: 16px;
+    min-width: 0;
+  }
+  .search-form .rt-Button {
+    width: 40px;
+    min-width: 40px;
+    min-height: 44px;
+  }
+  .answer-area {
+    padding: 12px 16px 18px;
+  }
+  .record-detail {
+    padding: 20px;
+  }
+  .record-detail > h1 {
+    font-size: 22px;
+  }
+  .source-mobile {
+    padding: 20px;
+  }
+  .nav-drawer.sidebar {
+    transform: none;
+  }
+}
+@media (max-width: 360px) {
+  .main-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .search-form {
+    gap: 2px;
+  }
+  .search-form input {
+    font-size: 14px;
+  }
+  .record-detail {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .source-panel {
+    animation: none;
+  }
+}
+
+.editor-dialog,
+.settings-dialog {
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.toast {
+  background: #191919;
+}
+
+/* Form boundaries remain discernible on every dialog surface. */
+.rt-DialogContent :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  border-color: #666;
+  background-color: #141414;
+  color: #eee;
+}
+.rt-DialogContent :is(input, textarea)::placeholder {
+  color: #a2a2a2;
+  opacity: 1;
+}
