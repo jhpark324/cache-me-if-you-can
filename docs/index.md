@@ -11,6 +11,7 @@
 | 공통 구조·기술 스택 확인 | [아키텍처](architecture/index.md) | 여러 기능에 영향을 주는 설계를 할 때 |
 | 기존 설계 결정·이유 확인 | [결정 기록](decisions/index.md) | 관련 결정을 재사용하거나 변경할 때 |
 | 전체 작업 순서·의존성 확인 | [작업 계획](plans/index.md) | 기능 간 우선순위와 연동·배포 검증 순서를 확인할 때 |
+| PR 작성·검토 | [PR 작성 규칙](guides/pull-request-convention.md) · [PR 템플릿](pull_request_template.md) | 표준 제목과 한글 단답형 설명을 작성할 때 |
 | Codex 기록 관리 스킬 | [에이전트 스킬](skills/index.md) | 저장·조회·정정·삭제 스킬을 설치하거나 유지보수할 때 |
 | 디자인 시안 확인·수정 | [프로토타입](prototypes/index.md) | 목데이터 화면과 디자인 검토 범위를 확인할 때 |
 | 서비스 소개 화면 확인 | [소개용 시각 자료](assets/index.md) | README의 실제 제품 스크린샷과 촬영 범위를 확인할 때 |
