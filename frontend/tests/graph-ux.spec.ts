@@ -150,7 +150,8 @@ test("화면 크기를 바꾸면 투영 좌표와 글자 폭을 갱신하고 그
   await fixture(page);
   await page.goto("/");
   await ready(page);
-  await expect.poll(() => visibleCount(page)).toBeGreaterThan(5);
+  await expect.poll(() => visibleCount(page)).toBeGreaterThan(0);
+  expect(await visibleCount(page)).toBeLessThanOrEqual(6);
   const canvas = page.locator(".graph-world canvas");
   await canvas.evaluate((el) => (el.dataset.identity = "kept"));
   const first = page.locator(".graph-label-layer > span").first();
@@ -167,7 +168,8 @@ test("화면 크기를 바꾸면 투영 좌표와 글자 폭을 갱신하고 그
   await page
     .getByRole("button", { name: "그래프 화면 맞추기", exact: true })
     .click();
-  await expect.poll(() => visibleCount(page)).toBeGreaterThan(5);
+  await expect.poll(() => visibleCount(page)).toBeGreaterThan(0);
+  expect(await visibleCount(page)).toBeLessThanOrEqual(3);
   await page.screenshot({ path: "test-results/graph-ux-50-mobile.png" });
   expect(
     await page.evaluate(

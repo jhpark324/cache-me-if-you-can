@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from uuid import NAMESPACE_URL, uuid5
 
 ROOT = Path(__file__).resolve().parents[1]
-DATASET = ROOT / 'docs/specs/004-local-runtime/artifacts/conversation-data/dataset.json'
+DATASET = ROOT / 'docs/examples/conversations/dataset.json'
 BATCH = 'codex-conversations-2026-11-02-v1'
 KINDS = {'knowledge', 'episode', 'context', 'idea', 'decision', 'artifact'}
 NODE_KINDS = {'explanation', 'interpretation', 'hypothesis', 'question', 'event', 'emotion', 'proposal', 'decision', 'action', 'result'}

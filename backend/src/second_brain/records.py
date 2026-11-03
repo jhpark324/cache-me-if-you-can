@@ -4,6 +4,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import re
 import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -48,6 +49,21 @@ def digest(value):
 
 def source_dict(value):
     return SourceRef.model_validate(value).model_dump(mode="json")
+
+
+def created_boundary(value, name):
+    if value is None:
+        return None
+    # Require a calendar date, a time and an explicit offset. fromisoformat on
+    # its own also accepts naive, basic and week-date forms.
+    pattern = (r"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}"
+               r"(?::[0-9]{2}(?:\.[0-9]{1,6})?)?(?:Z|[+-](?:[01][0-9]|2[0-3]):[0-5][0-9])")
+    try:
+        if not isinstance(value, str) or not re.fullmatch(pattern, value):
+            raise ValueError()
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except (ValueError, OverflowError):
+        fail("VALIDATION_ERROR", f"{name}은 시간대가 포함된 ISO 날짜시각이어야 합니다.")
 
 
 @dataclass(frozen=True)
@@ -494,7 +510,22 @@ class RecordService:
             next_cursor = base64.urlsafe_b64encode(canonical({"filter": filter_hash, "snapshot": snapshot, "offset": offset + limit}).encode()).decode()
         return {"items": [key(item) for item in selected], "next_cursor": next_cursor}
 
-    def list(self, *, query=None, kinds=None, concept_ids=None, limit=20, cursor=None):
+    def list(self, *, query=None, kinds=None, concept_ids=None, limit=20, cursor=None,
+             created_from=None, created_before=None, sort="created_desc"):
+        start, end = created_boundary(created_from, "created_from"), created_boundary(created_before, "created_before")
+        if start is not None and end is not None and start >= end:
+            fail("VALIDATION_ERROR", "저장일 범위의 시작은 끝보다 앞서야 합니다.")
+        if sort not in ("created_desc", "title_asc"):
+            fail("VALIDATION_ERROR", "지원하지 않는 기록 정렬입니다.")
+        filters = {"query": query, "kinds": sorted(normalize_record_kinds(kinds or [])), "concept_ids": sorted(map(str, concept_ids or []))}
+        # Keep existing default cursors valid; canonicalize new boundaries so
+        # equivalent offsets refer to the same result set.
+        if start is not None:
+            filters["created_from"] = start.isoformat()
+        if end is not None:
+            filters["created_before"] = end.isoformat()
+        if sort != "created_desc":
+            filters["sort"] = sort
         with self.db.read() as session:
             captures = list(session.scalars(select(Capture).where(Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None)).order_by(Capture.created_at.desc(), Capture.id.desc())))
             snapshot = digest([(c.id, c.state_version) for c in captures])
@@ -504,17 +535,23 @@ class RecordService:
                 Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None), *predicates))) if predicates else None
             values = []
             for capture in captures:
+                if start is not None or end is not None:
+                    created_at = datetime.fromisoformat(capture.created_at.replace("Z", "+00:00"))
+                    if (start is not None and created_at < start) or (end is not None and created_at >= end):
+                        continue
                 if matching_revisions is not None and capture.current_revision_id not in matching_revisions:
                     continue
                 revision = self._revision(session, capture)
                 if query and query.casefold() not in ((revision.title or "") + "\n" + revision.body_markdown).casefold():
                     continue
                 values.append((capture, revision))
+            if sort == "title_asc":
+                values.sort(key=lambda item: ((item[1].title or "").strip().casefold() or "제목 없는 기록", item[0].id))
             def summary(item):
                 capture, revision = item
                 view = self._view(session, capture, revision)
                 return {field: view[field] for field in ("id", "revision_id", "revision_no", "state_version", "title", "kinds", "visibility", "completion_state", "event_time", "created_at", "updated_at", "index_state", "node_status", "concept_state", "review_state")} | {"excerpt": revision.body_markdown[:240]}
-            return self._page(values, limit, cursor, {"query": query, "kinds": sorted(normalize_record_kinds(kinds or [])), "concept_ids": sorted(map(str, concept_ids or []))}, snapshot, summary)
+            return self._page(values, limit, cursor, filters, snapshot, summary)
 
     def _receipt(self, session, operation, data):
         receipt = session.get(MutationReceipt, (self.principal_scope, str(data.request_id)))

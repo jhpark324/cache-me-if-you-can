@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLibrary } from "./navigation";
 async function settle(page: Page) {
   await page.evaluate(async () => {
     await new Promise(requestAnimationFrame);
@@ -21,13 +22,15 @@ test("실제 API: 기록 생성·정정·주변 그래프·출처·확인 삭제
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "최근 기록" })).toBeVisible();
+  await openLibrary(page);
   await page
     .getByRole("button", { name: "새 기록", exact: true })
     .last()
     .click();
   const title = "실제 API 검증 " + Date.now();
-  await page.getByLabel("제목").fill(title);
+  await page
+    .getByRole("textbox", { name: "제목 선택", exact: true })
+    .fill(title);
   await page
     .getByLabel("내용", { exact: true })
     .fill(

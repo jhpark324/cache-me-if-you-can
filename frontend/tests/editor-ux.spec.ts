@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLibrary } from "./navigation";
 
 const captureId = "11111111-1111-4111-8111-111111111111";
 const revisionId = "22222222-2222-4222-8222-222222222222";
@@ -142,8 +143,7 @@ const editor = (page: Page) =>
 const confirmation = (page: Page) =>
   page.getByRole("alertdialog", { name: "작성 중인 내용을 버릴까요?" });
 async function openEditor(page: Page) {
-  const menu = page.getByRole("button", { name: "메뉴 열기", exact: true });
-  if (await menu.isVisible()) await menu.click();
+  await openLibrary(page);
   await page
     .getByRole("button", { name: "새 기록", exact: true })
     .last()
@@ -158,7 +158,9 @@ for (const dismiss of ["Escape", "outside", "close", "cancel"]) {
     const f = await fixture(page);
     await page.goto("/");
     await openEditor(page);
-    await page.getByLabel("제목").fill("삭제하면 안 되는 제목");
+    await page
+      .getByRole("textbox", { name: "제목 선택", exact: true })
+      .fill("삭제하면 안 되는 제목");
     await page.getByLabel("내용", { exact: true }).fill("입력 중인 **본문**");
     if (dismiss === "Escape") await page.keyboard.press("Escape");
     if (dismiss === "outside") await page.mouse.click(8, 8);
@@ -179,7 +181,9 @@ for (const dismiss of ["Escape", "outside", "close", "cancel"]) {
     await page.keyboard.press("Escape");
     await expect(confirmation(page)).toBeHidden();
     await expect(page.getByLabel("내용", { exact: true })).toBeFocused();
-    await expect(page.getByLabel("제목")).toHaveValue("삭제하면 안 되는 제목");
+    await expect(
+      page.getByRole("textbox", { name: "제목 선택", exact: true }),
+    ).toHaveValue("삭제하면 안 되는 제목");
     await page.getByRole("button", { name: "편집 닫기" }).click();
     await page.getByRole("button", { name: "버리기", exact: true }).click();
     await expect(editor(page)).toBeHidden();
@@ -351,7 +355,7 @@ test("작은 화면과 축소 모션에서 메타데이터 초안도 보호하�
   await expect(page.getByLabel("주제 힌트")).toHaveValue("학습, 데이터베이스");
 });
 
-test("모바일 메뉴에서 연 편집기를 취소하면 메뉴 열기로 초점이 돌아간다", async ({
+test("모바일 목록에서 연 편집기를 취소하면 새 기록 버튼으로 초점이 돌아간다", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -360,12 +364,12 @@ test("모바일 메뉴에서 연 편집기를 취소하면 메뉴 열기로 초�
   await page.getByRole("button", { name: "메뉴 열기" }).click();
   await page
     .getByRole("dialog", { name: "기록과 탐색" })
-    .getByRole("button", { name: "새 기록", exact: true })
+    .getByRole("button", { name: "모든 기록", exact: true })
     .click();
+  const opener = page.getByRole("button", { name: "새 기록", exact: true });
+  await opener.click();
   await expect(editor(page)).toBeVisible();
   await page.getByRole("button", { name: "편집 닫기" }).click();
   await expect(editor(page)).toBeHidden();
-  await expect(
-    page.getByRole("button", { name: "메뉴 열기", exact: true }),
-  ).toBeFocused();
+  await expect(opener).toBeFocused();
 });

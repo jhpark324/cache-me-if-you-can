@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLibrary } from "./navigation";
 
 const capture = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -95,7 +96,7 @@ for (const viewport of [
       reducedMotion: "reduce",
     });
 
-    test("menu keeps keyboard focus visible and Escape returns to its opener", async ({
+    test("navigation keeps visible keyboard focus and matches the viewport", async ({
       page,
     }) => {
       const state = await fixture(page);
@@ -104,44 +105,69 @@ for (const viewport of [
         name: "메뉴 열기",
         exact: true,
       });
-      await expect(opener).toBeVisible();
-      await opener.focus();
-      await page.keyboard.press("Enter");
-      await expectFocusInsideMenu(page);
+      if (viewport.width <= 800) {
+        await expect(opener).toBeVisible();
+        await opener.focus();
+        await page.keyboard.press("Enter");
+        await expectFocusInsideMenu(page);
+      } else {
+        await expect(opener).toHaveCount(0);
+        await expect(
+          page.getByRole("complementary", { name: "주 메뉴" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("dialog", { name: "기록과 탐색" }),
+        ).toHaveCount(0);
+      }
+      for (const name of ["지식 공간", "모든 기록", "타임라인", "설정"])
+        await expect(
+          page.getByRole("button", { name, exact: true }),
+        ).toBeVisible();
       await expect(
         page.getByRole("combobox", { name: "기록 유형", exact: true }),
-      ).toBeVisible();
-      await expect(
-        page.getByRole("combobox", { name: "주제", exact: true }),
-      ).toBeVisible();
+      ).toHaveCount(0);
       await expect(
         page.getByRole("button", { name: new RegExp(capture.title) }),
-      ).toBeVisible();
-
-      // Cross both ends of the drawer's focus order; background controls must
-      // never receive a hidden focus while the menu covers the workspace.
-      for (const key of ["Tab", "Shift+Tab"]) {
-        for (let i = 0; i < 14; i++) {
-          await page.keyboard.press(key);
-          await expectFocusInsideMenu(page);
-        }
-      }
-      await page.keyboard.press("Escape");
-      await expect(opener).toBeFocused();
-      await expect(
-        page.getByRole("complementary", { name: "주 메뉴" }),
       ).toHaveCount(0);
+
+      if (viewport.width <= 800) {
+        // Both ends wrap inside the modal drawer; covered background controls
+        // must never receive focus.
+        for (const key of ["Tab", "Shift+Tab"])
+          for (let i = 0; i < 14; i++) {
+            await page.keyboard.press(key);
+            await expectFocusInsideMenu(page);
+          }
+        await page.keyboard.press("Escape");
+        await expect(opener).toBeFocused();
+        await expect(
+          page.getByRole("complementary", { name: "주 메뉴" }),
+        ).toHaveCount(0);
+      } else {
+        await page
+          .getByRole("button", { name: "모든 기록", exact: true })
+          .focus();
+        await page.keyboard.press("Enter");
+        await expect(page.locator(".record-browser")).toBeVisible();
+        await expect(
+          page.getByRole("complementary", { name: "주 메뉴" }),
+        ).toBeVisible();
+        await expect(
+          page.getByRole("combobox", { name: "기록 유형", exact: true }),
+        ).toBeVisible();
+      }
       expect(state.unexpectedRequests).toEqual([]);
     });
 
-    test("selecting a record closes the drawer and focuses the record heading", async ({
+    test("opening the library closes the mobile drawer and record selection focuses its heading", async ({
       page,
     }) => {
       const state = await fixture(page);
       await page.goto("/");
-      await page
-        .getByRole("button", { name: "메뉴 열기", exact: true })
-        .click();
+      await openLibrary(page);
+      await expect(
+        page.getByRole("dialog", { name: "기록과 탐색" }),
+      ).toHaveCount(0);
       const record = page.getByRole("button", {
         name: new RegExp(capture.title),
       });
@@ -155,7 +181,7 @@ for (const viewport of [
       await expect(heading).toBeFocused();
       await expect(
         page.getByRole("complementary", { name: "주 메뉴" }),
-      ).toHaveCount(0);
+      ).toHaveCount(viewport.width <= 800 ? 0 : 1);
       expect(state.detailReads()).toBe(1);
       expect(state.unexpectedRequests).toEqual([]);
     });
@@ -165,9 +191,7 @@ for (const viewport of [
     }) => {
       const state = await fixture(page, true);
       await page.goto("/");
-      await page
-        .getByRole("button", { name: "메뉴 열기", exact: true })
-        .click();
+      await openLibrary(page);
       await page
         .getByRole("button", { name: new RegExp(capture.title) })
         .click();

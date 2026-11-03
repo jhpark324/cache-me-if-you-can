@@ -1,14 +1,14 @@
 # 운영체제 지원 설계
 
-- 상태: Windows·macOS·Linux 직접 실행은 사용자 확정 요구, WSL CPU에서 임베딩·검색 조합 실행 확인, 네이티브 앱·배포 검증 전
+- 상태: Windows·macOS·Linux 네이티브 실행 목표. WSL CPU에서 임베딩·검색 조합을 확인했으며 네이티브 앱·배포는 미검증
 - 확인일: 2026-11-02
 - 관련 문서: [제품 기획](../project/product-brief.md), [기술 스택](technology-stack.md), [검색과 임베딩](search-and-embedding.md)
 
 ## 지원 목표
 
-Windows·macOS·Linux 각각에서 로컬 FastAPI 서버, SQLite·LanceDB, 임베딩을 CPU로 직접 실행한다. WSL·Docker·GPU는 필수 조건으로 두지 않는다. 자체 웹은 각 OS의 브라우저에서 사용하고 Codex는 로컬 MCP에 연결한다. 모바일 기기 자체에서 서버를 실행하는 요구는 이번 지원 범위에 포함하지 않는다.
+Windows·macOS·Linux 각각에서 로컬 FastAPI 서버, SQLite·LanceDB, 임베딩을 CPU로 직접 실행한다. WSL·Docker·GPU는 필수 조건으로 두지 않는다. 자체 웹은 각 OS의 브라우저에서 사용하고 Codex는 로컬 MCP에 연결한다. 모바일 기기 자체의 서버 실행은 지원 목표에 포함하지 않는다.
 
-이는 지원 요구사항이며 호환성 검증이 끝났다는 선언이 아니다. OS 이름과 CPU 아키텍처를 구분하고, 최소 OS·Python 버전과 설치 방법은 실제 조합 검증 뒤 확정한다. Intel Mac이나 Windows ARM을 사용자 동의 없이 지원 대상에서 제외하지 않는다.
+이는 지원 요구사항이며 호환성 검증이 끝났다는 선언이 아니다. OS 이름과 CPU 아키텍처를 구분하고, 최소 OS·Python 버전과 설치 방법은 실제 조합 검증 뒤 확정한다. Intel Mac과 Windows ARM도 지원 목표에 포함하되 설치 경로 검증 전에는 지원 완료로 표시하지 않는다.
 
 ## 현재 배포 패키지 확인
 
@@ -31,7 +31,7 @@ LanceDB의 기본 x64 wheel에는 AVX2 등 CPU 명령어 조건도 있다. 구�
 
 WSL의 Linux x64 CPU 환경에서 KURE-v2, Sentence Transformers 6.2.0의 `MultiVectorEncoder`, PyTorch 2.15.0, LanceDB 0.41.0 조합을 설치하고 모델 인코딩·다중 벡터 검색·ICU FTS·RRF 하이브리드 검색·ANN 실행을 확인했다. 측정 조건과 결과, 한계는 [KURE-v2 구성 적합성 평가](../research/kure-v2-feasibility/report.md)에 기록한다.
 
-이 결과는 한국어 중심 MVP의 개발 기준으로 이 조합을 조건부 채택하는 근거다. Windows·macOS·Linux 네이티브 실행이나 전체 OS 배포를 승인한 결과는 아니다. FastAPI·웹·MCP·OAuth를 포함한 WSL 로컬 제품 시험은 [004](../specs/004-local-runtime/validation.md)에서 추가 수행했다. Windows·macOS·Linux 네이티브 OS별 설치·실행은 아직 수행하지 않았다. 위 패키지 표는 배포 파일 존재만 나타내며, WSL에서 실행한 조합의 결과를 다른 OS·아키텍처에 확대하지 않는다. Intel Mac과 Windows ARM64의 패키지 제약도 해결되지 않았다.
+이 결과는 한국어 중심 MVP의 개발 기준으로 이 조합을 조건부 채택하는 근거다. Windows·macOS·Linux 네이티브 실행이나 전체 OS 배포를 승인한 결과는 아니다. 제품 시험은 연구와 별도이며 FastAPI·웹·MCP·OAuth의 재현 절차는 [검증 안내](../guides/testing.md)에서 확인한다. Windows·macOS·Linux 네이티브 OS별 설치·실행은 아직 수행하지 않았다. 위 패키지 표는 배포 파일 존재만 나타내며, WSL에서 실행한 조합의 결과를 다른 OS·아키텍처에 확대하지 않는다. Intel Mac과 Windows ARM64의 패키지 제약도 해결되지 않았다.
 
 ## 실행·배포 원칙
 
@@ -47,7 +47,7 @@ Windows x64, Apple Silicon macOS, Linux x64·ARM64는 현재 주요 패키지의
 
 Intel Mac은 PyTorch가 2.2.x 이후 공식 macOS x64 배포를 중단했다. 이전 버전 고정, 별도 빌드, 다른 임베딩 실행기를 검토할 수 있지만 최신 모델·Lance 기능과 함께 동작하는지는 미검증이다. 구버전 패키지를 설치할 수 있다는 이유만으로 현재 설계의 ICU FTS 등 기능이 그대로 제공된다고 가정하지 않는다. [PyTorch 공식 발표](https://pytorch.org/blog/pytorch2-2/)
 
-Windows ARM64는 PyTorch CPU 배포가 있지만 LanceDB·PyArrow의 해당 버전 wheel이 없다. 필요 시 프로젝트에서 네이티브 의존성을 빌드·배포하는 경로를 검증한다. 검색 저장소 변경이나 다른 런타임 도입이 필요해지면 기존 LanceDB 선택과의 영향을 결정 기록에 남긴다. 사용자의 네이티브 실행 요구를 WSL 필수 설치로 대신 충족했다고 표시하지 않는다.
+Windows ARM64는 PyTorch CPU 배포가 있지만 LanceDB·PyArrow의 해당 버전 wheel이 없다. 필요 시 프로젝트에서 네이티브 의존성을 빌드·배포하는 경로를 검증한다. 검색 저장소 변경이나 다른 런타임 도입이 필요해지면 기존 LanceDB 선택과의 영향을 결정 기록에 남긴다. 네이티브 실행 목표를 WSL 필수 설치로 대신 충족했다고 표시하지 않는다.
 
 ## 구현 수용 기준으로 옮길 항목
 

@@ -1,18 +1,125 @@
-.graph-label-layer > span[data-selected="true"] {
-  color: #ffad66;
-  font-weight: 650;
-  background: rgba(22, 13, 6, 0.94);
-  box-shadow: 0 0 0 1px rgba(255, 173, 102, 0.45);
+.graph-section {
+  font-family: Pretendard, "Malgun Gothic", sans-serif;
+}
+.graph-section .graph-label-layer > .graph-label {
+  max-width: 220px;
+  padding: 1px 5px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: #000;
+  color: #b3b3b3;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 450;
+  line-height: 1.55;
+  letter-spacing: -0.015em;
+  text-shadow: none;
+  box-shadow: none;
+}
+.graph-section .graph-label-layer > .graph-label[data-kind="concept"] {
+  color: #ededed;
+  font-size: 14px;
+  font-weight: 500;
+}
+.graph-section .graph-label-layer > .graph-label[data-highlighted="true"] {
+  color: #fff;
+  border-color: #686868;
+  z-index: 2;
+}
+.graph-section .graph-label-layer > .graph-label[data-selected="true"] {
+  color: #fff;
+  font-weight: 550;
+  border-color: #ededed;
+  background: #171717;
   z-index: 3;
 }
+
+.graph-section .graph-controls {
+  padding: 4px;
+  gap: 2px;
+  border: 1px solid #333;
+  border-radius: 12px;
+  background: #0d0d0d;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.graph-section .graph-controls .rt-IconButton,
+.graph-section .graph-list-heading .rt-IconButton {
+  min-width: 40px;
+  min-height: 40px;
+  color: #b3b3b3;
+  border-radius: 8px;
+}
+.graph-section .graph-controls .rt-IconButton:hover,
+.graph-section .graph-list-heading .rt-IconButton:hover {
+  color: #fff;
+  background: #262626;
+}
+.graph-section .graph-controls .rt-IconButton:disabled {
+  color: #686868;
+  background: transparent;
+}
+.graph-section :is(button, input):focus-visible {
+  outline: 2px solid #ededed;
+  outline-offset: 3px;
+}
+.graph-section .graph-legend {
+  color: #b3b3b3;
+  font-size: 11px;
+}
+.graph-section .graph-legend .legend-capture {
+  width: 6px;
+  height: 6px;
+  background: #b3b3b3;
+}
+.graph-section .graph-legend .legend-concept {
+  width: 8px;
+  height: 8px;
+  background: #ededed;
+}
+.graph-section .graph-legend .legend-node {
+  width: 4px;
+  height: 4px;
+  background: #858585;
+}
+.graph-section .graph-legend .legend-retrieved {
+  width: 7px;
+  height: 7px;
+  border: 1px solid #b3b3b3;
+  background: transparent;
+}
+.graph-section .graph-legend .legend-cited {
+  width: 7px;
+  height: 7px;
+  background: #ededed;
+}
+
+.graph-section.graph-world .graph-list {
+  max-height: min(420px, calc(100% - 100px));
+  border: 1px solid #525252;
+  border-radius: 12px;
+  background: #111;
+  box-shadow: none;
+  backdrop-filter: none;
+  scrollbar-color: #686868 #111;
+  scrollbar-width: thin;
+}
+.graph-section .graph-list .chip {
+  color: #ededed;
+  font-family: inherit;
+  border-radius: 7px;
+}
 .graph-section .graph-list .chip[aria-pressed="true"] {
-  color: #ffad66;
-  background: rgba(255, 173, 102, 0.08);
-  border-color: rgba(255, 173, 102, 0.35);
+  color: #fff;
+  background: #292929;
+  border-color: #858585;
+}
+.graph-section .graph-list .chip > small {
+  color: #b3b3b3;
 }
 .graph-list-search {
   padding: 3px 10px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #333;
   margin-bottom: 4px;
 }
 .graph-list-search label {
@@ -22,32 +129,30 @@
   width: 100%;
   min-width: 0;
   min-height: 44px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 9px;
-  background: rgba(0, 0, 0, 0.35);
-  color: #fff;
+  border: 1px solid #686868;
+  border-radius: 8px;
+  background: #0a0a0a;
+  color: #ededed;
+  caret-color: #ededed;
   padding: 10px 12px;
   font-family: inherit;
   font-size: 14px;
 }
 .graph-list-search input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
-}
-.graph-list-search input:focus-visible {
-  outline: 2px solid #ffad66;
-  outline-offset: 2px;
+  color: #a3a3a3;
 }
 .graph-result-count {
   display: block;
   margin-top: 10px;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.72);
+  font-variant-numeric: tabular-nums;
+  color: #b3b3b3;
 }
 .graph-list-empty {
   margin: 12px 10px;
   font-size: 14px;
   line-height: 1.7;
-  color: rgba(255, 255, 255, 0.72);
+  color: #b3b3b3;
 }
 
 /* Search evidence stays in a visible graph area below the answer. */
@@ -58,70 +163,64 @@
 .main-content.has-retrieval .search-dock {
   max-height: min(52dvh, calc(100dvh - 310px));
 }
-.graph-label-layer > span[data-kind="retrieved_chunk"] {
+.graph-section .graph-label-layer > .graph-label[data-kind="retrieved_chunk"] {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   width: max-content;
-  max-width: 240px;
-  color: #b1f0f7;
-  background: rgba(5, 21, 25, 0.92);
-  box-shadow: 0 0 0 1px rgba(128, 220, 233, 0.3);
+  max-width: 260px;
+  color: #b3b3b3;
+  background: #111;
+  border: 1px dashed #686868;
   padding: 5px 8px;
-  font-weight: 550;
+  font-weight: 450;
 }
 .graph-label-context {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 7px;
   font-size: 10px;
   font-weight: 450;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.75);
+  color: #b3b3b3;
 }
-.graph-label-context > span:first-child,
+.graph-label-capture,
 .graph-label-excerpt {
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
+.graph-label-state,
 .graph-label-range {
   flex-shrink: 0;
+}
+.graph-label-range {
   font-variant-numeric: tabular-nums;
 }
-.graph-label-layer > span[data-kind="retrieved_chunk"][data-cited="true"] {
-  color: #ffad66;
-  background: rgba(28, 16, 7, 0.94);
-  box-shadow: 0 0 0 1px rgba(255, 173, 102, 0.4);
+.graph-section
+  .graph-label-layer
+  > .graph-label[data-kind="retrieved_chunk"][data-cited="true"] {
+  color: #ededed;
+  border-style: solid;
+  border-color: #a3a3a3;
 }
-.graph-label-layer > span[data-kind="retrieved_chunk"][data-selected="true"] {
+.graph-section
+  .graph-label-layer
+  > .graph-label[data-kind="retrieved_chunk"][data-selected="true"] {
   color: #fff;
-  box-shadow: 0 0 0 2px #ffad66;
+  border-color: #fff;
+  background: #292929;
 }
-.legend-retrieved {
-  background: #80dce9;
-}
-.legend-cited {
-  background: #ffad66;
-}
-.graph-world .graph-list .chip[data-kind="retrieved_chunk"] {
+.graph-section.graph-world .graph-list .chip[data-kind="retrieved_chunk"] {
   align-items: flex-start;
   flex-direction: column;
   gap: 5px;
-  border-left: 2px solid #80dce9;
 }
-.graph-world .graph-list .chip[data-cited="true"] {
-  border-left-color: #ffad66;
-}
-.graph-list .chip[data-kind="retrieved_chunk"] > small {
+.graph-section .graph-list .chip[data-kind="retrieved_chunk"] > small {
   white-space: normal;
   overflow-wrap: anywhere;
-  color: rgba(255, 255, 255, 0.72);
   font-size: 11px;
   line-height: 1.6;
-}
-.graph-world .graph-list {
-  max-height: min(420px, calc(100% - 100px));
 }
 .graph-retrieval-note {
   position: absolute;
@@ -129,16 +228,26 @@
   bottom: 80px;
   max-width: calc(100% - 52px);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
+  color: #b3b3b3;
 }
 .graph-retrieval-note ~ .graph-truncated {
   bottom: 112px;
 }
 @media (max-width: 800px) {
-  .graph-label-layer > span[data-kind="retrieved_chunk"] {
-    max-width: 200px;
+  .graph-section .graph-label-layer > .graph-label {
+    font-size: 11px;
+    max-width: 150px;
   }
-  .graph-controls .rt-IconButton {
+  .graph-section .graph-label-layer > .graph-label[data-kind="concept"] {
+    font-size: 12px;
+  }
+  .graph-section
+    .graph-label-layer
+    > .graph-label[data-kind="retrieved_chunk"] {
+    max-width: 220px;
+  }
+  .graph-section .graph-controls .rt-IconButton,
+  .graph-section .graph-list-heading .rt-IconButton {
     min-width: 44px;
     min-height: 44px;
   }
@@ -154,7 +263,7 @@
     bottom: 23px;
     left: 12px;
   }
-  .graph-legend {
+  .graph-section .graph-legend {
     bottom: 86px;
     font-size: 11px;
   }

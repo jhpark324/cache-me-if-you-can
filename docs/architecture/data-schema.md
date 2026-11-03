@@ -1,11 +1,11 @@
 # 데이터 스키마
 
-- 상태: 002·004에 반영한 공통 논리 스키마. 실행 DDL은 코드와 migration이 기준
+- 상태: 현재 공통 논리 스키마. 실행 DDL은 코드와 migration이 기준
 - 작성일: 2026-11-02
 - 기준: [제품 기획](../project/product-brief.md), [기록·공개 범위](../project/record-and-visibility.md), [지식 계층](knowledge-layer.md), [검색 설계](search-and-embedding.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
-기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/second_brain/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [004 검증](../specs/004-local-runtime/validation.md)을 함께 확인한다.
+기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/second_brain/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
 
 ## 공통 규약
 
@@ -93,7 +93,7 @@ erDiagram
 - `revision_id: UUID FK`, `kind: knowledge | context | episode | idea | decision | artifact`
 - 위 6개는 현재 입력·출력 기준이다. 불변 이력의 DB 제약은 과거 `procedure/reflection/plan`도 보존하며, 조회·필터에서 `knowledge/episode/idea`로 해석한다. 기존 이력 행을 직접 갱신하지 않는다.
 - 복합 PK `(revision_id, kind)`, 기본은 빈 집합. 기록 전체의 재사용 목적이며 여러 유형을 함께 지정할 수 있다. 미분류 `[]`도 본문으로 검색 가능해야 한다.
-- 각 값의 의미·예외·기존 아홉 유형에서 여섯 유형으로의 통합은 [기록 유형](../project/record-types.md)을 따른다. DB 이력을 재작성하는 마이그레이션 없이 입력 정규화·조회·필터 호환 계층으로 적용한다.
+- 각 값의 의미·예외·입력 별칭의 정규화는 [기록 유형](../project/record-types.md)을 따른다. DB 이력을 재작성하는 마이그레이션 없이 입력 정규화·조회·필터 호환 계층으로 적용한다.
 - `idea`는 구상·목표·향후 단계를 포함하며 일정·알림·반복 일정 테이블을 만들지 않는다. `context`는 특정 대상·상황의 조건이지 모든 대화에 항상 적용되는 지시가 아니다. `artifact`는 현재 Markdown 안의 재사용할 텍스트·코드를 뜻한다.
 - 유형이 Node의 종류·발화자·확인 상태·완료 여부를 대신하지 않는다. `decision`에는 명시적으로 선택한 내용이 있어야 하며 유형만으로 선택·실행 사실을 추정하지 않는다.
 
@@ -245,6 +245,6 @@ Lance의 일반 `add`를 UNIQUE 제약으로 간주하지 않는다. 결정적 �
 
 ## 구현·검증에서 추적할 세부값
 
-기본 식별자·부모 관계·상태 분리·공개 범위는 위 공통 설계를 따른다. 입력 최대 바이트/글자 수, 페이지 최대 크기, 확인 토큰 만료 시간의 시작값은 [서비스 계약](service-contracts.md#입력-제한과-상세-조회)에 정의했다. 검색·모델 호출 예산은 [검색·맥락 계약](retrieval-and-context.md#한-요청의-범위와-초기-예산)을 따른다. 작업 lease·재시도 수와 백업 파일 포맷은 구현되어 있으며 실제 값과 검증은 [004 운영 후속](../specs/004-local-runtime/operations-followup.md) 및 도메인 코드에서 확인한다. 구현 세부값을 조정해도 본문 필수 입력이나 삭제·출처 상태의 의미를 임의로 바꾸지 않는다.
+기본 식별자·부모 관계·상태 분리·공개 범위는 위 공통 설계를 따른다. 입력 최대 바이트/글자 수, 페이지 최대 크기, 확인 토큰 만료 시간의 시작값은 [서비스 계약](service-contracts.md#입력-제한과-상세-조회)에 정의했다. 검색·모델 호출 예산은 [검색·맥락 계약](retrieval-and-context.md#한-요청의-범위와-초기-예산)을 따른다. 작업 lease·재시도 수와 백업 파일 포맷은 구현되어 있으며 실제 값과 검증은 [실행 명세](../specs/runtime.md) 및 도메인 코드에서 확인한다. 구현 세부값을 조정해도 본문 필수 입력이나 삭제·출처 상태의 의미를 임의로 바꾸지 않는다.
 
-SQL DDL·Pydantic 모델 생성 단계에서는 FK·CHECK·복합 고유성, 동시 수정, 본문 span과 Node 상태 전이, 메타데이터 수정의 근거 동등성, 출처 재검토 전후의 이력·의존성, 조건 대체 범위와 관계 철회, soft delete 후 조회 제외·출처 보존, 재색인 중 저장·삭제 경합을 실제로 검증한다. 해당 항목의 자동·실제 연동 결과는 [002 검증](../specs/002-record-management/validation.md)과 [004 최종 점검](../specs/004-local-runtime/final-review.md)에서 관리한다. 이 논리 설계표만으로 모든 OS와 실제 사용자 자료의 검증을 대체하지 않는다.
+SQL DDL·Pydantic 모델 생성 단계에서는 FK·CHECK·복합 고유성, 동시 수정, 본문 span과 Node 상태 전이, 메타데이터 수정의 근거 동등성, 출처 재검토 전후의 이력·의존성, 조건 대체 범위와 관계 철회, soft delete 후 조회 제외·출처 보존, 재색인 중 저장·삭제 경합을 실제로 검증한다. 해당 항목의 자동·실제 연동 결과는 [검증 안내](../guides/testing.md)과 [검증 안내](../guides/testing.md)에서 관리한다. 이 논리 설계표만으로 모든 OS와 실제 사용자 자료의 검증을 대체하지 않는다.

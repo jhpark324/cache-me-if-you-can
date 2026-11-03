@@ -1,0 +1,689 @@
+.record-browser {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  padding: 20px 32px 0;
+  color: #f2f2f2;
+  font-family:
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  --rb-muted: #aaa;
+}
+
+.record-browser ::selection {
+  color: #fff;
+  background: #4a4a4a;
+}
+
+.record-browser :is(button, select, input):focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.record-browser button,
+.record-browser input,
+.record-browser select {
+  font-family: inherit;
+}
+
+.record-browser button:disabled,
+.record-browser select:disabled,
+.record-browser input:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.record-browser .rb-toolbar,
+.record-browser .rb-scroll {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+.record-browser .rb-toolbar {
+  flex: none;
+  padding: 0 4px 20px;
+}
+
+.record-browser .rb-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.record-browser .rb-heading-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+.record-browser .rb-heading h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+
+.record-browser .rb-count {
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.record-browser .rb-create,
+.record-browser .rb-secondary,
+.record-browser .rb-retry,
+.record-browser .rb-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.record-browser .rb-create {
+  flex: none;
+  color: #111;
+  background: #eee;
+  white-space: nowrap;
+}
+
+.record-browser .rb-create:hover {
+  background: #fff;
+}
+
+.record-browser .rb-create svg,
+.record-browser .rb-retry svg {
+  width: 16px;
+  height: 16px;
+}
+
+.record-browser .rb-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.record-browser .rb-filter {
+  display: block;
+  min-width: 0;
+  max-width: 220px;
+}
+
+.record-browser .rb-filter select,
+.record-browser .rb-filter input {
+  display: block;
+  width: 100%;
+  min-width: 128px;
+  max-width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #666;
+  border-radius: 6px;
+  color: #dedede;
+  background: #111;
+  font-size: 13px;
+  line-height: 1.5;
+  color-scheme: dark;
+  caret-color: #fff;
+}
+
+.record-browser .rb-filter select {
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.record-browser .rb-filter select:hover,
+.record-browser .rb-filter input:hover {
+  border-color: #999;
+}
+
+.record-browser .rb-sort,
+.record-browser .rb-period {
+  margin-left: auto;
+}
+
+.record-browser .rb-period {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 255px;
+}
+
+.record-browser .rb-period > span {
+  flex: none;
+  color: var(--rb-muted);
+  font-size: 12px;
+}
+
+.record-browser .rb-period input {
+  min-width: 160px;
+}
+
+.record-browser .rb-reset {
+  min-height: 40px;
+  padding-inline: 9px;
+  color: #bdbdbd;
+  background: transparent;
+  font-weight: 400;
+}
+
+.record-browser .rb-reset:hover,
+.record-browser .rb-retry:hover:not(:disabled) {
+  color: #fff;
+  background: #202020;
+}
+
+.record-browser .rb-scroll {
+  flex: 1;
+  min-height: 0;
+  padding: 4px 4px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #666 #101010;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+.record-browser .rb-records,
+.record-browser .rb-date-records {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.record-browser .rb-item {
+  min-width: 0;
+}
+
+.record-browser .rb-record {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) 100px 100px 16px;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  min-height: 92px;
+  margin: 0;
+  padding: 18px 12px;
+  border: 0;
+  border-bottom: 1px solid #292929;
+  border-radius: 5px;
+  color: #eee;
+  background: transparent;
+  text-align: left;
+  transition: background-color 160ms ease-out;
+}
+
+.record-browser .rb-record:hover {
+  background: #141414;
+}
+
+.record-browser .rb-record:focus-visible {
+  background: #202020;
+  outline-offset: -2px;
+}
+
+.record-browser .rb-record-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.record-browser .rb-record-title {
+  color: #eee;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.record-browser .rb-record-preview {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  color: var(--rb-muted);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.record-browser .rb-record-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  color: #bdbdbd;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.record-browser .rb-record-status > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.record-browser .rb-record-status svg {
+  width: 12px;
+  height: 12px;
+}
+
+.record-browser .rb-file,
+.record-browser .rb-chevron {
+  color: #aaa;
+}
+
+.record-browser .rb-file {
+  width: 18px;
+  height: 18px;
+}
+
+.record-browser .rb-chevron {
+  width: 16px;
+  height: 16px;
+}
+
+.record-browser .rb-record-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.record-browser .rb-record-date {
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.record-browser.rb-timeline .rb-toolbar,
+.record-browser.rb-timeline .rb-scroll {
+  max-width: 1040px;
+}
+
+.record-browser .rb-timeline-groups {
+  padding-top: 8px;
+}
+
+.record-browser .rb-date-group {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.record-browser .rb-date-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  padding-top: 14px;
+}
+
+.record-browser .rb-date-heading h2 {
+  margin: 0;
+  color: #bdbdbd;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.record-browser .rb-weekday {
+  color: var(--rb-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-browser .rb-recent {
+  margin-top: 2px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: #111;
+  background: #dedede;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.record-browser .rb-latest .rb-date-heading h2 {
+  color: #f2f2f2;
+  font-weight: 600;
+}
+
+.record-browser .rb-date-records {
+  position: relative;
+  min-width: 0;
+  padding: 0 0 32px 28px;
+  border-left: 1px solid #343434;
+}
+
+.record-browser .rb-date-records::before {
+  position: absolute;
+  top: 20px;
+  left: -4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #888;
+  content: "";
+}
+
+.record-browser .rb-latest .rb-date-records::before {
+  top: 19px;
+  left: -5px;
+  width: 9px;
+  height: 9px;
+  background: #eee;
+}
+
+.record-browser .rb-date-group:last-child .rb-date-records {
+  padding-bottom: 0;
+}
+
+.record-browser .rb-record-timeline {
+  grid-template-columns: minmax(0, 1fr) 100px 16px;
+  min-height: 82px;
+  padding: 15px 14px;
+}
+
+.record-browser .rb-notice {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #666;
+  border-radius: 6px;
+  color: #dedede;
+}
+
+.record-browser .rb-notice p {
+  flex: 1 1 260px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.record-browser .rb-list-error {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.record-browser .rb-retry {
+  color: #eee;
+  background: #191919;
+}
+
+.record-browser .rb-secondary {
+  max-width: 100%;
+  color: #dedede;
+  background: #191919;
+  border: 1px solid #666;
+}
+
+.record-browser .rb-secondary:hover:not(:disabled) {
+  color: #fff;
+  background: #252525;
+  border-color: #999;
+}
+
+.record-browser .rb-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 65ch;
+  padding: 48px 12px;
+}
+
+.record-browser .rb-empty h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-wrap: balance;
+}
+
+.record-browser .rb-empty p {
+  margin: 0 0 8px;
+  color: var(--rb-muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.record-browser .rb-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 24px 12px;
+  color: #bdbdbd;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.record-browser .rb-loading-initial {
+  justify-content: flex-start;
+  padding-top: 48px;
+}
+
+.record-browser .rb-loading svg {
+  width: 17px;
+  height: 17px;
+  animation: rb-spin 1s linear infinite;
+}
+
+.record-browser .rb-footer {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 4px;
+}
+
+@keyframes rb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 1100px) {
+  .record-browser .rb-record {
+    grid-template-columns: 20px minmax(0, 1fr) 82px 88px 16px;
+    gap: 12px;
+  }
+  .record-browser .rb-date-group {
+    grid-template-columns: 105px minmax(0, 1fr);
+  }
+  .record-browser .rb-date-records {
+    padding-left: 20px;
+  }
+  .record-browser .rb-record-timeline {
+    grid-template-columns: minmax(0, 1fr) 82px 16px;
+  }
+}
+
+@media (max-width: 760px) {
+  .record-browser {
+    padding: 16px 12px 0;
+  }
+  .record-browser .rb-toolbar {
+    padding-bottom: 16px;
+  }
+  .record-browser .rb-heading {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .record-browser .rb-heading-copy {
+    gap: 3px 10px;
+  }
+  .record-browser .rb-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .record-browser .rb-filter {
+    max-width: none;
+  }
+  .record-browser .rb-filter select,
+  .record-browser .rb-filter input {
+    min-width: 0;
+    min-height: 44px;
+  }
+  .record-browser .rb-sort,
+  .record-browser .rb-period {
+    grid-column: 2;
+    grid-row: 2;
+    margin: 0;
+  }
+  .record-browser .rb-period {
+    position: relative;
+    display: block;
+  }
+  .record-browser .rb-period > span {
+    position: absolute;
+    top: 3px;
+    left: 10px;
+    font-size: 10px;
+    line-height: 1.4;
+    pointer-events: none;
+  }
+  .record-browser .rb-period input {
+    padding-top: 17px;
+    padding-bottom: 3px;
+    font-size: 12px;
+  }
+  .record-browser .rb-reset {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    min-height: 44px;
+  }
+  .record-browser .rb-scroll {
+    padding-bottom: 20px;
+  }
+  .record-browser .rb-record {
+    grid-template-columns: minmax(0, 1fr) auto 16px;
+    gap: 8px;
+    padding: 16px 8px;
+  }
+  .record-browser .rb-file {
+    display: none;
+  }
+  .record-browser .rb-record-copy {
+    grid-column: 1 / 3;
+    grid-row: 1;
+  }
+  .record-browser .rb-record-kinds {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .record-browser .rb-record-date {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .record-browser .rb-chevron {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+  .record-browser .rb-date-group {
+    grid-template-columns: minmax(0, 1fr);
+    padding-bottom: 24px;
+  }
+  .record-browser .rb-date-heading {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 0 16px;
+  }
+  .record-browser .rb-date-heading h2 {
+    font-size: 15px;
+  }
+  .record-browser .rb-recent {
+    margin: 0 0 0 auto;
+  }
+  .record-browser .rb-date-records {
+    margin-left: 4px;
+    padding: 0 0 0 16px;
+  }
+  .record-browser .rb-date-records::before {
+    top: 18px;
+  }
+  .record-browser .rb-latest .rb-date-records::before {
+    top: 17px;
+  }
+  .record-browser .rb-record-timeline {
+    grid-template-columns: minmax(0, 1fr) 16px;
+    padding: 12px 8px;
+  }
+  .record-browser .rb-record-timeline .rb-record-copy {
+    grid-column: 1;
+  }
+  .record-browser .rb-record-timeline .rb-chevron {
+    grid-column: 2;
+  }
+  .record-browser .rb-empty {
+    padding: 32px 8px;
+  }
+}
+
+@media (max-width: 360px) {
+  .record-browser {
+    padding-inline: 8px;
+  }
+  .record-browser .rb-heading-copy {
+    flex-direction: column;
+  }
+  .record-browser .rb-create {
+    padding-inline: 11px;
+  }
+  .record-browser .rb-filter select,
+  .record-browser .rb-filter input {
+    padding-inline: 7px;
+  }
+  .record-browser .rb-period > span {
+    left: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-browser .rb-record {
+    transition: none;
+  }
+  .record-browser .rb-loading svg {
+    animation: none;
+  }
+}

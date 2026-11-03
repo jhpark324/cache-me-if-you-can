@@ -17,8 +17,6 @@ local-access.json
 *.pem
 *.key
 *.log
-!docs/research/kure-v2-feasibility/run.log
-!docs/research/kure-v2-feasibility/runtime-checks.log
 .DS_Store
 Thumbs.db
 .ruff_cache/

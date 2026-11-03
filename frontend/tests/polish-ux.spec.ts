@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-test("도움말이 화면높이로 늘어나지 않고 선택한 검색 조건을 바로 해제한다", async ({
+test("도움말이 화면높이로 늘어나지 않고 목록 필터를 바로 초기화한다", async ({
   page,
 }) => {
   await page.route("**/api/v1/**", (route) => {
@@ -11,7 +11,7 @@ test("도움말이 화면높이로 늘어나지 않고 선택한 검색 조건�
         : { items: [], next_cursor: null };
     return route.fulfill({ json: { schema_version: 1, ok: true, data } });
   });
-  await page.setViewportSize({ width: 1024, height: 768 });
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const menu = page.getByRole("button", { name: "메뉴 열기", exact: true });
   await menu.focus();
@@ -21,19 +21,22 @@ test("도움말이 화면높이로 늘어나지 않고 선택한 검색 조건�
   expect(rect!.height).toBeLessThan(60);
   expect(rect!.width).toBeLessThan(260);
   await menu.click();
+  await page.getByRole("button", { name: "모든 기록", exact: true }).click();
   await page
     .getByRole("combobox", { name: "기록 유형", exact: true })
     .selectOption("knowledge");
-  await page.keyboard.press("Escape");
-  await expect(menu).toBeFocused();
-  const filter = page.getByRole("button", {
-    name: "기록 유형 필터 해제",
-    exact: true,
-  });
-  await expect(filter).toContainText("지식");
+  const filter = page
+    .getByRole("group", { name: "기록 필터", exact: true })
+    .getByRole("button", { name: "필터 초기화", exact: true });
+  await expect(
+    page.getByRole("combobox", { name: "기록 유형", exact: true }),
+  ).toHaveValue("knowledge");
   await filter.click();
   await expect(filter).toHaveCount(0);
   await expect(
-    page.getByRole("heading", { name: "첫 번째 생각을 남겨보세요" }),
+    page.getByRole("combobox", { name: "기록 유형", exact: true }),
+  ).toHaveValue("");
+  await expect(
+    page.getByRole("heading", { name: "모든 기록", exact: true }),
   ).toBeVisible();
 });

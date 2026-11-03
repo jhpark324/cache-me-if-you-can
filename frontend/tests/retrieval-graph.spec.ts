@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { openHome, openLibrary } from "./navigation";
 import type { AnswerResult, Capture, SourceRef } from "../src/types";
 
 const stamp = "2026-11-02T00:00:00Z";
@@ -253,7 +254,7 @@ test("검색은 맨 위에 있고 완료된 검색 구간과 인용을 같은 ca
   await expect(page.getByText("내 공간", { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "새 기록", exact: true }),
-  ).toHaveCount(1);
+  ).toHaveCount(0);
   const canvas = page.locator(".graph-world canvas");
   await canvas.evaluate((element) =>
     element.setAttribute("data-identity", "same-canvas"),
@@ -346,7 +347,7 @@ test("검색은 맨 위에 있고 완료된 검색 구간과 인용을 같은 ca
         Math.abs(previous.x - target.x) < 0.5 &&
         Math.abs(previous.y - target.y) < 0.5 &&
         (await chunk(page, target.index).getAttribute("data-highlighted")) ===
-        "true"
+          "true"
       );
     })
     .toBe(true);
@@ -426,7 +427,7 @@ test("WebGL 없이도 키보드 목록에서 같은 기록의 다른 검색 구�
   await expect(anchor).toHaveAttribute("aria-pressed", "true");
 });
 
-test("새 질문·닫기·필터에서 검색 그래프를 비우고 늦은 응답을 무시한다", async ({
+test("새 질문·닫기·보기 이동에서 검색 그래프를 비우고 늦은 응답을 무시한다", async ({
   page,
 }) => {
   const state = await fixture(page);
@@ -456,10 +457,10 @@ test("새 질문·닫기·필터에서 검색 그래프를 비우고 늦은 응�
   await expect(page.getByRole("article", { name: "AI 답변" })).toHaveCount(0);
   await expect(chunks(page)).toHaveCount(0);
   await complete(page);
-  await page
-    .getByRole("combobox", { name: "기록 유형", exact: true })
-    .selectOption("knowledge");
+  await openLibrary(page);
   await expect(chunks(page)).toHaveCount(0);
+  await expect(page.getByRole("article", { name: "AI 답변" })).toHaveCount(0);
+  await openHome(page);
   await complete(page);
   await page
     .getByRole("button", { name: "검색 응답 닫기", exact: true })
