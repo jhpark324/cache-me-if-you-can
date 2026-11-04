@@ -104,10 +104,13 @@ uv run --locked --project backend --extra embedding python scripts/check_codex.p
 
 ```sh
 uv run --locked --project backend --extra embedding python scripts/check_cacheme_skill.py --output .local/checks/skill-behavior.json
+uv run --locked --project backend --extra embedding python scripts/check_cacheme_skill.py --boundaries-only --output .local/checks/skill-boundaries.json
 uv run --locked --project backend --extra embedding python scripts/check_cacheme_skill.py --global-only --output .local/checks/skill-installed.json
 ```
 
-두 번째 명령 전에는 [cache-me 설치](local-development.md#codex-mcp)가 필요하다. 실제 모델의 선택은 요청과 모델에 따라 달라질 수 있으므로 한 실행의 성공을 모든 표현의 성공으로 해석하지 않는다.
+`--boundaries-only`는 저장 범위와 기록 단위에 대한 네 사례를 9턴으로 검사한다. 같은 대화에서 첫 주제를 저장한 뒤 다른 주제로 넘어가 최근 내용만 저장하는 경우, 전체 대화의 독립적인 내용을 각각 저장하는 경우, 하나의 결정과 이유를 함께 보존하는 경우, 여러 주제가 있는 한 문서의 원문을 보존하는 경우다. 기본 실행에도 이 사례들이 포함된다. 결과의 `thread_id`와 `turn_id`로 대화 재사용을 확인하고, 실제 저장된 기록의 개수·본문·공개 범위·서로 다른 요청 ID와 기존 기록 보존을 검사한다. 복수 저장의 부분 실패는 이 모델 검사에서 주입하지 않는다.
+
+`--global-only` 실행 전에는 [cache-me 설치](local-development.md#codex-mcp)가 필요하다. 실제 모델의 선택은 요청과 모델에 따라 달라질 수 있으므로 한 실행의 성공을 모든 표현의 성공으로 해석하지 않는다. `scripts/tests/test_check_cacheme_skill.py`는 외부 의존성 없이 합성 app-server 스트림과 저장 결과로 검사 도구의 대화 재사용·알림 구분·실패 처리·판정 로직을 확인하며, 실제 모델의 행동을 검증한 결과는 아니다.
 
 ## CI와 수동 확인
 
