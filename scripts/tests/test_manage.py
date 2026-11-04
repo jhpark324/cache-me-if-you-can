@@ -14,6 +14,21 @@ spec.loader.exec_module(manage)
 
 
 class ManageTests(unittest.TestCase):
+    def setUp(self):
+        directory = tempfile.TemporaryDirectory(prefix='manage-isolated-')
+        self.addCleanup(directory.cleanup)
+        self.root = Path(directory.name)
+        self.codex_home = self.root / 'codex'
+        self.codex_home.mkdir()
+        self.project = self.root / 'project'
+        self.project.mkdir()
+        environment = patch.dict(manage.os.environ, {'CODEX_HOME': str(self.codex_home)})
+        environment.start()
+        self.addCleanup(environment.stop)
+        root = patch.object(manage, 'ROOT', self.project)
+        root.start()
+        self.addCleanup(root.stop)
+
     def test_runtime_commands_use_prepared_python_without_dependency_install(self):
         with tempfile.TemporaryDirectory(prefix='manage spaced ') as directory:
             root = Path(directory)
@@ -86,8 +101,61 @@ class ManageTests(unittest.TestCase):
                 manage.main()
                 command = execute.call_args.args[0]
                 self.assertNotIn(secret, ' '.join(command))
-                self.assertIn('mcp_servers.second_brain.url="http://127.0.0.1:8123/mcp/"', command)
+                self.assertIn('mcp_servers.cache_me.url="http://127.0.0.1:8123/mcp/"', command)
+                self.assertIn('mcp_servers.cache_me.bearer_token_env_var="SECOND_BRAIN_MCP_TOKEN"', command)
+                self.assertFalse(any('mcp_servers.second_brain.' in arg for arg in command))
                 self.assertEqual(execute.call_args.kwargs['env']['SECOND_BRAIN_MCP_TOKEN'], secret)
+
+    def test_codex_requires_explicit_migration_before_reading_data_or_launching(self):
+        secret = 'synthetic-private-setting'
+        for suffix, message in (('', 'install-codex --replace'),
+                                ('enabled = false\n', 'install-codex --replace'),
+                                ('[mcp_servers.cache_me]\nurl = "http://127.0.0.1:52761/mcp/"\n', '함께 있습니다')):
+            config = self.codex_home / 'config.toml'
+            original = f'[mcp_servers.second_brain]\nurl = "{secret}"\n' + suffix
+            config.write_text(original, encoding='utf-8')
+            with self.subTest(suffix=suffix), patch.object(sys, 'argv', ['manage.py', 'codex']), \
+                    patch.object(manage, 'executable', return_value='/tools bin/uv'), \
+                    patch.object(manage.subprocess, 'check_output') as read_settings, \
+                    patch.object(manage, 'execute') as execute:
+                with self.assertRaisesRegex(SystemExit, message) as error:
+                    manage.main()
+                self.assertNotIn(secret, str(error.exception))
+                read_settings.assert_not_called()
+                execute.assert_not_called()
+                self.assertEqual(config.read_text(encoding='utf-8'), original)
+
+    def test_codex_detects_legacy_and_current_keys_across_configuration_layers(self):
+        (self.codex_home / 'config.toml').write_text(
+            '[mcp_servers.cache_me]\nurl = "http://127.0.0.1:52761/mcp/"\n', encoding='utf-8')
+        config = self.project / '.codex' / 'config.toml'
+        config.parent.mkdir()
+        config.write_text('[mcp_servers.second_brain]\nurl = "http://127.0.0.1:8000/mcp/"\n', encoding='utf-8')
+        with self.assertRaisesRegex(SystemExit, '함께 있습니다'):
+            manage.require_current_mcp_name()
+
+    def test_codex_ignores_unrelated_config_above_repository_root(self):
+        config = self.root / '.codex' / 'config.toml'
+        config.parent.mkdir()
+        original = '[mcp_servers.second_brain]\nurl = "http://127.0.0.1:8000/mcp/"\n'
+        config.write_text(original, encoding='utf-8')
+        manage.require_current_mcp_name()
+        self.assertEqual(config.read_text(encoding='utf-8'), original)
+
+    def test_codex_allows_current_key_and_unrelated_server_without_writing_config(self):
+        config = self.codex_home / 'config.toml'
+        original = ('[mcp_servers.cache_me]\nurl = "http://127.0.0.1:52761/mcp/"\n'
+                    '[mcp_servers.notes]\ncommand = "synthetic-notes"\n')
+        config.write_text(original, encoding='utf-8')
+        manage.require_current_mcp_name()
+        self.assertEqual(config.read_text(encoding='utf-8'), original)
+
+    def test_codex_rejects_invalid_config_without_echoing_values(self):
+        for content in ('mcp_servers = "synthetic-secret"', '[mcp_servers.synthetic-secret'):
+            (self.codex_home / 'config.toml').write_text(content, encoding='utf-8')
+            with self.subTest(content=content), self.assertRaises(SystemExit) as error:
+                manage.require_current_mcp_name()
+            self.assertNotIn('synthetic-secret', str(error.exception))
 
     def test_codex_does_not_launch_if_settings_validation_fails(self):
         with patch.object(sys, 'argv', ['manage.py', 'codex']), \

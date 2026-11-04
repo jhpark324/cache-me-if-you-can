@@ -97,7 +97,9 @@ $cache-me 지난번 복습 계획을 줄인 이유를 찾아줘.
 $cache-me 그 기록에 직접 예제로 확인한 내용을 추가해줘.
 ```
 
-스킬 이름은 `cache-me`, MCP 서버 키는 `second_brain`입니다. 기존 설정은 보존하며, 삭제는 사용자 재확인을 거칩니다. 이전 `8000` 연결은 명시적으로 갱신해야 합니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 이전](guides/local-development.md#기존-포트에서-이전) · [스킬 원본](skills/cache-me/SKILL.md)
+스킬 이름은 `cache-me`, MCP 등록 키는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`입니다. 삭제는 사용자 재확인을 거칩니다.
+
+이전 `second_brain` 관리 연결은 `install-codex --replace`로 이전한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. 기록·인증 파일과 Python 패키지 `second_brain`은 유지합니다. 이전 `8000` 연결도 명시적으로 갱신해야 합니다. [연결 설정](guides/local-development.md#codex-mcp) · [MCP 이름 이전](guides/local-development.md#기존-mcp-이름에서-이전) · [포트 이전](guides/local-development.md#기존-포트에서-이전) · [스킬 원본](skills/cache-me/SKILL.md)
 
 ## 동작 구조
 

@@ -13,7 +13,7 @@ import pytest
 from second_brain import codex_integration
 from second_brain.codex_integration import header_value, install, server_config, updated_config
 from second_brain.config import Settings
-from second_brain.brand import DEFAULT_PORT
+from second_brain.brand import DEFAULT_PORT, MCP_SERVER_KEY, LEGACY_MCP_SERVER_KEY
 
 
 def test_runtime_metadata_preserves_exact_paths_and_endpoint(tmp_path, source_package, monkeypatch):
@@ -22,6 +22,7 @@ def test_runtime_metadata_preserves_exact_paths_and_endpoint(tmp_path, source_pa
     home = tmp_path / 'codex home'
     runtime = codex_integration.runtime_config(python, data, 54321, home)
     server = server_config(python, data, 54321)
+    assert runtime['mcp_server'] == MCP_SERVER_KEY
     assert runtime['mcp_url'] == server['url'] == 'http://127.0.0.1:54321/mcp/'
     assert runtime['commands']['start'] == [str(python), '-m', 'second_brain.runtime', 'start',
                                           '--data-dir', str(data), '--port', '54321']
@@ -50,7 +51,7 @@ def test_runtime_metadata_conflict_is_preflighted_and_migration_is_explicit(tmp_
     assert all(path.read_bytes() == value for path, value in before.items())
     install(home, source_package, new_server, runtime_metadata=new_runtime, replace=True)
     assert json.loads((home / 'skills/cache-me/runtime.json').read_text()) == new_runtime
-    assert tomllib.loads((home / 'config.toml').read_text())['mcp_servers']['second_brain'] == new_server
+    assert tomllib.loads((home / 'config.toml').read_text())['mcp_servers'][MCP_SERVER_KEY] == new_server
     # A runtime-only customization also blocks all package writes before replacement.
     (home / 'skills/cache-me/runtime.json').write_text('customized runtime')
     source_package.write_text('new canonical skill')
@@ -87,7 +88,8 @@ def test_doctor_distinguishes_configuration_and_never_echoes_secrets(tmp_path, m
     headers = server.pop('http_headers', None)
     config_text = updated_config('', server)
     if headers:
-        config_text += '\n[mcp_servers.second_brain.http_headers]\nAuthorization = "secret"\n'
+        config_text = config_text.replace(codex_integration.END,
+            '[mcp_servers.cache_me.http_headers]\nAuthorization = "secret"\n' + codex_integration.END)
     (home / 'config.toml').write_text(config_text)
     monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'ready', 'message': 'ready'})
     before = {path: path.read_bytes() for path in tmp_path.rglob('*') if path.is_file()}
@@ -182,7 +184,7 @@ def test_install_preserves_unrelated_config_and_idempotency(tmp_path, source_pac
     assert tomllib.loads(config)['mcp_servers']['existing']['url'] == 'https://example.invalid/mcp'
     assert result['skill_name'] == 'cache-me'
     assert result['skill_slug'] == 'cache-me'
-    assert result['server'] == 'second_brain'
+    assert result['server'] == MCP_SERVER_KEY
     assert Path(result['metadata']).read_bytes() == (source_package.parent / 'agents/openai.yaml').read_bytes()
     assert result['legacy_skill']['status'] == 'absent'
     assert set(result['legacy_skills']) == {'second-brain', 'cacheme'}
@@ -255,7 +257,7 @@ def test_replace_updates_package_and_managed_config(tmp_path, source_package, le
     assert (installed / 'agents/openai.yaml').read_bytes() == (source_package.parent / 'agents/openai.yaml').read_bytes()
     parsed = tomllib.loads(config.read_text())
     assert parsed['model'] == 'keep'
-    assert parsed['mcp_servers']['second_brain'] == second_server
+    assert parsed['mcp_servers'][MCP_SERVER_KEY] == second_server
     assert result['legacy_skills'][legacy_package.name]['status'] == 'backed_up'
 
 
@@ -338,8 +340,156 @@ def test_managed_config_updates_only_with_explicit_replace(tmp_path):
     with pytest.raises(ValueError):
         updated_config(original, second)
     updated = updated_config(original, second, replace=True)
-    assert tomllib.loads(updated)['mcp_servers']['second_brain'] == second
+    assert tomllib.loads(updated)['mcp_servers'][MCP_SERVER_KEY] == second
     assert tomllib.loads(updated)['model'] == 'keep'
+
+
+def legacy_config(server, *, managed=True):
+    block = '[mcp_servers.second_brain]\n'
+    block += ''.join(f'{key} = {json.dumps(value)}\n' for key, value in server.items())
+    return (codex_integration.LEGACY_START + block + codex_integration.LEGACY_END) if managed else block
+
+
+def test_matching_external_current_registration_is_preserved(tmp_path):
+    server = server_config(Path(sys.executable), tmp_path, 54321)
+    original = updated_config('# User-owned configuration\nmodel = "keep"\n', server)
+    original = original.replace(codex_integration.START, '').replace(codex_integration.END, '')
+    for replace in (False, True):
+        assert updated_config(original, server, replace=replace) == original
+        with pytest.raises(ValueError, match='외부'):
+            updated_config(original, {**server, 'url': 'http://127.0.0.1:54322/mcp/'}, replace=replace)
+
+
+def snapshot(home):
+    return {str(path.relative_to(home)): path.read_bytes() for path in home.rglob('*') if path.is_file()}
+
+
+def test_legacy_managed_name_migration_preserves_other_settings_and_is_idempotent(tmp_path, source_package, monkeypatch):
+    home, data = tmp_path / 'codex', tmp_path / 'data'
+    data.mkdir()
+    (data / 'local-access.json').write_text('{"mcp_token":"unchanged-synthetic-secret"}')
+    server = server_config(Path(sys.executable), data, 54321)
+    runtime = codex_integration.runtime_config(Path(sys.executable), data, 54321, home)
+    install(home, source_package, server, runtime_metadata=runtime)
+    config = home / 'config.toml'
+    original = ('# 사용자 설정\nmodel = "keep"\n' + legacy_config(server)
+                + '[mcp_servers.other]\nurl = "https://other.invalid/mcp"\n')
+    config.write_text(original)
+    (home / 'skills/cache-me/SKILL.md').write_text('previous installed skill')
+    previous_runtime = dict(runtime)
+    previous_runtime.pop('mcp_server')
+    (home / 'skills/cache-me/runtime.json').write_text(json.dumps(previous_runtime))
+    before, data_before = snapshot(home), snapshot(data)
+    with pytest.raises(ValueError, match='--replace'):
+        install(home, source_package, server, runtime_metadata=runtime)
+    assert snapshot(home) == before and snapshot(data) == data_before
+    result = install(home, source_package, server, runtime_metadata=runtime, replace=True)
+    after = tomllib.loads(config.read_text())
+    assert result['server'] == MCP_SERVER_KEY
+    assert after['mcp_servers'] == {MCP_SERVER_KEY: server, 'other': {'url': 'https://other.invalid/mcp'}}
+    assert after['model'] == 'keep'
+    assert codex_integration.LEGACY_START not in config.read_text()
+    assert config.read_text().count(codex_integration.START) == 1
+    assert json.loads((home / 'skills/cache-me/runtime.json').read_text())['mcp_server'] == MCP_SERVER_KEY
+    assert snapshot(data) == data_before
+    migrated = snapshot(home)
+    monkeypatch.setattr(codex_integration, 'atomic_write', lambda *_: pytest.fail('Repeated migration wrote a file'))
+    install(home, source_package, server, runtime_metadata=runtime)
+    install(home, source_package, server, runtime_metadata=runtime, replace=True)
+    assert snapshot(home) == migrated
+
+
+@pytest.mark.parametrize('replace', [False, True])
+@pytest.mark.parametrize('conflict', ['external_legacy', 'duplicate'])
+def test_legacy_external_or_duplicate_names_never_change_installation(tmp_path, source_package, replace, conflict):
+    home = tmp_path / 'codex'
+    server = server_config(Path(sys.executable), tmp_path / 'data', 54321)
+    install(home, source_package, server)
+    original = legacy_config(server, managed=False)
+    if conflict == 'duplicate':
+        original += updated_config('', server)
+    (home / 'config.toml').write_text(original)
+    source_package.write_text('new skill must not be installed on failure')
+    before = snapshot(home)
+    with pytest.raises(ValueError, match='외부|함께'):
+        install(home, source_package, server, replace=replace)
+    assert snapshot(home) == before
+
+
+@pytest.mark.parametrize('legacy', [False, True])
+@pytest.mark.parametrize('damage', ['missing_start', 'missing_end', 'reversed', 'duplicate_marker',
+                                  'mixed_markers', 'other_server', 'root_setting', 'outside_field', 'inline_marker'])
+def test_malformed_managed_blocks_are_rejected_even_when_settings_match(tmp_path, source_package, legacy, damage):
+    home = tmp_path / 'codex'
+    server = server_config(Path(sys.executable), tmp_path / 'data', 54321)
+    install(home, source_package, server)
+    start, end = (codex_integration.LEGACY_START, codex_integration.LEGACY_END) if legacy else (codex_integration.START, codex_integration.END)
+    key = LEGACY_MCP_SERVER_KEY if legacy else MCP_SERVER_KEY
+    original = legacy_config(server) if legacy else updated_config('', server)
+    if damage == 'missing_start':
+        original = original.replace(start, '')
+    elif damage == 'missing_end':
+        original = original.replace(end, '')
+    elif damage == 'reversed':
+        original = original.replace(start, 'PLACEHOLDER').replace(end, start).replace('PLACEHOLDER', end)
+    elif damage == 'duplicate_marker':
+        original = original.replace(start, start + start)
+    elif damage == 'mixed_markers':
+        original += (codex_integration.START + codex_integration.END) if legacy else (codex_integration.LEGACY_START + codex_integration.LEGACY_END)
+    elif damage == 'other_server':
+        original = original.replace(end, '[mcp_servers.other]\nurl = "keep"\n' + end)
+    elif damage == 'root_setting':
+        original = original.replace(start, start + 'model = "keep"\n')
+    elif damage == 'outside_field':
+        original += f'[mcp_servers.{key}.http_headers]\nAuthorization = "synthetic-secret"\n'
+    else:
+        original = original.replace(start, '# prefix ' + start)
+    (home / 'config.toml').write_text(original)
+    source_package.write_text('new skill must not be installed on failure')
+    before = snapshot(home)
+    for replace in (False, True):
+        with pytest.raises(ValueError):
+            install(home, source_package, server, replace=replace)
+        assert snapshot(home) == before
+
+
+@pytest.mark.parametrize('configuration,expected,managed', [
+    ('managed_legacy', 'legacy', True), ('external_legacy', 'legacy', False),
+    ('duplicate', 'duplicate', None), ('malformed', 'invalid', None), ('missing', 'missing', None),
+])
+def test_doctor_distinguishes_name_migration_without_writes_or_secrets(tmp_path, monkeypatch, configuration, expected, managed):
+    settings = Settings(tmp_path / 'data')
+    settings.data_dir.mkdir()
+    (settings.data_dir / 'local-access.json').write_text('{"mcp_token":"synthetic-auth-secret"}')
+    home = tmp_path / 'codex'
+    home.mkdir()
+    server = server_config(Path(sys.executable), settings.data_dir, settings.port)
+    server['http_headers_helper'] = 'synthetic-config-secret'
+    original = legacy_config(server, managed=configuration != 'external_legacy')
+    if configuration == 'duplicate':
+        original += updated_config('', server)
+    elif configuration == 'malformed':
+        original = original.replace(codex_integration.LEGACY_END, '')
+    elif configuration == 'missing':
+        original = 'model = "synthetic-config-secret"\n'
+    (home / 'config.toml').write_text(original)
+    before = snapshot(tmp_path)
+    monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'ready', 'message': 'ready'})
+    result = codex_integration.doctor(settings, home)
+    assert not result['ok']
+    assert result['data']['codex']['status'] == expected
+    if managed is not None:
+        assert result['data']['codex']['managed'] == managed
+    steps = ' '.join(result['data']['next_steps'])
+    if managed is True:
+        assert 'install-codex --replace' in steps
+    elif configuration in {'external_legacy', 'duplicate', 'malformed'}:
+        assert '직접' in steps
+    if expected in {'legacy', 'duplicate'}:
+        assert '새 세션' in steps
+    serialized = json.dumps(result)
+    assert 'synthetic-auth-secret' not in serialized and 'synthetic-config-secret' not in serialized
+    assert snapshot(tmp_path) == before
 
 
 def test_helper_uses_only_app_mcp_token_and_quotes_paths(tmp_path):

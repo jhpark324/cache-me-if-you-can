@@ -9,5 +9,5 @@ policy:
 dependencies:
   tools:
     - type: "mcp"
-      value: "second_brain"
+      value: "cache_me"
       description: "cache-me 로컬 기록 저장·검색·출처 관리 서버"

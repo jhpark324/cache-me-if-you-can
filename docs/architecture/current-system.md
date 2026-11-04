@@ -84,6 +84,8 @@ flowchart TB
 
 기본 포트는 `52761`이며 `SECOND_BRAIN_PORT`로 변경한다. `manage.py run`은 포그라운드 실행, `start`는 준비 완료를 확인하는 명시적 백그라운드 시작이다. `doctor`는 런타임과 설치 상태를 읽기 전용으로 진단한다. 설치된 스킬의 `runtime.json`이 같은 Python·데이터 경로·포트의 진단·시작 명령을 제공하며 인증 토큰은 담지 않는다. MCP 헤더 helper는 인증 정보 제공만 담당하고 도구 탐색 중에 서버를 시작하지 않는다. 서버의 정상 응답과 현재 Codex 대화의 도구 목록은 별도로 확인한다.
 
+MCP 등록 키는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`, 스킬 이름은 `cache-me`다. 설치기는 명시적인 `install-codex --replace`에서 기존 `second_brain` 관리 연결을 이전하며 외부 작성 설정·두 키의 충돌·잘못된 관리 구간은 보존하고 거부한다. Python 패키지·환경 변수·데이터 경로와 개별 MCP 도구 이름은 유지한다. 설치·재연결 절차는 [로컬 실행 가이드](../guides/local-development.md#기존-mcp-이름에서-이전)를 따른다.
+
 ## 정본 데이터 관계
 
 ```mermaid

@@ -48,8 +48,8 @@
 
 ## 제품 이름과 호환 식별자
 
-제품 이름은 **Cache Me If You Can**, 스킬 이름과 호출 이름은 **`cache-me`**다. 일반적인 개인 지식 관리 방식은 세컨드 브레인이라고 설명할 수 있지만 현재 제품 이름으로 `Second Brain`을 섞어 쓰지 않는다.
+제품 이름과 MCP 서버 표시 이름은 **Cache Me If You Can**, 스킬 이름과 호출 이름은 **`cache-me`**, MCP 등록 키와 스킬 의존성 ID는 **`cache_me`**다. 일반적인 개인 지식 관리 방식은 세컨드 브레인이라고 설명할 수 있지만 현재 제품 이름으로 `Second Brain`을 섞어 쓰지 않는다.
 
-코드 패키지·MCP 키 `second_brain`, 환경 변수 `SECOND_BRAIN_*`, 기본 데이터 디렉터리 이름 `SecondBrain`, API 경로·필드·도구 이름은 실행·저장 호환성을 가진 식별자다. 한국어 용어를 통일하기 위해 이를 변경하지 않는다.
+Python 패키지 `second_brain`, 환경 변수 `SECOND_BRAIN_*`, 기본 데이터 디렉터리 이름 `SecondBrain`, API 경로·필드·`capture_create` 같은 개별 도구 이름은 실행·저장 호환성을 가진 식별자이며 유지한다. MCP 등록 키와 Python 패키지 이름은 서로 다르다. 이전 `second_brain` MCP 관리 연결은 [설치 가이드의 명시적 이전 절차](../guides/local-development.md#기존-mcp-이름에서-이전)를 따른다.
 
 새 문서·화면 문구는 이 기준을 참조하고 의미를 바꾸는 경우 관련 명세를 먼저 갱신한다. 인용·연구·외부 제품·기술 라이브러리의 용어는 해당 맥락을 보존한다.

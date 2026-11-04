@@ -13,6 +13,7 @@ from uuid import uuid4
 
 import httpx
 
+from second_brain.brand import MCP_SERVER_KEY
 from second_brain.codex_integration import install, runtime_config, server_config
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -35,7 +36,7 @@ class Codex:
             if 'delete' not in schema.get('properties', {}):
                 # Harness-only permission to call the isolated synthetic-data tools.
                 # The application's separate delete form still requires the handling below.
-                if not schema.get('properties') and 'second_brain MCP server to run tool' in message['params'].get('message', ''):
+                if not schema.get('properties') and f'{MCP_SERVER_KEY} MCP server to run tool' in message['params'].get('message', ''):
                     await self.send({'id': message['id'], 'result': {'action': 'accept', 'content': {}}})
                 else:
                     await self.send({'id': message['id'], 'result': {'action': 'decline'}})
@@ -124,12 +125,13 @@ async def run(args):
                     actual_home = Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
                     existing = tomllib.loads((actual_home / 'config.toml').read_text())
                     for name in existing.get('mcp_servers', {}):
-                        if name != 'second_brain':
+                        if name != MCP_SERVER_KEY:
                             command += ['-c', f'mcp_servers.{name}.enabled=false']
                     for key, value in server_config(Path(sys.executable), data, args.port).items():
-                        command += ['-c', f'mcp_servers.second_brain.{key}={json.dumps(value)}']
+                        command += ['-c', f'mcp_servers.{MCP_SERVER_KEY}.{key}={json.dumps(value)}']
                     command += ['-c', 'features.apps=false']
-                    command += ['-c', 'mcp_servers.second_brain.default_tools_approval_mode="auto"']
+                    command += ['-c', f'mcp_servers.{MCP_SERVER_KEY}.enabled=true']
+                    command += ['-c', f'mcp_servers.{MCP_SERVER_KEY}.default_tools_approval_mode="auto"']
                     codex_env['CODEX_HOME'] = str(actual_home)
                 codex_process = await asyncio.create_subprocess_exec(*command,
                     cwd=temp, env=codex_env, stdin=asyncio.subprocess.PIPE,
@@ -142,14 +144,19 @@ async def run(args):
                                                           'approvalPolicy': 'on-request', 'sandbox': 'workspace-write'})
                 thread_id = thread['thread']['id']
                 inventory = await codex.call('mcpServerStatus/list', {'threadId': thread_id,
-                    'serverName': 'second_brain', 'detail': 'toolsAndAuthOnly'})
+                    'detail': 'toolsAndAuthOnly'})
+                active = [entry for entry in inventory.get('data', [])
+                          if entry.get('runtimeStatus') != 'disabled' and entry.get('tools')]
+                assert [entry.get('name') for entry in active] == [MCP_SERVER_KEY], 'Unexpected MCP servers in isolated session'
+                assert active[0].get('httpOrigin') == f'http://127.0.0.1:{args.port}', 'MCP endpoint is not the isolated application'
+                assert {'capture_create', 'capture_update', 'capture_get', 'capture_delete_prepare', 'capture_delete'} <= set(active[0]['tools']), 'Expected record tools were not discovered'
                 skills = await codex.call('skills/list', {'cwds': [str(temp)], 'forceReload': True})
                 assert any(skill.get('name') == 'cache-me' and skill.get('enabled') is True
                            for group in skills.get('data', []) for skill in group.get('skills', [])), 'Installed skill not discovered'
 
                 async def tool(name, arguments):
                     result = await codex.call('mcpServer/tool/call', {'threadId': thread_id,
-                        'server': 'second_brain', 'tool': name, 'arguments': arguments})
+                        'server': MCP_SERVER_KEY, 'tool': name, 'arguments': arguments})
                     payload = result.get('structuredContent')
                     if not payload:
                         for content in result.get('content', []):
@@ -205,6 +212,8 @@ async def run(args):
                     'delete': 'not_executed_decline_only' if args.decline_only else ('passed' if deleted['ok'] else 'human_declined'),
                     'confirmation_events': codex.confirmations,
                     'inventory_server_count': len(inventory.get('data', [])),
+                    'active_mcp_servers': [entry['name'] for entry in active],
+                    'mcp_origin_matches_isolated_storage': True,
                     'desktop_native_form_rendering': 'not_tested'}
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2))
