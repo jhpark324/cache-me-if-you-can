@@ -212,7 +212,7 @@ def test_record_window_is_bounded_and_deterministic(graph, monkeypatch):
     assert len(result["nodes"]) == 50 and result["truncated"]
     assert len(validations) == 50
     # One bounded validation per candidate plus batch metadata/expansion reads.
-    assert len(statements) <= 58
+    assert len(statements) <= 59
     assert result == search.home_graph()
 
 
@@ -230,6 +230,73 @@ def test_nodes_and_edges_have_independent_bounds_without_dangling_endpoints(grap
     assert len(result["nodes"]) == 2 and len(result["edges"]) == 100 and result["truncated"]
     all_ids = {n["id"] for n in result["nodes"]}
     assert all({e["source"], e["target"]} <= all_ids for e in result["edges"])
+
+
+def test_node_only_topics_are_preserved_in_neighbors_with_current_evidence(graph):
+    records, search = graph
+    topic = concept(records, "세부 항목에만 지정한 주제")
+    capture = create(records, "주제와 연결할 본문", nodes=[
+        {"kind": "explanation", "body_start": 0, "body_end": 2},
+    ])
+    capture = assign(records, capture, node_concepts=[
+        {"node_id": capture["nodes"][0]["id"], "concept_ids": [topic["id"]]},
+    ])
+    part = capture["nodes"][0]
+    home, neighbors = search.home_graph(), search.neighbors(capture["id"])
+    expected_edge = next(edge for edge in home["edges"] if edge["kind"] == "has_topic")
+    assert expected_edge in neighbors["edges"]
+    assert expected_edge["source"] == part["id"]
+    assert expected_edge["target"] == topic["id"]
+    assert expected_edge["evidence"]["revision_id"] == capture["revision_id"]
+    assert expected_edge["evidence"]["body_start"] == part["body_start"]
+    assert topic["id"] in ids(neighbors, "concept")
+
+    # A subsequent semantic edit must not expose the old Node's topic edge.
+    changed = update(records, capture, body_markdown="의미를 바꾼 새로운 본문")
+    result = search.neighbors(changed["id"])
+    assert expected_edge["id"] not in {edge["id"] for edge in result["edges"]}
+    assert topic["id"] not in ids(result, "concept")
+
+
+def test_node_topic_expansion_obeys_graph_limits_without_dangling_edges(graph):
+    records, search = graph
+    topics = [concept(records, f"주제 {index}")["id"] for index in range(20)]
+    capture = create(records, "범위 원문", nodes=[
+        {"kind": "explanation", "body_start": 0, "body_end": 2} for _ in range(8)
+    ])
+    capture = assign(records, capture, node_concepts=[
+        {"node_id": part["id"], "concept_ids": topics} for part in capture["nodes"]
+    ])
+    result = search.neighbors(capture["id"])
+    assert result["truncated"]
+    assert len(result["nodes"]) <= 50 and len(result["edges"]) == 100
+    all_ids = {node["id"] for node in result["nodes"]}
+    assert all({edge["source"], edge["target"]} <= all_ids for edge in result["edges"])
+
+
+def test_home_graph_reports_current_classification_state_without_job_secrets(graph):
+    records, search = graph
+    capture = create(records, "합성 분류 상태 확인")
+    def node_state():
+        node = next(node for node in search.home_graph()["nodes"] if node["id"] == capture["id"])
+        return node["concept_state"]
+    assert node_state() == {"status": "pending", "error_code": None}
+    job = records.claim_concept_job()
+    assert node_state() == {"status": "running", "error_code": None}
+    records.fail_concept_job(job["job_id"], job["lease_token"], error_code="CLASSIFICATION_FAILED")
+    assert node_state() == {"status": "failed", "error_code": "CLASSIFICATION_FAILED"}
+
+    # Current metadata must not inherit the failure of an older version.
+    capture = update(records, capture, body_markdown="새 버전의 합성 분류 상태")
+    assert node_state() == {"status": "pending", "error_code": None}
+    job = records.claim_concept_job()
+    records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[], new_concepts=[
+        {"name": "합성 주제", "attach_to_capture": True, "node_ids": []},
+    ])
+    assert node_state() == {"status": "ready", "error_code": None}
+    result = search.home_graph()
+    assert any(edge["kind"] == "has_topic" for edge in result["edges"])
+    assert all("lease_token" not in node and "job_id" not in node for node in result["nodes"])
 
 
 def test_http_contract_session_filters_validation_and_brand(tmp_path):

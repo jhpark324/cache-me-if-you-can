@@ -1,6 +1,7 @@
 """Thin HTTP adapter. Authentication and trusted confirmation belong to app setup."""
 from __future__ import annotations
 
+import asyncio
 import inspect
 from typing import Annotated, Literal
 from uuid import UUID
@@ -96,9 +97,13 @@ def capture_review_sources(capture_id: UUID, data: ReviewSourcesInput, records: 
 
 
 @router.post("/captures/{capture_id}/concept-retry", response_model=OutputEnvelope[MutationResult])
-def capture_retry_concepts(capture_id: UUID, data: RetryConceptsInput, records: Records):
+async def capture_retry_concepts(capture_id: UUID, data: RetryConceptsInput, request: Request, records: Records):
     check_path(capture_id, data.capture_id)
-    return success(records.retry_concepts(data))
+    result = await asyncio.to_thread(records.retry_concepts, data)
+    auth = getattr(request.app.state, "auth", None)
+    if auth is not None and not result['replayed']:
+        auth.resume_requests()
+    return success(result)
 
 
 @router.post("/captures/{capture_id}/deletion-preview", response_model=OutputEnvelope[DeletionPreview])

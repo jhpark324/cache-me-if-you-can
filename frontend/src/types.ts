@@ -156,6 +156,7 @@ export interface GraphData {
     source?: SourceRef;
     cited?: boolean;
     capture_label?: string;
+    concept_state?: { status: string; error_code?: string | null };
   }[];
   edges: {
     id?: string;
@@ -171,6 +172,11 @@ export interface Settings {
   auth?: {
     connected: boolean;
     pending_login?: boolean;
+    request_blocked?: {
+      code: string;
+      message: string;
+      retryable: boolean;
+    } | null;
     plan_enabled?: boolean;
     email?: string;
     active_account_id?: string;

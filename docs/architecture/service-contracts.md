@@ -209,6 +209,8 @@ Codex의 실제 확인 지원과 Skill 재질문 응답의 연결은 연동 시�
 
 홈의 `GET /api/v1/graph`는 반복 쿼리 매개변수 `kinds`, `concept_ids`를 받는다. 최근 현재 기록을 시작점으로 SQLite의 실제 주제 연결·Node·명시적 관계를 반환하며 임베딩 준비 상태와 독립적으로 동작한다. 후보·출처 검증에도 예산을 적용하고 생략이 있으면 `truncated=true`로 알린다. 필터를 벗어난 기록을 관계 확장으로 되살리지 않는다. 페이지 커서나 전체 개수는 반환하지 않으며 필터·검색·선택 기록 주변 탐색으로 범위를 좁힌다. 상세 동작과 화면 수용 기준은 [홈 그래프 개선](../specs/workspace.md)을 따른다.
 
+홈 그래프의 `capture` 노드에는 현재 기록 버전의 `concept_state: {status, error_code}`를 포함한다. `status`는 상세 조회와 같은 `pending | running | ready | needs_review | failed`이며 공급자 원문이나 작업 비밀은 포함하지 않는다. 표시된 기록의 상태를 한 번의 배치 조회로 읽고 과거 버전의 실패를 현재 상태로 표시하지 않는다. 이 메타데이터는 화면 갱신·복구 안내용이며 간선을 대신하지 않는다. 선택 기록의 주변 그래프도 현재 세부 항목의 `NodeConcept` 주제 연결을 `has_topic` 간선으로 반환하며 해당 세부 항목의 SourceRef를 근거로 사용한다.
+
 `ContextInput`은 검색용 query·동일 필터, 선택적 subject_hint/situation_hint/as_of, limit(기본 10, 최대 10개 기록)을 받는다. 힌트는 검증된 사실이나 권한이 아니다. knowledge_context도 64토큰을 넘는 query를 거부한다.
 
 `QuestionInput`은 `request_id`, `question`, 선택적 `kinds/concept_ids/event_time` 검색 조건이다. 각 요청은 독립된 단일 검색·응답이며 이전 요청의 대화·응답 이력을 입력으로 받지 않는다. 요청 안에서 LangGraph가 추가 검색할 수 있지만 요청 사이의 대화 상태는 만들지 않는다.

@@ -14,11 +14,12 @@ from uuid import uuid4
 
 import httpx
 import jwt
-from openai import AsyncOpenAI, APIStatusError
+from openai import AsyncOpenAI, APIError, APIConnectionError, APITimeoutError
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 
 from .config import atomic_private_json
 from .brand import PRODUCT_NAME
+from .model_errors import ACTION_REQUIRED_MODEL_ERRORS
 
 ISSUER = 'https://auth.openai.com'
 AUTHORIZE = ISSUER + '/api/accounts/authorize'
@@ -45,11 +46,12 @@ def model_failure(*, status=None, code=None, param=None, request_id=None):
                                'parameter': identifier(param), 'request_id': identifier(request_id)}.items() if v is not None}
     if code == 'subscription_sharing_usage_limit_exceeded':
         return AuthError('MODEL_USAGE_LIMIT', 'ChatGPT의 앱 사용 한도에 도달했습니다. ChatGPT 설정의 사용량을 확인해 주세요.', details=details)
-    if code == 'subscription_sharing_unsupported_capability' or status == 400:
+    if code in ('subscription_sharing_unsupported_capability', 'subscription_sharing_route_not_supported') or status == 400:
         return AuthError('MODEL_REQUEST_INVALID', '모델이 지원하지 않는 요청 형식입니다. 앱의 모델 연결 설정을 확인해야 합니다.', details=details)
     if status == 401 or code == 'subscription_sharing_invalid_user':
         return AuthError('MODEL_AUTH_REJECTED', '모델이 현재 계정의 인증을 수락하지 않았습니다. 설정에서 연결 상태를 확인해 주세요.', details=details)
-    if status == 403:
+    if status == 403 or code in ('subscription_sharing_user_not_eligible', 'chatpass_v2_scope_not_authorized',
+                                'chatpass_v2_invalid_authorization_context'):
         return AuthError('MODEL_PERMISSION_DENIED', '계정 또는 워크스페이스 정책이 모델 사용을 허용하지 않습니다.', details=details)
     if status == 429:
         return AuthError('MODEL_RATE_LIMIT', '모델 요청 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.', details=details, retryable=True)
@@ -80,6 +82,8 @@ class ModelAuth:
         self.inflight_logins: dict[str, dict] = {}
         self.auth_generation = 0
         self.model_generation = 0
+        self.request_generation = 0
+        self.request_blocked: AuthError | None = None
         self.lock = asyncio.Lock()
         self.models: list[dict] = []
         self.last_error = None
@@ -90,6 +94,11 @@ class ModelAuth:
     def active(self):
         return self.data['accounts'].get(self.data.get('active'))
 
+    def resume_requests(self):
+        """Resume only after an explicit, successfully validated user action."""
+        self.request_generation += 1
+        self.request_blocked = None
+
     def status(self, session_id: str | None = None):
         account = self.active() or {}
         return {
@@ -99,6 +108,8 @@ class ModelAuth:
             'accounts': [{'id': key, 'email': a.get('email'), 'label': (a.get('email') or 'ChatGPT') + ' · ' + key[-6:]} for key, a in self.data['accounts'].items()],
             'selected_model': account.get('model'), 'models': self.models,
             'selected_reasoning_effort': account.get('reasoning_effort'),
+            'request_blocked': {'code': self.request_blocked.code, 'message': self.request_blocked.message,
+                                'retryable': False} if self.request_blocked else None,
             'error': self.last_error, 'pending_login': self.login_pending(session_id) if session_id else False,
         }
 
@@ -229,6 +240,7 @@ class ModelAuth:
                 self.auth_generation += 1
                 self.models = []
                 self.save()
+                self.resume_requests()
             self.last_error = None
         except AuthError:
             raise
@@ -366,6 +378,7 @@ class ModelAuth:
         account['model'] = model
         account['reasoning_effort'] = reasoning_effort
         self.save()
+        self.resume_requests()
 
     async def logout(self):
         async with self.lock:
@@ -378,6 +391,7 @@ class ModelAuth:
                     account.pop(key, None)
             self.models = []
             self.save()
+            self.resume_requests()
         # Local logout is already durable, including if this await is cancelled.
         confirmed = revocation is None
         if revocation:
@@ -413,6 +427,7 @@ class ModelAuth:
         generation = self.auth_generation
         account_id = self.data.get('active')
         model_generation = self.model_generation
+        request_generation = self.request_generation
         model = (self.active() or {}).get('model')
         reasoning_effort = (self.active() or {}).get('reasoning_effort')
         if expected_model is not None and expected_model != model:
@@ -420,19 +435,35 @@ class ModelAuth:
         def check_context():
             if generation != self.auth_generation or account_id != self.data.get('active'):
                 raise AuthError('LOGIN_REQUIRED', '로그인 상태가 변경되어 응답을 중지했습니다.')
-            if model_generation != self.model_generation or model != (self.active() or {}).get('model') or reasoning_effort != (self.active() or {}).get('reasoning_effort'):
+            if model_generation != self.model_generation or request_generation != self.request_generation or model != (self.active() or {}).get('model') or reasoning_effort != (self.active() or {}).get('reasoning_effort'):
                 raise AuthError('MODEL_CHANGED', '답변 모델이 변경되어 응답을 중지했습니다. 다시 요청해 주세요.')
-        token = await self.access_token()
-        check_context()
-        if not model:
-            raise AuthError('MODEL_REQUIRED', '설정에서 답변 모델을 선택해 주세요.')
-        if reasoning_effort is not None:
-            if not any(item['slug'] == model for item in self.models):
-                await self.list_models()
-                check_context()
-            selected = next((item for item in self.models if item['slug'] == model), {})
-            if not any(level['effort'] == reasoning_effort for level in selected.get('supported_reasoning_efforts', [])):
-                raise AuthError('REASONING_UNAVAILABLE', '설정에서 이 모델의 추론 수준을 다시 선택해 주세요.')
+        def record_failure(error):
+            # Old requests must not pause a replacement account or a user's retry.
+            if (generation == self.auth_generation and account_id == self.data.get('active')
+                    and model_generation == self.model_generation and request_generation == self.request_generation
+                    and (error.code in ACTION_REQUIRED_MODEL_ERRORS
+                         or error.code == 'AUTH_REFRESH_FAILED' and not error.retryable)):
+                self.request_blocked = AuthError(error.code, error.message, details=error.details)
+            return error
+        try:
+            if self.request_blocked:
+                raise self.request_blocked
+            token = await self.access_token()
+            check_context()
+            if self.request_blocked:
+                raise self.request_blocked
+            if not model:
+                raise AuthError('MODEL_REQUIRED', '설정에서 답변 모델을 선택해 주세요.')
+            if reasoning_effort is not None:
+                if not any(item['slug'] == model for item in self.models):
+                    await self.list_models()
+                    check_context()
+                selected = next((item for item in self.models if item['slug'] == model), {})
+                if not any(level['effort'] == reasoning_effort for level in selected.get('supported_reasoning_efforts', [])):
+                    raise AuthError('REASONING_UNAVAILABLE', '설정에서 이 모델의 추론 수준을 다시 선택해 주세요.')
+        except AuthError as exc:
+            record_failure(exc)
+            raise
         payload = serialize_model_input(messages, instructions, tools, tool_choice=tool_choice)
         if reasoning_effort is not None:
             payload['reasoning'] = {'effort': reasoning_effort}
@@ -441,6 +472,9 @@ class ModelAuth:
         try:
             async with AsyncOpenAI(api_key=token, base_url=RESOURCE, max_retries=0, timeout=60) as client:
                 # SIWC requires array input and does not accept max_output_tokens.
+                check_context()
+                if self.request_blocked:
+                    raise self.request_blocked
                 stream = await client.responses.create(model=model, **payload, store=False, stream=True)
                 async with stream:
                     async for event in stream:
@@ -465,13 +499,21 @@ class ModelAuth:
                             error = getattr(getattr(event, 'response', None), 'error', None)
                             raise model_failure(code=getattr(error, 'code', getattr(event, 'code', None)),
                                                 param=getattr(error, 'param', getattr(event, 'param', None)))
-        except AuthError:
+        except AuthError as exc:
+            record_failure(exc)
             raise
-        except APIStatusError as exc:
+        except APITimeoutError:
+            raise AuthError('MODEL_TIMEOUT', '모델 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.', retryable=True) from None
+        except APIConnectionError:
+            raise AuthError('MODEL_UNAVAILABLE', '모델에 연결하지 못했습니다. 연결 상태를 확인하고 다시 시도해 주세요.', retryable=True) from None
+        except APIError as exc:
             body = exc.body if isinstance(exc.body, dict) else {}
             error = body.get('error', body)
             error = error if isinstance(error, dict) else {}
-            raise model_failure(status=exc.status_code, code=error.get('code'), param=error.get('param'), request_id=exc.request_id) from None
+            failure = model_failure(status=getattr(exc, 'status_code', None),
+                code=error.get('code', getattr(exc, 'code', None)), param=error.get('param', getattr(exc, 'param', None)),
+                request_id=getattr(exc, 'request_id', None))
+            raise record_failure(failure) from None
         except Exception:
             raise AuthError('MODEL_UNAVAILABLE', '모델 연결에 실패했습니다. 로그인과 사용 한도를 확인해 주세요.') from None
         if not completed:
