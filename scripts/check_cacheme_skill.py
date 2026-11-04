@@ -22,7 +22,7 @@ from uuid import uuid4
 import httpx
 
 from check_codex import Codex
-from second_brain.brand import DEFAULT_PORT
+from second_brain.brand import DEFAULT_PORT, MCP_SERVER_KEY
 from second_brain.codex_integration import server_config
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,7 +51,7 @@ class SkillProbe(Codex):
             params = message.get("params", {})
             if method == "mcpServer/elicitation/request":
                 properties = params.get("requestedSchema", {}).get("properties", {})
-                ordinary_permission = not properties and "second_brain MCP server to run tool" in params.get("message", "")
+                ordinary_permission = not properties and f"{MCP_SERVER_KEY} MCP server to run tool" in params.get("message", "")
                 result = {"action": "accept", "content": {}} if ordinary_permission else {"action": "decline"}
                 if self.current is not None:
                     self.current["confirmations"].append({"action": result["action"], "deletion": "delete" in properties})
@@ -87,7 +87,7 @@ class SkillProbe(Codex):
         self.current = scenario
         thread = await self.call("thread/start", {"cwd": self.workspace, "ephemeral": True,
             "approvalPolicy": "on-request", "sandbox": "read-only",
-            "developerInstructions": "검증에 쓰는 모든 기록은 합성 자료이고 연결된 second_brain은 격리된 임시 저장소다. "
+            "developerInstructions": f"검증에 쓰는 모든 기록은 합성 자료이고 연결된 {MCP_SERVER_KEY} 서버는 격리된 임시 저장소다. "
                 "연결된 MCP 도구와 필요한 스킬 문서 읽기만 사용한다. 인증/설정 파일, 실제 앱 데이터는 읽거나 쓰지 않는다. "
                 "저장·정정 결과에는 실제 반환된 제목·본문·유형·공개 범위·완료 상태를 보여준다."})
         inputs = [{"type": "text", "text": prompt}]
@@ -108,7 +108,7 @@ class SkillProbe(Codex):
 
     async def tool(self, thread_id, name, arguments):
         result = await self.call("mcpServer/tool/call", {"threadId": thread_id,
-            "server": "second_brain", "tool": name, "arguments": arguments})
+            "server": MCP_SERVER_KEY, "tool": name, "arguments": arguments})
         payload = result.get("structuredContent")
         if not payload:
             for content in result.get("content", []):
@@ -188,16 +188,16 @@ async def run(args):
                     existing = tomllib.loads(config_bytes.decode())
                     command = [codex_binary, "app-server"]
                     for name in existing.get("mcp_servers", {}):
-                        if name != "second_brain":
+                        if name != MCP_SERVER_KEY:
                             command += ["-c", f"mcp_servers.{name}.enabled=false"]
                     for name in existing.get("plugins", {}):
                         command += ["-c", f"plugins.{name}.enabled=false"]
                     for key, value in server_config(Path(sys.executable), data, port).items():
-                        command += ["-c", f"mcp_servers.second_brain.{key}={json.dumps(value)}"]
+                        command += ["-c", f"mcp_servers.{MCP_SERVER_KEY}.{key}={json.dumps(value)}"]
                     command += ["-c", "features.apps=false", "-c", "features.plugins=false",
                                 "-c", "features.skill_mcp_dependency_install=false",
-                                "-c", "mcp_servers.second_brain.enabled=true",
-                                "-c", 'mcp_servers.second_brain.default_tools_approval_mode="auto"']
+                                "-c", f"mcp_servers.{MCP_SERVER_KEY}.enabled=true",
+                                "-c", f'mcp_servers.{MCP_SERVER_KEY}.default_tools_approval_mode="auto"']
                     process = await asyncio.create_subprocess_exec(*command, cwd=workspace, env=env,
                         stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
                         stderr=codex_log, limit=4 * 1024 * 1024)
@@ -225,8 +225,8 @@ async def run(args):
                         "tool_count": len(entry.get("tools", {}))} for entry in inventory.get("data", [])]
                     active_servers = [entry.get("name") for entry in inventory.get("data", [])
                                       if entry.get("runtimeStatus") != "disabled" and entry.get("tools")]
-                    assert active_servers == ["second_brain"], "Unexpected MCP servers in isolated model session"
-                    isolated = next(entry for entry in inventory["data"] if entry.get("name") == "second_brain")
+                    assert active_servers == [MCP_SERVER_KEY], "Unexpected MCP servers in isolated model session"
+                    isolated = next(entry for entry in inventory["data"] if entry.get("name") == MCP_SERVER_KEY)
                     assert isolated.get("httpOrigin") == f"http://127.0.0.1:{port}", "MCP endpoint is not the isolated application"
                     summary["active_mcp_servers"] = active_servers
                     save()
