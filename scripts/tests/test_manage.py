@@ -4,6 +4,7 @@ import json
 from pathlib import Path, PureWindowsPath
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -13,6 +14,36 @@ spec.loader.exec_module(manage)
 
 
 class ManageTests(unittest.TestCase):
+    def test_runtime_commands_use_prepared_python_without_dependency_install(self):
+        with tempfile.TemporaryDirectory(prefix='manage spaced ') as directory:
+            root = Path(directory)
+            for platform, python_dir, python_name in (('posix', 'bin', 'python'), ('nt', 'Scripts', 'python.exe')):
+                python = root / 'backend' / '.venv' / python_dir / python_name
+                python.parent.mkdir(parents=True)
+                python.touch()
+                for action, module in (('start', 'second_brain.runtime'), ('doctor', 'second_brain.codex_integration')):
+                    with self.subTest(platform=platform, action=action), \
+                            patch.object(manage, 'ROOT', root), \
+                            patch.object(manage, 'os', SimpleNamespace(name=platform)), \
+                            patch.object(sys, 'argv', ['manage.py', action]), \
+                            patch.object(manage, 'executable') as executable, \
+                            patch.object(manage, 'execute') as execute:
+                        manage.main()
+                        executable.assert_not_called()
+                        execute.assert_called_once_with([str(python), '-m', module, action])
+
+    def test_runtime_commands_require_existing_environment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for action in ('start', 'doctor'):
+                with self.subTest(action=action), patch.object(manage, 'ROOT', Path(directory)), \
+                        patch.object(sys, 'argv', ['manage.py', action]), \
+                        patch.object(manage, 'executable') as executable, \
+                        patch.object(manage, 'execute') as execute:
+                    with self.assertRaisesRegex(SystemExit, 'manage.py setup'):
+                        manage.main()
+                    executable.assert_not_called()
+                    execute.assert_not_called()
+
     def test_install_codex_passes_canonical_package_and_optional_replace(self):
         for replace in (False, True):
             with self.subTest(replace=replace), \
@@ -49,14 +80,23 @@ class ManageTests(unittest.TestCase):
             (data / 'local-access.json').write_text(json.dumps({'mcp_token': secret}))
             with patch.object(sys, 'argv', ['manage.py', 'codex']), \
                     patch.object(manage, 'executable', side_effect=lambda name: '/tools bin/' + name), \
-                    patch.object(manage.subprocess, 'check_output', return_value=str(data) + '\n'), \
+                    patch.object(manage.subprocess, 'check_output', return_value=json.dumps({'data_dir': str(data), 'port': 8123}) + '\n'), \
                     patch.object(manage, 'execute') as execute, \
-                    patch.dict(manage.os.environ, {'SECOND_BRAIN_PORT': '8123'}):
+                    patch.dict(manage.os.environ, {'SECOND_BRAIN_PORT': '9999'}):
                 manage.main()
                 command = execute.call_args.args[0]
                 self.assertNotIn(secret, ' '.join(command))
                 self.assertIn('mcp_servers.second_brain.url="http://127.0.0.1:8123/mcp/"', command)
                 self.assertEqual(execute.call_args.kwargs['env']['SECOND_BRAIN_MCP_TOKEN'], secret)
+
+    def test_codex_does_not_launch_if_settings_validation_fails(self):
+        with patch.object(sys, 'argv', ['manage.py', 'codex']), \
+                patch.object(manage, 'executable', return_value='/tools bin/uv'), \
+                patch.object(manage.subprocess, 'check_output', side_effect=manage.subprocess.CalledProcessError(1, ['settings'])), \
+                patch.object(manage, 'execute') as execute:
+            with self.assertRaises(manage.subprocess.CalledProcessError):
+                manage.main()
+            execute.assert_not_called()
 
 
 if __name__ == '__main__':

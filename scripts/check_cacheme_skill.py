@@ -22,6 +22,7 @@ from uuid import uuid4
 import httpx
 
 from check_codex import Codex
+from second_brain.brand import DEFAULT_PORT
 from second_brain.codex_integration import server_config
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -147,10 +148,12 @@ async def run(args):
         args.output.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     try:
-        with socket.socket() as sock:
-            sock.bind(("127.0.0.1", 0))
-            port = sock.getsockname()[1]
-        assert port != 8000
+        while True:
+            with socket.socket() as sock:
+                sock.bind(("127.0.0.1", 0))
+                port = sock.getsockname()[1]
+            if port != DEFAULT_PORT:
+                break
         with tempfile.TemporaryDirectory(prefix="cache-me-model-check-") as temporary:
             temp = Path(temporary)
             data, workspace = temp / "data", temp / "workspace"

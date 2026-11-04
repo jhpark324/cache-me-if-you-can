@@ -2,11 +2,17 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
 
 from platformdirs import user_data_path
+
+from second_brain.brand import DEFAULT_PORT
+
+
+PORT_ERROR = 'SECOND_BRAIN_PORT must be an integer between 1 and 65535.'
 
 
 def atomic_private_json(path: Path, value: dict) -> None:
@@ -26,15 +32,28 @@ def atomic_private_json(path: Path, value: dict) -> None:
 @dataclass
 class Settings:
     data_dir: Path
-    port: int = 8000
+    port: int = DEFAULT_PORT
     frontend_dir: Path | None = None
     background_jobs: bool = True
 
+    def __post_init__(self):
+        if type(self.port) is not int or not 1 <= self.port <= 65535:
+            raise ValueError(PORT_ERROR)
+
     @classmethod
-    def load(cls):
-        data = Path(os.environ.get('SECOND_BRAIN_DATA_DIR', str(user_data_path('SecondBrain', appauthor=False))))
+    def load(cls, *, data_dir: Path | None = None, port: int | None = None):
+        data = data_dir if data_dir is not None else Path(os.environ.get(
+            'SECOND_BRAIN_DATA_DIR', str(user_data_path('SecondBrain', appauthor=False))))
         frontend = Path(__file__).resolve().parents[3] / 'frontend' / 'dist'
-        return cls(data, int(os.environ.get('SECOND_BRAIN_PORT', '8000')), frontend)
+        if port is None:
+            environment_port = os.environ.get('SECOND_BRAIN_PORT', str(DEFAULT_PORT)).strip()
+            if not re.fullmatch(r'[0-9]+', environment_port):
+                raise ValueError(PORT_ERROR)
+            try:
+                port = int(environment_port)
+            except ValueError:
+                raise ValueError(PORT_ERROR) from None
+        return cls(data, port, frontend)
 
     @property
     def origin(self):

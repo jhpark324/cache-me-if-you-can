@@ -233,8 +233,9 @@ def test_nodes_and_edges_have_independent_bounds_without_dangling_endpoints(grap
 
 
 def test_http_contract_session_filters_validation_and_brand(tmp_path):
-    app = create_app(Settings(tmp_path, background_jobs=False))
-    with TestClient(app, base_url="http://127.0.0.1:8000") as client:
+    settings = Settings(tmp_path, background_jobs=False)
+    app = create_app(settings)
+    with TestClient(app, base_url=settings.origin) as client:
         assert client.get("/api/v1/graph").status_code == 401
         client.get("/api/v1/session")
         assert client.get("/api/v1/graph").json()["data"] == {"nodes": [], "edges": [], "truncated": False}

@@ -70,7 +70,7 @@ python3 scripts/manage.py setup
 python3 scripts/manage.py run
 ```
 
-서버 실행 후 [http://127.0.0.1:8000/](http://127.0.0.1:8000/)를 엽니다.
+서버 실행 후 [http://127.0.0.1:52761/](http://127.0.0.1:52761/)를 엽니다. 캐시미 전용 기본 포트는 `52761`이며 `SECOND_BRAIN_PORT`로 변경할 수 있습니다.
 
 1. **새 기록**에서 첫 내용을 저장합니다. 기록 관리에는 모델 로그인이 필요하지 않습니다.
 2. 설정의 **검색 모델 준비**를 실행합니다. 처음에는 KURE-v2를 내려받습니다.
@@ -81,10 +81,12 @@ python3 scripts/manage.py run
 
 ## Codex에서 사용하기
 
-제품 서버를 실행한 상태에서 프로젝트 루트에서 다음 명령을 실행합니다.
+프로젝트 루트에서 준비된 서버를 시작하고 연결을 설치합니다. `start`는 같은 서버가 실행 중이면 재사용하며, `doctor`는 설정과 실행 상태를 읽기 전용으로 진단합니다.
 
 ```sh
+python3 scripts/manage.py start
 python3 scripts/manage.py install-codex
+python3 scripts/manage.py doctor
 ```
 
 새 Codex 세션에서 `cache-me`를 선택하거나 다음처럼 요청합니다.
@@ -95,7 +97,7 @@ $cache-me 지난번 복습 계획을 줄인 이유를 찾아줘.
 $cache-me 그 기록에 직접 예제로 확인한 내용을 추가해줘.
 ```
 
-스킬 이름은 `cache-me`, MCP 서버 키는 `second_brain`입니다. 기존 설정은 보존하며, 삭제는 사용자 재확인을 거칩니다. [연결 설정](guides/local-development.md#codex-mcp) · [스킬 원본](skills/cache-me/SKILL.md)
+스킬 이름은 `cache-me`, MCP 서버 키는 `second_brain`입니다. 기존 설정은 보존하며, 삭제는 사용자 재확인을 거칩니다. 이전 `8000` 연결은 명시적으로 갱신해야 합니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 이전](guides/local-development.md#기존-포트에서-이전) · [스킬 원본](skills/cache-me/SKILL.md)
 
 ## 동작 구조
 

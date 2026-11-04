@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict
 from starlette.background import BackgroundTask
 
 from .auth import ModelAuth, AuthError
-from .brand import PRODUCT_NAME
+from .brand import PRODUCT_NAME, PRODUCT_ID
 from .background import run_periodic
 from .config import Settings
 from .db import Database, migrate_database
@@ -35,6 +35,7 @@ from .questions import QuestionInput, QuestionService
 from .search import SearchService, SearchInput, ContextInput, GraphInput
 from .mcp_server import create_mcp
 from .enrichment import ConceptEnrichment
+from .runtime import storage_fingerprint
 
 
 def ok(data):
@@ -55,7 +56,7 @@ class ModelInput(BaseModel):
     model: str
 
 
-def create_app(settings: Settings | None = None):
+def create_app(settings: Settings | None = None, *, server_lock: FileLock | None = None):
     settings = settings or Settings.load()
     local = settings.initialize()
     database_path = settings.data_dir / 'brain.sqlite3'
@@ -74,7 +75,7 @@ def create_app(settings: Settings | None = None):
     sessions = {}
     tasks: set[asyncio.Task] = set()
     question_tasks: set[asyncio.Task] = set()
-    lock = FileLock(str(settings.data_dir / 'server.lock'))
+    lock = server_lock or FileLock(str(settings.data_dir / 'server.lock'))
 
     @asynccontextmanager
     async def lifespan(app):
@@ -179,7 +180,8 @@ def create_app(settings: Settings | None = None):
 
     @app.get('/health')
     async def health():
-        return ok({'status': 'ready', 'version': '0.1.0'})
+        return ok({'status': 'ready', 'version': '0.1.0', 'application': PRODUCT_ID,
+                   'storage_id': storage_fingerprint(settings.data_dir)})
 
     @app.get('/api/v1/settings')
     async def get_settings(request: Request):
@@ -339,7 +341,12 @@ def create_app(settings: Settings | None = None):
 def run():
     import uvicorn
     settings = Settings.load()
-    uvicorn.run(create_app(settings), host='127.0.0.1', port=settings.port, access_log=False)
+    settings.data_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
+    # Acquire before auth initialization and migrations, including foreground run.
+    # The lifespan reuses this reentrant lock and releases only its acquisition.
+    lock = FileLock(str(settings.data_dir / 'server.lock'), mode=0o600)
+    with lock.acquire(timeout=0):
+        uvicorn.run(create_app(settings, server_lock=lock), host='127.0.0.1', port=settings.port, access_log=False)
 
 
 if __name__ == '__main__':
