@@ -37,7 +37,7 @@ const typeName = (n: GraphData["nodes"][number]) =>
     : n.kind === "concept"
       ? "주제"
       : n.kind === "node"
-        ? "내용의 맥락"
+        ? "세부 항목"
         : n.kinds?.length
           ? n.kinds.map((k) => KIND_LABELS[k]).join(" · ")
           : "기록";
@@ -654,7 +654,7 @@ export default function Graph({
                 </span>
                 <span>
                   <i className="legend-node" />
-                  내용의 맥락
+                  세부 항목
                 </span>
               </>
             )}

@@ -215,7 +215,7 @@ export function ReferencePicker({
                 <option value="span">본문에서 구간 선택</option>
                 {candidate.node_status === "current" &&
                   candidate.nodes.length > 0 && (
-                    <option value="node">정리된 내용 선택</option>
+                    <option value="node">세부 항목 선택</option>
                   )}
               </select>
             </label>
@@ -286,7 +286,7 @@ export function ReferencePicker({
                       })
                     }
                   >
-                    <strong>{n.label || "정리된 내용"}</strong>
+                    <strong>{n.label || "세부 항목"}</strong>
                     <span>{n.text}</span>
                   </button>
                 ))}

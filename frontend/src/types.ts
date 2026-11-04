@@ -195,8 +195,7 @@ export interface Settings {
 }
 export const RELATION_LABELS = {
   related_to: "관련 있음",
-  explains: "설명함",
-  applies_to: "적용됨",
+  clarifies: "명확히 설명함",
   corrects: "정정함",
   supports: "뒷받침함",
   contradicts: "상충함",

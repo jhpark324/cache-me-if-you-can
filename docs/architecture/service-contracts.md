@@ -2,6 +2,7 @@
 
 - 상태: 현재 공통 서비스 계약. 검증 절차는 [검증 안내](../guides/testing.md) 참조
 - 작성일: 2026-11-02
+- 용어: [도메인 용어](../project/domain-language.md)
 - 기준: [데이터 스키마](data-schema.md), [지식 계층](knowledge-layer.md), [검색과 맥락 선택](retrieval-and-context.md), [MCP v2 채택](../decisions/ADR-005-mcp-python-sdk-v2.md)
 
 MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 사용한다. 별도 구현마다 삭제·버전·공개 범위 규칙을 다르게 만들지 않는다. 생성된 OpenAPI와 MCP 입출력 스키마는 서버 구현이 기준이며, 자동·실제 연결 확인 절차는 검증 안내에서 관리한다.
@@ -18,6 +19,8 @@ MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 �
 프로토콜 세부 메시지·호환 처리는 SDK에 맡긴다. 현재 규격의 stateless 요청 구조를 저장소 트랜잭션이나 단일 검색의 실행 중 메모리 상태가 없어야 한다는 뜻으로 해석하지 않는다. [공식 v2 안내](https://py.sdk.modelcontextprotocol.io/whats-new/), [ASGI 통합](https://py.sdk.modelcontextprotocol.io/run/asgi/), [규격 호환](https://py.sdk.modelcontextprotocol.io/protocol-versions/)
 
 ## 공통 타입
+
+문서와 화면의 기록·기록 버전·세부 항목·주제·출처 참조는 각각 `Capture`·`CaptureRevision`·`Node`·`Concept`·`SourceRef`에 대응한다. 아래 타입·필드·도구 이름은 호환 식별자로 유지한다.
 
 | 타입 | 필드·의미 |
 | --- | --- |
@@ -129,6 +132,8 @@ review_state는 서버가 전체 현재 출처로 계산하며 클라이언트�
 `concept_create`는 `request_id`, `name`, 선택적 `description/aliases`를 받아 서버 ID와 `state_version=1`인 ConceptView를 반환한다. `concept_list`는 선택적 문자열 `query`, `limit/cursor`로 이름·별칭을 찾고 `concept_get`은 ID로 조회한다. 동명 후보는 구분해 반환하며 자동 병합·전역 이름 UNIQUE를 적용하지 않는다. 목록은 관리·저장용이며 그래프에는 조회 가능한 기록/Node에 연결된 주제만 표시한다.
 
 `concept_update`는 `request_id`, `concept_id`, `expected_state_version`, `changes{name?, description?, aliases?}`를 받는다. 이름은 비울 수 없고 description null·aliases 빈 배열은 제거다. 성공하면 상태 버전이 증가한다. 이름 변경으로 기록 내용·주체·범위를 바꾸지 않는다. 개별 주제의 물리 삭제·병합 관리 기능은 넣지 않는다.
+
+`relation_type`은 [일곱 관계 유형](../project/domain-language.md#관계-유형과-표시-이름)을 사용한다. 웹 선택지·표시와 MCP·API가 같은 값을 사용하며 표시 이름을 별도 enum으로 취급하지 않는다.
 
 `RelationInput`은 `request_id`, `relation_type`, `source: SourceRef`, `target: SourceRef`, `evidence: SourceRef`, 선택적 `scope_note/evidence_note`다. 같은 brain의 조회 가능한 현재 또는 안전하게 동등한 참조를 사용하고 커밋까지 상태를 다시 검사한다. 구조 검증은 관계 의미의 진실성을 보장하지 않는다.
 

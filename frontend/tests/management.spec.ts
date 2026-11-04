@@ -233,13 +233,28 @@ test("병합은 대상 버전과 출처를 보내고 충돌 후 초안·동일 �
     other.body_markdown,
   );
 });
-test("관계는 선택한 방향과 근거로 저장하고 이유를 남겨 철회한다", async ({
+test("지원 관계 유형을 선택하고 명확히 설명함 관계의 방향·근거를 보존해 저장·철회한다", async ({
   page,
 }) => {
   const f = await fixture(page);
   await openCurrent(page);
   await page.getByRole("button", { name: "관계 관리", exact: true }).click();
   await page.getByRole("button", { name: "관계 추가", exact: true }).click();
+  const relationType = page.getByLabel("관계의 의미", { exact: true });
+  expect(
+    await relationType.locator("option").evaluateAll((options) =>
+      options.map((option) => (option as HTMLOptionElement).value),
+    ),
+  ).toEqual([
+    "related_to",
+    "clarifies",
+    "corrects",
+    "supports",
+    "contradicts",
+    "merged_from",
+    "supersedes",
+  ]);
+  await relationType.selectOption({ label: "명확히 설명함" });
   await pick(page, "대상", other.title);
   await page
     .getByRole("group", { name: "근거", exact: true })
@@ -251,7 +266,9 @@ test("관계는 선택한 방향과 근거로 저장하고 이유를 남겨 철�
   await page.getByRole("button", { name: "관계 저장", exact: true }).click();
   await expect(page.locator(".relation-card")).toContainText(current.title);
   await expect(page.locator(".relation-card")).toContainText(other.title);
+  await expect(page.locator(".relation-card")).toContainText("명확히 설명함");
   const created = f.writes.find((w) => w.path === "/relations")!.body;
+  expect(created.relation_type).toBe("clarifies");
   expect(created.source).toEqual(ref(current));
   expect(created.target).toEqual(ref(other));
   expect(created.evidence).toEqual(ref(current));
@@ -260,6 +277,9 @@ test("관계는 선택한 방향과 근거로 저장하고 이유를 남겨 철�
     current.body_markdown,
   );
   await page.getByRole("button", { name: "관계 철회", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "명확히 설명함 관계 철회", exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "이유를 남기고 철회" }),
   ).toBeDisabled();
