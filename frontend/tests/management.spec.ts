@@ -420,10 +420,10 @@ test("로그인 시도 취소는 현재 연결된 계정의 로그아웃과 구�
   await page.goto("/");
   await page.getByRole("button", { name: "설정", exact: true }).click();
   await page
-    .getByRole("button", { name: "로그인 시도 취소", exact: true })
+    .getByRole("button", { name: "로그인 취소", exact: true })
     .click();
   await expect(
-    page.getByRole("button", { name: "로그인 시도 취소", exact: true }),
+    page.getByRole("button", { name: "로그인 취소", exact: true }),
   ).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "로그아웃", exact: true }),

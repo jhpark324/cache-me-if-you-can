@@ -1184,10 +1184,18 @@ summary:hover {
 }
 .setting-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   font-size: 14px;
+}
+.settings-account {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.settings-section > .rt-Button.rt-variant-ghost {
+  margin: 8px 0;
 }
 .data-path {
   font-size: 13px;

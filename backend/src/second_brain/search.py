@@ -209,7 +209,7 @@ class SearchService:
 
     def _require(self):
         if not self.embedding.ready or self._table is None or self._model_state != "ready":
-            raise DomainError("INDEX_NOT_READY", "설정에서 검색 모델과 색인을 먼저 준비해 주세요.", retryable=True)
+            raise DomainError("INDEX_NOT_READY", "설정에서 검색 기능을 먼저 준비해 주세요.", retryable=True)
 
     def _fts(self):
         from lancedb.index import FTS
@@ -380,7 +380,7 @@ class SearchService:
             vector_rows = table.search(query, query_type="vector", vector_column_name="vector").metric("cosine").bypass_vector_index().where(filters, prefilter=True).select(columns + ["_distance"]).limit(40).to_list()
             fts_rows = table.search(data.query, query_type="fts", fts_columns="text").where(filters, prefilter=True).select(columns + ["_score"]).limit(40).to_list()
         except Exception as exc:
-            raise DomainError("SEARCH_FAILED", "검색을 완료하지 못했습니다. 색인 상태를 확인해 주세요.", retryable=True) from exc
+            raise DomainError("SEARCH_FAILED", "검색을 완료하지 못했습니다. 설정에서 검색 준비 상태를 확인해 주세요.", retryable=True) from exc
         scored = {}
         for rows in (vector_rows, fts_rows):
             for rank, row in enumerate(rows, 1):
