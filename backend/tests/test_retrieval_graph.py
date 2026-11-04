@@ -201,7 +201,8 @@ def test_search_candidates_excluded_from_model_budget_do_not_appear_in_graph(rec
 
 @pytest.mark.parametrize('cited', [False, True])
 def test_final_completed_boundary_rechecks_graph_without_leaking_stale_labels(tmp_path, monkeypatch, cited):
-    app = create_app(Settings(tmp_path, background_jobs=False))
+    settings = Settings(tmp_path, background_jobs=False)
+    app = create_app(settings)
     records = app.state.records
     stable = create(records, '살아 있는 답변 근거')
     changing = create(records, '마지막 순간 사라질 구간', title='사라질 제목')
@@ -225,7 +226,7 @@ def test_final_completed_boundary_rechecks_graph_without_leaking_stale_labels(tm
 
     monkeypatch.setattr(QuestionService, 'run', answer)
     monkeypatch.setattr(QuestionService, 'revalidate', revalidate)
-    with TestClient(app, base_url='http://127.0.0.1:8000') as client:
+    with TestClient(app, base_url=settings.origin) as client:
         client.headers['x-csrf-token'] = client.get('/api/v1/session').json()['data']['csrf_token']
         response = client.post('/api/v1/questions', json={'request_id': str(uuid4()), 'question': '기록은?'})
     assert '사라질 제목' not in response.text and '마지막 순간' not in response.text

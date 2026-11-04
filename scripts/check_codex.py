@@ -13,7 +13,7 @@ from uuid import uuid4
 
 import httpx
 
-from second_brain.codex_integration import install, server_config
+from second_brain.codex_integration import install, runtime_config, server_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -116,7 +116,8 @@ async def run(args):
                     else:
                         raise RuntimeError('Isolated server did not start')
                 install(home, ROOT / 'docs/skills/cache-me/SKILL.md',
-                        server_config(Path(sys.executable), data, args.port))
+                        server_config(Path(sys.executable), data, args.port),
+                        runtime_metadata=runtime_config(Path(sys.executable), data, args.port, home))
                 command = [shutil.which('codex'), 'app-server']
                 codex_env = dict(env, CODEX_HOME=str(home))
                 if args.model_turn:

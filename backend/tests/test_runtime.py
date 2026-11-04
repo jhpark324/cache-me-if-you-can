@@ -25,8 +25,9 @@ from agent_fakes import OfflineModel
 
 @pytest.fixture
 def web(tmp_path):
-    app = create_app(Settings(tmp_path, background_jobs=False))
-    with TestClient(app, base_url='http://127.0.0.1:8000') as client:
+    settings = Settings(tmp_path, background_jobs=False)
+    app = create_app(settings)
+    with TestClient(app, base_url=settings.origin) as client:
         session = client.get('/api/v1/session').json()['data']
         client.headers['x-csrf-token'] = session['csrf_token']
         yield client, app

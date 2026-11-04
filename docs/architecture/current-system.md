@@ -69,6 +69,7 @@ flowchart TB
 | 경계 | 실제 코드 | 책임·변경 시 함께 확인할 항목 |
 | --- | --- | --- |
 | 조립·수명 | [main.py](../../backend/src/second_brain/main.py) | 서버 lock, 작업 취소, 세션/CSRF·Origin·Host, 정적 웹, 백업 |
+| 로컬 실행·연결 | [runtime.py](../../backend/src/second_brain/runtime.py), [codex_integration.py](../../backend/src/second_brain/codex_integration.py) | 명시적 백그라운드 시작·동일 서버 재사용, 읽기 전용 진단, Codex 설정·스킬·비밀 없는 실행 정보 설치 |
 | 계약 | [schemas.py](../../backend/src/second_brain/schemas.py), [outputs.py](../../backend/src/second_brain/outputs.py) | 웹/MCP 입력·출력. 프런트 [types.ts](../../frontend/src/types.ts)는 수동 동기화이므로 계약 변경 시험 필요 |
 | 정본 변경 | [records.py](../../backend/src/second_brain/records.py) | 요청 멱등성, expected revision/state, 저장·삭제·주제·관계와 출처 검증 |
 | 공통 선택 | [record_filters.py](../../backend/src/second_brain/record_filters.py) | 여러 유형은 OR, 여러 주제는 OR, 두 그룹은 AND. 현재 Node의 주제도 부모 기록 선택에 반영 |
@@ -80,6 +81,8 @@ flowchart TB
 | 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordBrowser.tsx](../../frontend/src/RecordBrowser.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 기록 라이브러리·타임라인, 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
 
 한 로컬 서버 프로세스에서 동작한다. 분산 큐·별도 벡터 서버·그래프 DB·LangSmith·영구 대화 체크포인터는 필수가 아니다. 두 DB의 작업을 하나의 원자적 트랜잭션으로 간주하지 않는다.
+
+기본 포트는 `52761`이며 `SECOND_BRAIN_PORT`로 변경한다. `manage.py run`은 포그라운드 실행, `start`는 준비 완료를 확인하는 명시적 백그라운드 시작이다. `doctor`는 런타임과 설치 상태를 읽기 전용으로 진단한다. 설치된 스킬의 `runtime.json`이 같은 Python·데이터 경로·포트의 진단·시작 명령을 제공하며 인증 토큰은 담지 않는다. MCP 헤더 helper는 인증 정보 제공만 담당하고 도구 탐색 중에 서버를 시작하지 않는다. 서버의 정상 응답과 현재 Codex 대화의 도구 목록은 별도로 확인한다.
 
 ## 정본 데이터 관계
 

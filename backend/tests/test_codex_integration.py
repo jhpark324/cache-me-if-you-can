@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import shlex
+import socket
 import subprocess
 import sys
 import tomllib
@@ -11,6 +12,135 @@ import pytest
 
 from second_brain import codex_integration
 from second_brain.codex_integration import header_value, install, server_config, updated_config
+from second_brain.config import Settings
+from second_brain.brand import DEFAULT_PORT
+
+
+def test_runtime_metadata_preserves_exact_paths_and_endpoint(tmp_path, source_package, monkeypatch):
+    python = tmp_path / 'Python 공백' / 'bin' / 'python'
+    data = tmp_path / 'private data'
+    home = tmp_path / 'codex home'
+    runtime = codex_integration.runtime_config(python, data, 54321, home)
+    server = server_config(python, data, 54321)
+    assert runtime['mcp_url'] == server['url'] == 'http://127.0.0.1:54321/mcp/'
+    assert runtime['commands']['start'] == [str(python), '-m', 'second_brain.runtime', 'start',
+                                          '--data-dir', str(data), '--port', '54321']
+    assert runtime['commands']['doctor'][-2:] == ['--codex-home', str(home)]
+    assert not data.exists()  # Metadata generation does not initialize auth or storage.
+    result = install(home, source_package, server, runtime_metadata=runtime)
+    artifact = Path(result['runtime_metadata'])
+    assert json.loads(artifact.read_text()) == runtime
+    if os.name != 'nt':
+        assert artifact.stat().st_mode & 0o077 == 0
+    monkeypatch.setattr(codex_integration, 'atomic_write', lambda *_: pytest.fail('Identical install rewrote files'))
+    install(home, source_package, server, runtime_metadata=runtime)
+
+
+def test_runtime_metadata_conflict_is_preflighted_and_migration_is_explicit(tmp_path, source_package):
+    home, data = tmp_path / 'codex', tmp_path / 'data'
+    python = Path(sys.executable)
+    old_server = server_config(python, data, 8000)
+    old_runtime = codex_integration.runtime_config(python, data, 8000, home)
+    install(home, source_package, old_server, runtime_metadata=old_runtime)
+    before = {path: path.read_bytes() for path in home.rglob('*') if path.is_file()}
+    new_server = server_config(python, data, DEFAULT_PORT)
+    new_runtime = codex_integration.runtime_config(python, data, DEFAULT_PORT, home)
+    with pytest.raises(ValueError, match='--replace'):
+        install(home, source_package, new_server, runtime_metadata=new_runtime)
+    assert all(path.read_bytes() == value for path, value in before.items())
+    install(home, source_package, new_server, runtime_metadata=new_runtime, replace=True)
+    assert json.loads((home / 'skills/cache-me/runtime.json').read_text()) == new_runtime
+    assert tomllib.loads((home / 'config.toml').read_text())['mcp_servers']['second_brain'] == new_server
+    # A runtime-only customization also blocks all package writes before replacement.
+    (home / 'skills/cache-me/runtime.json').write_text('customized runtime')
+    source_package.write_text('new canonical skill')
+    with pytest.raises(ValueError, match='--replace'):
+        install(home, source_package, new_server, runtime_metadata=new_runtime)
+    assert (home / 'skills/cache-me/SKILL.md').read_text() != 'new canonical skill'
+    assert (home / 'skills/cache-me/runtime.json').read_text() == 'customized runtime'
+
+
+def test_doctor_missing_install_is_read_only(tmp_path, monkeypatch):
+    settings = Settings(tmp_path / 'data')
+    home = tmp_path / 'codex'
+    monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'stopped', 'message': 'stopped'})
+    result = codex_integration.doctor(settings, home)
+    assert not result['ok']
+    assert result['data']['runtime']['status'] == 'stopped'
+    assert result['data']['authentication']['status'] == 'unavailable'
+    assert result['data']['codex']['status'] == 'missing'
+    assert not home.exists() and not settings.data_dir.exists()
+
+
+@pytest.mark.parametrize('change,expected', [({}, 'ready'), ({'url': 'http://localhost:8000/mcp/'}, 'mismatch'),
+                                          ({'enabled': False}, 'mismatch'),
+                                          ({'http_headers_helper': 'different-helper'}, 'mismatch'),
+                                          ({'http_headers': {'Authorization': 'secret'}}, 'mismatch')])
+def test_doctor_distinguishes_configuration_and_never_echoes_secrets(tmp_path, monkeypatch, change, expected):
+    settings = Settings(tmp_path / 'data')
+    settings.data_dir.mkdir()
+    secret = 'synthetic-private-mcp-secret'
+    (settings.data_dir / 'local-access.json').write_text(json.dumps({'mcp_token': secret}))
+    home = tmp_path / 'codex'
+    home.mkdir()
+    server = {**server_config(Path(sys.executable), settings.data_dir, settings.port), **change}
+    headers = server.pop('http_headers', None)
+    config_text = updated_config('', server)
+    if headers:
+        config_text += '\n[mcp_servers.second_brain.http_headers]\nAuthorization = "secret"\n'
+    (home / 'config.toml').write_text(config_text)
+    monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'ready', 'message': 'ready'})
+    before = {path: path.read_bytes() for path in tmp_path.rglob('*') if path.is_file()}
+    result = codex_integration.doctor(settings, home)
+    assert result['ok'] == (expected == 'ready')
+    assert result['data']['codex']['status'] == expected
+    assert secret not in json.dumps(result) and 'Authorization' not in json.dumps(result)
+    assert all(path.read_bytes() == value for path, value in before.items())
+    if expected == 'ready':
+        assert '새 세션' in result['data']['next_steps'][0]
+
+
+@pytest.mark.parametrize('credential', ['[]', '{invalid-synthetic-secret', '{"mcp_token": "secret with space"}'])
+def test_doctor_malformed_credentials_and_config_are_sanitized(tmp_path, monkeypatch, credential):
+    (tmp_path / 'local-access.json').write_text(credential)
+    (tmp_path / 'config.toml').write_text('token = invalid-synthetic-secret')
+    monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'ready', 'message': 'ready'})
+    result = codex_integration.doctor(Settings(tmp_path), tmp_path)
+    assert not result['ok']
+    assert result['data']['authentication']['status'] == 'unavailable'
+    assert result['data']['codex']['status'] == 'invalid'
+    assert 'synthetic-secret' not in json.dumps(result)
+
+
+def test_doctor_cli_invalid_port_is_structured_and_sanitized(tmp_path):
+    env = dict(os.environ, SECOND_BRAIN_PORT='synthetic-secret-invalid-port')
+    result = subprocess.run([sys.executable, '-m', 'second_brain.codex_integration', 'doctor',
+                             '--data-dir', str(tmp_path / 'data'), '--codex-home', str(tmp_path / 'codex')],
+                            capture_output=True, text=True, env=env)
+    assert result.returncode == 1
+    assert json.loads(result.stdout)['error']['code'] == 'invalid_configuration'
+    assert 'synthetic-secret' not in result.stdout + result.stderr
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_explicit_cli_port_takes_precedence_and_headers_are_port_independent(tmp_path):
+    env = dict(os.environ, SECOND_BRAIN_PORT='invalid-ambient-port', SECOND_BRAIN_DATA_DIR=str(tmp_path))
+    (tmp_path / 'local-access.json').write_text(json.dumps({'mcp_token': 'synthetic-test-token'}))
+    for extra in ([], ['--data-dir', str(tmp_path)]):
+        result = subprocess.run([sys.executable, '-m', 'second_brain.codex_integration', 'headers', *extra],
+                                capture_output=True, text=True, env=env)
+        assert result.returncode == 0 and not result.stderr
+        assert json.loads(result.stdout) == {'Authorization': 'Bearer synthetic-test-token'}
+    with socket.socket() as sock:
+        sock.bind(('127.0.0.1', 0))
+        port = sock.getsockname()[1]
+    result = subprocess.run([sys.executable, '-m', 'second_brain.codex_integration', 'doctor',
+                             '--port', str(port), '--data-dir', str(tmp_path),
+                             '--codex-home', str(tmp_path / 'codex')], capture_output=True, text=True, env=env)
+    payload = json.loads(result.stdout)
+    assert result.returncode == 1 and not result.stderr
+    assert payload['data']['authentication']['status'] == 'ready'
+    assert payload['data']['codex']['status'] == 'missing'
 
 
 @pytest.fixture

@@ -235,8 +235,9 @@ def test_retry_http_contract_and_version_conflict(records):
 def test_web_login_cancellation_uses_current_session_and_csrf(tmp_path):
     from second_brain.config import Settings
     from second_brain.main import create_app
-    app = create_app(Settings(tmp_path / 'web-state', background_jobs=False))
-    with TestClient(app, base_url='http://127.0.0.1:8000') as client:
+    settings = Settings(tmp_path / 'web-state', background_jobs=False)
+    app = create_app(settings)
+    with TestClient(app, base_url=settings.origin) as client:
         csrf = client.get('/api/v1/session').json()['data']['csrf_token']
         client.headers['x-csrf-token'] = csrf
         assert not client.get('/api/v1/settings').json()['data']['auth']['pending_login']
