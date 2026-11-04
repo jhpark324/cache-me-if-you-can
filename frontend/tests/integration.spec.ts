@@ -180,7 +180,7 @@ test("실제 API: 기록 생성·정정·주변 그래프·출처·확인 삭제
     page.getByRole("button", { name: "Continue with ChatGPT" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "모델 준비", exact: true }),
+    page.getByRole("button", { name: "검색 기능 준비", exact: true }),
   ).toBeVisible();
   await expect(page.getByRole("dialog")).toContainText(
     "백업에는 삭제 표시된 내부 기록도 포함",

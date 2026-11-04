@@ -49,11 +49,13 @@ def error(code, message, status=400):
 class LoginInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     account_id: str | None = None
+    replace_account: bool = False
 
 
 class ModelInput(BaseModel):
     model_config = ConfigDict(extra='forbid')
     model: str
+    reasoning_effort: str | None = None
 
 
 def create_app(settings: Settings | None = None, *, server_lock: FileLock | None = None):
@@ -189,16 +191,20 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
 
     @app.patch('/api/v1/settings')
     async def set_settings(data: ModelInput):
-        previous_model = (auth.active() or {}).get('model')
-        auth.select_model(data.model)
-        if data.model != previous_model:
+        previous_generation = auth.model_generation
+        if 'reasoning_effort' in data.model_fields_set:
+            auth.select_model(data.model, reasoning_effort=data.reasoning_effort)
+        else:
+            auth.select_model(data.model)
+        if auth.model_generation != previous_generation:
             for task in list(question_tasks):
                 task.cancel()
         return ok(auth.status())
 
     @app.post('/api/v1/auth/login')
     async def login(data: LoginInput, request: Request):
-        return ok({'authorization_url': auth.begin(request.state.session_id, data.account_id)})
+        return ok({'authorization_url': auth.begin(request.state.session_id, data.account_id,
+                                                   replace_account=data.replace_account)})
 
     @app.post('/api/v1/auth/cancel')
     async def cancel_login(request: Request):

@@ -426,10 +426,10 @@ test("설정은 사용자 동작 전 모델 다운로드를 시작하지 않는�
     page.getByRole("button", { name: "Continue with ChatGPT" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "모델 준비", exact: true }),
+    page.getByRole("button", { name: "검색 기능 준비", exact: true }),
   ).toBeVisible();
   expect(f.calls.filter((c) => c.path === "/index/prepare")).toHaveLength(0);
-  await page.getByRole("button", { name: "모델 준비", exact: true }).click();
+  await page.getByRole("button", { name: "검색 기능 준비", exact: true }).click();
   await expect
     .poll(() => f.calls.filter((c) => c.path === "/index/prepare").length)
     .toBe(1);

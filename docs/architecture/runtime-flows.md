@@ -138,7 +138,7 @@ sequenceDiagram
     Auth-->>Web: 상태·모델 목록 (토큰 제외)
     Web->>Auth: 단일 질문
     Auth->>Provider: 필요 시 refresh + store=false 호출
-    alt 취소/모델 변경/로그아웃
+    alt 취소/모델·추론 수준 변경/로그아웃
       Web->>Auth: 취소 또는 상태 변경
       Auth->>Auth: 실행 task·세대 무효화
       Auth-->>Web: cancelled 또는 오류
@@ -148,3 +148,13 @@ sequenceDiagram
 ```
 
 브라우저에는 공급자 토큰을 전달하지 않는다. HTTP callback query·질문·본문을 접근 로그에 기록하지 않도록 한다. 취소 후 결과가 도착해도 새 요청을 덮지 않아야 하며, 공급자의 원격 연산이 즉시 중단됐다고 보증하지 않는다. 실제 계정의 로그인·갱신·재로그인과 OS별 callback은 배포 환경에서 별도로 검증한다.
+
+### 단일 계정과 모델 설정
+
+- 기존 여러 계정 저장소는 현재 계정 한 개로 정리한다. 일반 로그인은 현재 계정의 앱 등록을 재사용하며, `POST /api/v1/auth/login`의 `replace_account: true`는 새 계정 연결을 시작한다. 교체 성공 후에만 이전 계정을 제거한다. 로그아웃은 현재 토큰을 제거하고 재연결용 앱 등록 정보는 유지한다.
+- 설정 화면은 연결된 계정의 모델 목록이 비어 있으면 `GET /api/v1/auth/models`를 조회한다. 목록은 메모리에만 있으므로 서버 재시작 후에도 이 경로로 복구한다. 실패·빈 목록은 선택 컨트롤의 안내와 수동 재시도로 표시한다.
+- 카탈로그의 모델별 추론 수준을 `supported_reasoning_efforts`와 `default_reasoning_effort`로 정규화한다. 공급자가 지원 정보를 보내지 않으면 수준을 추측하지 않는다.
+- `PATCH /api/v1/settings`는 `model`과 선택적인 `reasoning_effort`를 검증한 뒤 함께 저장한다. `null`은 공급자 기본 동작이며 요청에 추론 옵션을 추가하지 않는다. 필드 생략은 같은 모델의 기존 선택을 유지하며 모델 변경 시 초기화한다. 명시한 수준은 Responses 요청의 `reasoning.effort`로 전달한다.
+- 모델·추론 수준 변경은 실행 세대를 무효화하고 진행 중인 질문을 취소한다. 다른 계정이나 이전 설정의 늦은 응답이 새 상태를 덮지 않도록 한다.
+
+앱 등록 재사용과 목록 형식은 [SIWC 계정·세션](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions), [모델·추론](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference)을 따른다. 실제 계정의 모델·추론 수준 제공 여부는 공급자가 반환한 카탈로그에 달려 있다.

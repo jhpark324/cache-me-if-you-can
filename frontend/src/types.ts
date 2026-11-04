@@ -174,9 +174,14 @@ export interface Settings {
     plan_enabled?: boolean;
     email?: string;
     active_account_id?: string;
-    accounts?: { id: string; email?: string; label?: string }[];
-    selected_model?: string;
-    models?: { slug: string; display_name: string }[];
+    selected_model?: string | null;
+    selected_reasoning_effort?: string | null;
+    models?: {
+      slug: string;
+      display_name: string;
+      supported_reasoning_efforts?: { effort: string; description: string }[];
+      default_reasoning_effort?: string | null;
+    }[];
     error?: string;
   };
   index?: {

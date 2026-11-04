@@ -24,6 +24,7 @@ ISSUER = 'https://auth.openai.com'
 AUTHORIZE = ISSUER + '/api/accounts/authorize'
 TOKEN = ISSUER + '/api/accounts/oauth/token'
 RESOURCE = 'https://api.openai.com/v1'
+_UNSET = object()
 
 
 class AuthError(Exception):
@@ -64,7 +65,15 @@ class ModelAuth:
         self.data = json.loads(self.path.read_text()) if self.path.exists() else {
             'host_id': 'urn:uuid:' + str(uuid4()), 'accounts': {}, 'active': None,
         }
-        if not self.path.exists():
+        # Older installations retained every account. Keep only the current
+        # registration, including its client mapping for later reauthorization.
+        current_id = self.data.get('active')
+        current = self.data['accounts'].get(current_id)
+        accounts = {current_id: current} if current else {}
+        migrated = self.data['accounts'] != accounts or (current is None and current_id is not None)
+        self.data['accounts'] = accounts
+        self.data['active'] = current_id if current else None
+        if not self.path.exists() or migrated:
             self.save()
         self.pending: dict[str, dict] = {}
         self.login_generations: dict[str, int] = {}
@@ -89,10 +98,15 @@ class ModelAuth:
             'email': account.get('email'), 'active_account_id': self.data.get('active'),
             'accounts': [{'id': key, 'email': a.get('email'), 'label': (a.get('email') or 'ChatGPT') + ' · ' + key[-6:]} for key, a in self.data['accounts'].items()],
             'selected_model': account.get('model'), 'models': self.models,
+            'selected_reasoning_effort': account.get('reasoning_effort'),
             'error': self.last_error, 'pending_login': self.login_pending(session_id) if session_id else False,
         }
 
-    def begin(self, session_id: str, account_id: str | None = None):
+    def begin(self, session_id: str, account_id: str | None = None, *, replace_account=False):
+        if replace_account:
+            account_id = None
+        elif account_id is None:
+            account_id = self.data.get('active')
         old = self.data['accounts'].get(account_id) if account_id else None
         if account_id and old is None:
             raise AuthError('NOT_FOUND', '등록된 계정을 찾을 수 없습니다.')
@@ -204,12 +218,13 @@ class ModelAuth:
                 if not self.pending_is_current(pending):
                     raise AuthError('AUTH_CANCELLED', '취소한 로그인 결과는 반영하지 않습니다.')
                 previous = self.data['accounts'].get(key, {})
-                self.data['accounts'][key] = {
+                self.data['accounts'] = {key: {
                     'client_id': client_id, 'subject': claims['sub'], 'email': claims.get('email'),
                     'id_token': tokens['id_token'], 'access_token': tokens['access_token'],
                     'refresh_token': tokens.get('refresh_token'), 'scopes': tokens.get('scope', '').split(),
                     'expires_at': expires_at, 'model': previous.get('model'),
-                }
+                    'reasoning_effort': previous.get('reasoning_effort'),
+                }}
                 self.data['active'] = key
                 self.auth_generation += 1
                 self.models = []
@@ -273,25 +288,58 @@ class ModelAuth:
     async def list_models(self):
         generation, account_id = self.auth_generation, self.data.get('active')
         token = await self.access_token()
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.get(RESOURCE + '/models', headers={'Authorization': 'Bearer ' + token})
-            if response.status_code != 200:
-                raise AuthError('MODELS_UNAVAILABLE', '계정의 모델 목록을 가져오지 못했습니다.')
-            if generation != self.auth_generation or account_id != self.data.get('active'):
-                raise AuthError('AUTH_CANCELLED', '계정이 변경되어 이전 모델 목록을 반영하지 않습니다.')
-            self.models = []
-            for model in response.json().get('models', []):
-                if model.get('visibility') != 'list' or not isinstance(model.get('slug'), str):
-                    continue
-                item = {'slug': model['slug'], 'display_name': model.get('display_name', model['slug'])}
-                for field in ('context_window', 'max_context_window', 'max_input_tokens', 'max_output_tokens'):
-                    value = model.get(field)
-                    if type(value) is int and value > 0:
-                        item[field] = value
-                tokenizer = model.get('tokenizer')
-                if isinstance(tokenizer, str) and re.fullmatch(r'[A-Za-z0-9_.:/-]{1,160}', tokenizer):
-                    item['tokenizer'] = tokenizer
-                self.models.append(item)
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.get(RESOURCE + '/models', headers={'Authorization': 'Bearer ' + token})
+        except httpx.HTTPError:
+            raise AuthError('MODELS_UNAVAILABLE', '모델 목록을 불러오지 못했습니다. 연결 상태를 확인하고 다시 불러와 주세요.', retryable=True) from None
+        if response.status_code != 200:
+            raise AuthError('MODELS_UNAVAILABLE', '계정의 모델 목록을 가져오지 못했습니다.')
+        try:
+            catalog = response.json().get('models')
+        except (ValueError, AttributeError):
+            catalog = None
+        if not isinstance(catalog, list):
+            raise AuthError('MODELS_UNAVAILABLE', '계정의 모델 목록을 확인하지 못했습니다. 다시 불러와 주세요.')
+        if generation != self.auth_generation or account_id != self.data.get('active'):
+            raise AuthError('AUTH_CANCELLED', '계정이 변경되어 이전 모델 목록을 반영하지 않습니다.')
+        models, seen = [], set()
+        for model in catalog:
+            if not isinstance(model, dict) or model.get('visibility') != 'list' or not isinstance(model.get('slug'), str) or not model['slug'] or model['slug'] in seen:
+                continue
+            seen.add(model['slug'])
+            name = model.get('display_name')
+            item = {'slug': model['slug'], 'display_name': name if isinstance(name, str) and name else model['slug']}
+            levels = model.get('supported_reasoning_levels', model.get('supported_reasoning_efforts', []))
+            efforts = []
+            if isinstance(levels, list):
+                for level in levels:
+                    if not isinstance(level, dict):
+                        continue
+                    effort = level.get('effort')
+                    if not isinstance(effort, str) or not re.fullmatch(r'[a-z][a-z0-9_]{0,31}', effort) or any(entry['effort'] == effort for entry in efforts):
+                        continue
+                    description = level.get('description')
+                    efforts.append({'effort': effort, 'description': description if isinstance(description, str) else ''})
+            default = model.get('default_reasoning_level', model.get('default_reasoning_effort'))
+            item['supported_reasoning_efforts'] = efforts
+            item['default_reasoning_effort'] = default if any(entry['effort'] == default for entry in efforts) else None
+            for field in ('context_window', 'max_context_window', 'max_input_tokens', 'max_output_tokens'):
+                value = model.get(field)
+                if type(value) is int and value > 0:
+                    item[field] = value
+            tokenizer = model.get('tokenizer')
+            if isinstance(tokenizer, str) and re.fullmatch(r'[A-Za-z0-9_.:/-]{1,160}', tokenizer):
+                item['tokenizer'] = tokenizer
+            models.append(item)
+        self.models = models
+        account = self.active()
+        selected = next((item for item in models if item['slug'] == account.get('model')), {})
+        if account.get('reasoning_effort') is not None and not any(level['effort'] == account['reasoning_effort'] for level in selected.get('supported_reasoning_efforts', [])):
+            account['reasoning_effort'] = None
+            self.model_generation += 1
+            self.save()
+        self.last_error = None
         return self.models
 
     async def model_metadata(self):
@@ -304,12 +352,19 @@ class ModelAuth:
                 'max_output_tokens': item.get('max_output_tokens'), 'tokenizer': item.get('tokenizer'),
                 'source': 'catalog' if item else 'unavailable'}
 
-    def select_model(self, model):
-        if not self.active() or not any(m['slug'] == model for m in self.models):
+    def select_model(self, model, reasoning_effort=_UNSET):
+        account = self.active()
+        selected = next((item for item in self.models if item['slug'] == model), None)
+        if not account or selected is None:
             raise AuthError('MODEL_UNAVAILABLE', '계정에서 사용 가능한 모델을 선택해 주세요.')
-        if self.active().get('model') != model:
+        if reasoning_effort is _UNSET:
+            reasoning_effort = account.get('reasoning_effort') if account.get('model') == model else None
+        if reasoning_effort is not None and not any(level['effort'] == reasoning_effort for level in selected.get('supported_reasoning_efforts', [])):
+            raise AuthError('REASONING_UNAVAILABLE', '선택한 모델에서 지원하는 추론 수준을 선택해 주세요.')
+        if account.get('model') != model or account.get('reasoning_effort') != reasoning_effort:
             self.model_generation += 1
-        self.active()['model'] = model
+        account['model'] = model
+        account['reasoning_effort'] = reasoning_effort
         self.save()
 
     async def logout(self):
@@ -359,18 +414,28 @@ class ModelAuth:
         account_id = self.data.get('active')
         model_generation = self.model_generation
         model = (self.active() or {}).get('model')
+        reasoning_effort = (self.active() or {}).get('reasoning_effort')
         if expected_model is not None and expected_model != model:
             raise AuthError('MODEL_CHANGED', '답변 모델이 변경되었습니다. 새 모델로 다시 요청해 주세요.')
         def check_context():
             if generation != self.auth_generation or account_id != self.data.get('active'):
                 raise AuthError('LOGIN_REQUIRED', '로그인 상태가 변경되어 응답을 중지했습니다.')
-            if model_generation != self.model_generation or model != (self.active() or {}).get('model'):
+            if model_generation != self.model_generation or model != (self.active() or {}).get('model') or reasoning_effort != (self.active() or {}).get('reasoning_effort'):
                 raise AuthError('MODEL_CHANGED', '답변 모델이 변경되어 응답을 중지했습니다. 다시 요청해 주세요.')
         token = await self.access_token()
         check_context()
         if not model:
             raise AuthError('MODEL_REQUIRED', '설정에서 답변 모델을 선택해 주세요.')
+        if reasoning_effort is not None:
+            if not any(item['slug'] == model for item in self.models):
+                await self.list_models()
+                check_context()
+            selected = next((item for item in self.models if item['slug'] == model), {})
+            if not any(level['effort'] == reasoning_effort for level in selected.get('supported_reasoning_efforts', [])):
+                raise AuthError('REASONING_UNAVAILABLE', '설정에서 이 모델의 추론 수준을 다시 선택해 주세요.')
         payload = serialize_model_input(messages, instructions, tools, tool_choice=tool_choice)
+        if reasoning_effort is not None:
+            payload['reasoning'] = {'effort': reasoning_effort}
         text, completed, characters, byte_count = [], False, 0, 0
         output, done_items = None, {}
         try:
