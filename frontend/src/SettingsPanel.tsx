@@ -326,6 +326,25 @@ export default function SettingsPanel({
               {settings.auth?.error && (
                 <p className="notice">{settings.auth.error}</p>
               )}
+              {settings.auth?.request_blocked && (
+                <div className="notice concept-failure-help" role="status">
+                  <p>{settings.auth.request_blocked.message}</p>
+                  <p>
+                    원인을 해결한 뒤 기록 상세에서 주제 연결을 다시 시도하거나
+                    답변 모델을 변경해 주세요.
+                  </p>
+                  {settings.auth.request_blocked.code ===
+                    "MODEL_USAGE_LIMIT" && (
+                    <a
+                      href="https://chatgpt.com/settings/usage"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      ChatGPT 사용량 확인
+                    </a>
+                  )}
+                </div>
+              )}
               {settings.auth?.connected &&
                 settings.auth.plan_enabled === false && (
                   <p className="notice">

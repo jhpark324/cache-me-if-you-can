@@ -42,6 +42,7 @@ import { RecordBrowser, monthBounds } from "./RecordBrowser";
 import SettingsPanel from "./SettingsPanel";
 import { Tool, ErrorMessage, Loading } from "./ui";
 import { useConceptCatalog } from "./useConceptCatalog";
+import { useHomeGraph } from "./useHomeGraph";
 import { SourceReview, ConceptEditor } from "./ManagementDialogs";
 import { MergeDialog, RelationsDialog } from "./RecordConnections";
 import {
@@ -94,6 +95,40 @@ const indexLabel = (status: string) =>
     failed: "검색 준비 실패",
     excluded: "검색 제외",
   })[status] || status;
+const CONCEPT_FAILURE_HELP: Record<string, string> = {
+  MODEL_USAGE_LIMIT:
+    "ChatGPT의 앱 사용 한도에 도달했습니다. 한도를 확인한 뒤 다시 시도해 주세요.",
+  AUTH_REQUIRED:
+    "설정에서 ChatGPT 로그인과 답변 모델 선택을 확인한 뒤 다시 시도해 주세요.",
+  LOGIN_REQUIRED: "설정에서 ChatGPT에 다시 로그인한 뒤 시도해 주세요.",
+  MODEL_AUTH_REJECTED:
+    "계정 인증을 확인하지 못했습니다. 설정에서 ChatGPT에 다시 로그인해 주세요.",
+  AUTH_REJECTED:
+    "계정 인증을 확인하지 못했습니다. 설정에서 ChatGPT에 다시 로그인해 주세요.",
+  PLAN_PERMISSION_REQUIRED:
+    "ChatGPT에서 이 앱의 모델 사용 권한을 허용한 뒤 다시 시도해 주세요.",
+  MODEL_PERMISSION_DENIED:
+    "계정 또는 워크스페이스의 모델 사용 권한을 확인한 뒤 다시 시도해 주세요.",
+  MODEL_REQUIRED: "설정에서 답변 모델을 선택한 뒤 다시 시도해 주세요.",
+  MODEL_UNAVAILABLE:
+    "모델에 연결하지 못했습니다. 연결 상태와 AI 설정을 확인한 뒤 다시 시도해 주세요.",
+  MODELS_UNAVAILABLE:
+    "모델 목록을 확인하지 못했습니다. 설정에서 모델 목록을 다시 불러와 주세요.",
+  REASONING_UNAVAILABLE:
+    "선택한 추론 수준을 사용할 수 없습니다. 설정에서 답변 모델의 추론 수준을 다시 선택해 주세요.",
+  MODEL_REQUEST_INVALID:
+    "선택한 모델이 요청을 지원하지 않습니다. 설정에서 다른 모델을 선택한 뒤 다시 시도해 주세요.",
+  MODEL_FORMAT_ERROR:
+    "모델의 응답을 주제로 정리하지 못했습니다. 다시 시도하거나 주제 정정에서 직접 선택해 주세요.",
+  MODEL_TIMEOUT:
+    "모델의 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
+  MODEL_RATE_LIMIT:
+    "모델 요청이 일시적으로 많습니다. 잠시 후 다시 시도해 주세요.",
+  MODEL_TEMPORARILY_UNAVAILABLE:
+    "모델 서비스에 일시적인 문제가 있습니다. 잠시 후 다시 시도해 주세요.",
+  MODEL_CHANGED:
+    "처리 중 답변 모델이 변경되었습니다. 현재 모델로 다시 시도해 주세요.",
+};
 function useMedia(query: string) {
   const [v, setV] = useState(() => matchMedia(query).matches);
   useEffect(() => {
@@ -194,10 +229,6 @@ export default function App() {
   const conceptRetryReceipt = useRef<{ key: string; id: string } | null>(null);
   const [graph, setGraph] = useState<GraphData | null>(null),
     [graphLoading, setGraphLoading] = useState(false);
-  const [homeGraph, setHomeGraph] = useState<GraphData | null>(null),
-    [homeGraphLoading, setHomeGraphLoading] = useState(true),
-    [homeGraphError, setHomeGraphError] = useState(""),
-    [graphRefresh, setGraphRefresh] = useState(0);
   const [exampleMode, setExampleMode] = useState(false),
     [exampleSelection, setExampleSelection] = useState("");
   useEffect(() => {
@@ -206,33 +237,25 @@ export default function App() {
       setExampleSelection("");
     }
   }, [selected, editor]);
-  const homeGraphVersion = useRef(0);
+  const {
+    data: homeGraph,
+    loading: homeGraphLoading,
+    error: homeGraphError,
+    refresh: loadHomeGraph,
+  } = useHomeGraph(
+    view === "home" &&
+      !selected &&
+      !detailLoading &&
+      !detailError &&
+      !exampleMode &&
+      !settingsOpen &&
+      !editor,
+  );
   const refreshHomeGraph = useCallback(() => {
-    setHomeGraph(null);
     setExampleMode(false);
     setExampleSelection("");
-    setGraphRefresh((value) => value + 1);
-  }, []);
-  useEffect(() => {
-    const version = ++homeGraphVersion.current;
-    const controller = new AbortController();
-    setHomeGraph(null);
-    setHomeGraphLoading(true);
-    setHomeGraphError("");
-    const params = new URLSearchParams();
-    api<GraphData>("/graph?" + params, { signal: controller.signal })
-      .then((data) => {
-        if (version === homeGraphVersion.current) setHomeGraph(data);
-      })
-      .catch((error) => {
-        if (!controller.signal.aborted && version === homeGraphVersion.current)
-          setHomeGraphError(errorText(error));
-      })
-      .finally(() => {
-        if (version === homeGraphVersion.current) setHomeGraphLoading(false);
-      });
-    return () => controller.abort();
-  }, [graphRefresh]);
+    void loadHomeGraph();
+  }, [loadHomeGraph]);
   const systemReduced = useMedia("(prefers-reduced-motion: reduce)"),
     reduced = systemReduced || paused,
     mobile = useMedia("(max-width: 1279px)"),
@@ -246,6 +269,17 @@ export default function App() {
   const hasRetrieval = displayGraph.nodes.some(
     (node) => node.kind === "retrieved_chunk",
   );
+  const pendingConnections =
+    homeGraph?.nodes.filter(
+      (node) =>
+        node.kind === "capture" &&
+        ["pending", "running"].includes(node.concept_state?.status || ""),
+    ) || [];
+  const failedConnections =
+    homeGraph?.nodes.filter(
+      (node) =>
+        node.kind === "capture" && node.concept_state?.status === "failed",
+    ) || [];
   useEffect(() => {
     const area = searchArea.current;
     if (!area) return;
@@ -763,6 +797,7 @@ export default function App() {
         `/captures/${selected.id}/concept-retry`,
         { ...payload, request_id: conceptRetryReceipt.current.id },
       );
+      conceptRetryReceipt.current = null;
       if (version !== detailVersion.current) return;
       if (result.capture) {
         setSelected(result.capture);
@@ -1242,7 +1277,25 @@ export default function App() {
               )}
               {selected.concept_state?.status === "failed" && (
                 <div className="concept-status notice">
-                  <span>기록은 저장되었지만 주제를 연결하지 못했습니다.</span>
+                  <div className="concept-failure-help">
+                    <p>기록은 저장되었지만 주제를 연결하지 못했습니다.</p>
+                    <p>
+                      {CONCEPT_FAILURE_HELP[
+                        selected.concept_state.error_code || ""
+                      ] ||
+                        "설정에서 AI 연결을 확인한 뒤 다시 시도하거나, 주제 정정에서 직접 선택해 주세요."}
+                    </p>
+                    {selected.concept_state.error_code ===
+                      "MODEL_USAGE_LIMIT" && (
+                      <a
+                        href="https://chatgpt.com/settings/usage"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        ChatGPT 사용량 확인
+                      </a>
+                    )}
+                  </div>
                   <Button
                     variant="soft"
                     disabled={
@@ -1444,12 +1497,12 @@ export default function App() {
               </small>
             </div>
           )}
-          {homeGraphLoading && (
+          {homeGraphLoading && !homeGraph && (
             <div className="graph-state">
               <Loading text="지식을 연결하는 중" />
             </div>
           )}
-          {homeGraphError && (
+          {homeGraphError && !homeGraph && (
             <div className="graph-state graph-error glass">
               <ErrorMessage error={homeGraphError} />
               <Button variant="soft" onClick={refreshHomeGraph}>
@@ -1496,6 +1549,61 @@ export default function App() {
                     예시 보기 <ChevronRight />
                   </button>
                 }
+              </div>
+            )}
+          {!exampleMode &&
+            homeGraph &&
+            homeGraph.nodes.length > 0 &&
+            !hasRetrieval &&
+            (pendingConnections.length > 0 ||
+              failedConnections.length > 0 ||
+              !homeGraph.edges.length ||
+              Boolean(homeGraphError)) && (
+              <div
+                className="graph-connection-status"
+                role="status"
+                aria-label="주제 연결 상태"
+              >
+                {pendingConnections.length > 0 && (
+                  <p>
+                    표시 중인 기록 {pendingConnections.length}개의 주제 연결을
+                    기다리고 있어요.
+                  </p>
+                )}
+                {failedConnections.length > 0 && (
+                  <>
+                    <p>
+                      표시 중인 기록 {failedConnections.length}개의 주제 연결에
+                      실패했습니다. 기록을 열어 원인을 확인하고 다시 시도해
+                      주세요.
+                    </p>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        void openCapture(
+                          failedConnections[0].source?.capture_id ||
+                            failedConnections[0].id,
+                        )
+                      }
+                    >
+                      연결 실패 기록 확인 <ChevronRight />
+                    </button>
+                  </>
+                )}
+                {!pendingConnections.length &&
+                  !failedConnections.length &&
+                  !homeGraph.edges.length && (
+                    <p>
+                      아직 표시할 연결이 없습니다. 기록에 주제를 지정하거나
+                      관계를 추가하면 연결선이 나타납니다.
+                    </p>
+                  )}
+                {homeGraphError && (
+                  <p>
+                    그래프를 갱신하지 못했습니다. 아래 새로고침으로 다시 확인해
+                    주세요.
+                  </p>
+                )}
               </div>
             )}
           <div className="stage-footer">

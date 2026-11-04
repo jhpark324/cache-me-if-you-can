@@ -71,7 +71,7 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
     enrichment = ConceptEnrichment(records, auth)
     mcp_records = RecordService(db, principal_scope='mcp:local', session_scope='mcp:local', created_via='mcp')
     # Use one loaded model and index manager across transports.
-    mcp = create_mcp(mcp_records, search)
+    mcp = create_mcp(mcp_records, search, on_concept_retry=auth.resume_requests)
     # SSE response transport is required for server-initiated deletion elicitation.
     mcp_app = mcp.streamable_http_app(streamable_http_path='/', json_response=False)
     sessions = {}

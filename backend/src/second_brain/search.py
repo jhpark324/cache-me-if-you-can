@@ -16,7 +16,7 @@ from sqlalchemy import func, or_, select
 from .chunking import MarkdownChunker
 from .db import new_id, utcnow
 from .embedding import KureEmbedding, EmbeddingError, MODEL_ID, MODEL_REVISION
-from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, EmbeddingProfile,
+from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, ConceptEnrichmentJob, EmbeddingProfile,
                      IndexBuild, IndexJob, KnowledgeNode, LocalBrain, NodeConcept, Relation,
                      RevisionConcept, RevisionKind)
 from .records import DomainError, SourceValidationBudget, SourceValidationLimit, digest
@@ -620,6 +620,22 @@ class SearchService:
 
             # Every expansion query has an independent ceiling. Batch loading
             # avoids a topic/Node query for each record and every graph edge.
+            current_jobs = select(
+                ConceptEnrichmentJob.capture_id, ConceptEnrichmentJob.status, ConceptEnrichmentJob.error_code,
+                func.row_number().over(partition_by=ConceptEnrichmentJob.capture_id, order_by=(
+                    ConceptEnrichmentJob.created_at.desc(), ConceptEnrichmentJob.expected_state_version.desc(),
+                    ConceptEnrichmentJob.id.desc())).label("position"),
+            ).where(ConceptEnrichmentJob.brain_id == self.brain_id,
+                    ConceptEnrichmentJob.capture_id.in_(captures),
+                    or_(ConceptEnrichmentJob.requested_revision_id.in_(revisions),
+                        ConceptEnrichmentJob.applied_revision_id.in_(revisions))).subquery()
+            concept_states = {
+                capture_id: {"status": {"completed": "ready", "superseded": "needs_review"}.get(status, status),
+                             "error_code": error_code}
+                for capture_id, status, error_code in session.execute(select(
+                    current_jobs.c.capture_id, current_jobs.c.status, current_jobs.c.error_code,
+                ).where(current_jobs.c.position == 1).limit(50))
+            }
             kinds = {revision_id: [] for revision_id in revisions}
             for revision_id, kind in session.execute(select(RevisionKind.revision_id, RevisionKind.kind).where(
                     RevisionKind.revision_id.in_(revisions)).order_by(RevisionKind.kind).limit(450)):
@@ -657,7 +673,8 @@ class SearchService:
             for capture in captures.values():
                 revision = revisions[capture.current_revision_id]
                 if not add_node({"id": capture.id, "kind": "capture", "label": (revision.title or revision.body_markdown)[:60],
-                                 "kinds": kinds[revision.id], "source": _ref(capture)}):
+                                 "kinds": kinds[revision.id], "source": _ref(capture),
+                                 "concept_state": concept_states.get(capture.id, {"status": "ready", "error_code": None})}):
                     continue
                 for concept in topics[revision.id]:
                     add_topic(capture.id, concept, _ref(capture))
@@ -755,6 +772,16 @@ class SearchService:
                     if add_node({"id": node.id, "kind": "node", "label": (node.label or revision.body_markdown[node.body_start:node.body_end])[:60], "source": ref}):
                         add_edge({"id": f"part:{capture.id}:{node.id}", "source": capture.id, "target": node.id,
                                   "kind": "contains", "directed": True, "evidence": ref})
+                shown_parts = [id for id, item in nodes.items() if item["kind"] == "node"]
+                node_topics = session.execute(select(NodeConcept.node_id, Concept).join(
+                    Concept, Concept.id == NodeConcept.concept_id).where(
+                    NodeConcept.node_id.in_(shown_parts), Concept.brain_id == self.brain_id,
+                ).order_by(NodeConcept.node_id, Concept.id).limit(101)).all()
+                truncated |= len(node_topics) > 100
+                for node_id, concept in node_topics[:100]:
+                    if add_node({"id": concept.id, "kind": "concept", "label": concept.name[:60]}):
+                        add_edge({"id": f"topic:{node_id}:{concept.id}", "source": node_id, "target": concept.id,
+                                  "kind": "has_topic", "directed": True, "evidence": nodes[node_id]["source"]})
             relations = list(session.scalars(select(Relation).where(Relation.brain_id == self.brain_id, Relation.withdrawn_at.is_(None),
                 or_(Relation.source_capture_id == capture.id, Relation.target_capture_id == capture.id)).order_by(Relation.created_at, Relation.id).limit(101)))
             truncated |= len(relations) > 100

@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 from .auth import AuthError
 from .questions import parse_json
 from .records import DomainError
+from .model_errors import CONCEPT_MODEL_ERRORS
 
 SEGMENT_CHARACTERS = 12_000
 MAX_SEGMENTS = 20
@@ -95,6 +96,20 @@ class ClassificationProposal(BaseModel):
 
 class SupersededClassification(Exception):
     pass
+
+
+def classification_error_code(error):
+    """Persist an actionable category, never provider text or model output."""
+    if isinstance(error, TimeoutError):
+        return 'MODEL_TIMEOUT'
+    if isinstance(error, AuthError):
+        if error.code in ('LOGIN_REQUIRED', 'PLAN_PERMISSION_REQUIRED', 'MODEL_REQUIRED', 'AUTH_INVALID') or (
+                error.code == 'AUTH_REFRESH_FAILED' and not error.retryable):
+            return 'AUTH_REQUIRED'
+        return error.code if error.code in CONCEPT_MODEL_ERRORS else 'CLASSIFICATION_FAILED'
+    if isinstance(error, DomainError) and error.code in ('VERSION_CONFLICT', 'CURSOR_STALE'):
+        return 'VERSION_CONFLICT'
+    return 'CLASSIFICATION_FAILED'
 
 
 INSTRUCTIONS = (
@@ -253,7 +268,7 @@ class ConceptEnrichment:
 
     async def process_one(self):
         status = self.auth.status()
-        if not status['connected'] or not status['plan_enabled'] or not status['selected_model']:
+        if not status['connected'] or not status['plan_enabled'] or not status['selected_model'] or status.get('request_blocked'):
             return
         job = await asyncio.to_thread(self.records.claim_concept_job)
         if not job:
@@ -269,5 +284,5 @@ class ConceptEnrichment:
         except SupersededClassification:
             return
         except Exception as error:
-            code = 'MODEL_TIMEOUT' if isinstance(error, TimeoutError) else 'AUTH_REQUIRED' if isinstance(error, AuthError) and error.code in ('LOGIN_REQUIRED', 'PLAN_PERMISSION_REQUIRED', 'MODEL_REQUIRED') else 'MODEL_CHANGED' if isinstance(error, AuthError) and error.code == 'MODEL_CHANGED' else 'VERSION_CONFLICT' if isinstance(error, DomainError) and error.code in ('VERSION_CONFLICT', 'CURSOR_STALE') else 'CLASSIFICATION_FAILED'
-            await asyncio.to_thread(self.records.fail_concept_job, job['job_id'], job['lease_token'], error_code=code)
+            await asyncio.to_thread(self.records.fail_concept_job, job['job_id'], job['lease_token'],
+                                    error_code=classification_error_code(error))

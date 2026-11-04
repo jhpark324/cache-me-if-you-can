@@ -16,6 +16,7 @@ from .db import Database, new_id, utcnow
 from .concept_labels import concept_label_key
 from .record_filters import record_filter_predicates
 from .record_kinds import normalize_record_kinds
+from .model_errors import ACTION_REQUIRED_MODEL_ERRORS, CONCEPT_MODEL_ERRORS
 from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, ConceptAlias,
                      ConceptEnrichmentJob, DeletionConfirmation, IndexBuild, IndexJob,
                      KnowledgeNode, LocalBrain, MutationReceipt, NodeConcept,
@@ -340,6 +341,8 @@ class RecordService:
                 ConceptEnrichmentJob.brain_id == self.brain_id,
                 ConceptEnrichmentJob.attempt_count < max_attempts,
                 ConceptEnrichmentJob.available_at <= now,
+                or_(ConceptEnrichmentJob.status != "failed", ConceptEnrichmentJob.error_code.is_(None),
+                    ConceptEnrichmentJob.error_code.not_in(ACTION_REQUIRED_MODEL_ERRORS)),
                 or_(ConceptEnrichmentJob.status.in_(["pending", "failed"]), (ConceptEnrichmentJob.status == "running") & (ConceptEnrichmentJob.lease_until < now)),
             ).order_by(ConceptEnrichmentJob.created_at, ConceptEnrichmentJob.id))
             for job in jobs:
@@ -395,7 +398,7 @@ class RecordService:
 
     def fail_concept_job(self, job_id, lease_token, *, error_code="MODEL_UNAVAILABLE"):
         # Error codes only: provider exception strings may contain secrets/content.
-        allowed = {"MODEL_UNAVAILABLE", "AUTH_REQUIRED", "MODEL_TIMEOUT", "MODEL_CHANGED", "CLASSIFICATION_FAILED", "VERSION_CONFLICT"}
+        allowed = CONCEPT_MODEL_ERRORS | {"CLASSIFICATION_FAILED", "VERSION_CONFLICT"}
         if error_code not in allowed:
             error_code = "CLASSIFICATION_FAILED"
         with self.db.write() as session:
