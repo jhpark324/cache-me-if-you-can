@@ -8,6 +8,7 @@ Cache Me If You Can은 명시적으로 저장한 지식·경험·맥락·아이�
 
 | 문서 | 읽는 조건 |
 | --- | --- |
+| [도메인 용어](domain-language.md) | 기록·세부 항목·주제·관계와 코드 식별자의 대응을 확인할 때 |
 | [제품 개요](product-brief.md) | 사용 사례·현재 범위·저장과 답변의 원칙을 확인할 때 |
 | [MVP 범위와 사용 흐름](mvp-scope.md) | 화면·검색·출처·백업의 동작과 완료 조건을 확인할 때 |
 | [기록과 공개 범위](record-and-visibility.md) | 저장 단위·공개 범위 메타데이터와 향후 공유 경계를 확인할 때 |
@@ -16,10 +17,10 @@ Cache Me If You Can은 명시적으로 저장한 지식·경험·맥락·아이�
 
 ## 구현과 지원 범위
 
-SQLite는 기록·불변 버전·주제·명시적 관계를 저장하고 LanceDB는 재생성 가능한 검색 색인을 저장한다. 검색은 KURE-v2 CPU 다중 벡터와 BM25를 결합하며, 관련 본문 구간과 연결된 Node의 명시적 관계를 제한된 범위에서 확장한다. 모델 답변과 자동 주제 분류는 ChatGPT OAuth로 연결한 외부 모델을 호출한다. 로컬 저장이 완전한 오프라인 추론을 뜻하지는 않는다.
+SQLite는 기록·불변 기록 버전·주제·명시적 관계를 저장하고 LanceDB는 재생성 가능한 검색 색인을 저장한다. 검색은 KURE-v2 CPU 다중 벡터와 BM25를 결합하며, 관련 본문 구간과 연결된 세부 항목의 명시적 관계를 제한된 범위에서 확장한다. 모델 답변과 자동 주제 분류는 ChatGPT OAuth로 연결한 외부 모델을 호출한다. 로컬 저장이 완전한 오프라인 추론을 뜻하지는 않는다.
 
 Windows·macOS·Linux 네이티브 실행을 목표로 하며 실제 검증된 WSL/Linux 환경과 구분한다. 설치·의존성 제약은 [플랫폼 지원](../architecture/platform-support.md), 현재 구현은 [아키텍처](../architecture/index.md), 기능 계약은 [명세](../specs/index.md), 재현 가능한 확인 절차는 [검증 안내](../guides/testing.md)에서 관리한다.
 
-제품 이름은 Cache Me If You Can, 스킬 이름은 `cache-me`다. 코드 패키지·MCP 키는 `second_brain`, 환경 변수는 `SECOND_BRAIN_*`, 기본 데이터 디렉터리 이름은 `SecondBrain`을 사용한다. 이 식별자는 실행 설정과 데이터 경로에서 확인할 수 있다.
+제품·스킬 이름과 호환 식별자는 [도메인 용어](domain-language.md#제품-이름과-호환-식별자)를 따른다.
 
 공유·일정 관리·영구 대화 이력·휴지통과 복원은 현재 제공하지 않는다. `visibility=public/private`는 메타데이터이며 인터넷 공개나 모델 전송 제어를 실행하지 않는다.

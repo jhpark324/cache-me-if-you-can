@@ -1295,7 +1295,7 @@ export default function App() {
               {selected.nodes?.length > 0 && (
                 <details>
                   <summary>
-                    내용의 맥락 {selected.nodes.length}개{" "}
+                    세부 항목 {selected.nodes.length}개{" "}
                     {selected.node_status === "stale" ? "· 재구성 필요" : ""}
                   </summary>
                   {selected.nodes.map((n) => (

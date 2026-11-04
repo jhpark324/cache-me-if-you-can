@@ -5,6 +5,7 @@
 | 목적 | 진입 문서 |
 | --- | --- |
 | 제품 기능과 범위 이해 | [제품](project/index.md) |
+| 도메인 용어와 코드 대응 확인 | [도메인 용어](project/domain-language.md) |
 | 설치·설정·문제 해결 | [로컬 실행](guides/local-development.md) |
 | Codex에서 기록 관리 | [cache-me 스킬](skills/index.md) |
 | 합성 예제 사용 | [예제](examples/index.md) |

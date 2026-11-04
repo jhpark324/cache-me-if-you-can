@@ -3,6 +3,7 @@
 - 상태: 현재 공통 논리 스키마. 실행 DDL은 코드와 migration이 기준
 - 작성일: 2026-11-02
 - 기준: [제품 기획](../project/product-brief.md), [기록·공개 범위](../project/record-and-visibility.md), [지식 계층](knowledge-layer.md), [검색 설계](search-and-embedding.md)
+- 용어: [도메인 용어](../project/domain-language.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
 기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/second_brain/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
@@ -18,7 +19,7 @@
 | enum | API에서 문자열 enum, SQLite에서 TEXT + CHECK. 알 수 없는 값은 검증 오류이며 임의로 기본값으로 바꾸지 않는다. |
 | JSON | 선택적 구조 필드만 버전이 있는 타입으로 검증한다. 전체 도메인을 임의 JSON 하나로 저장하지 않는다. |
 | 소유 범위 | 단일 로컬 `brain_id`를 서버 실행 맥락에서 정한다. 모델 입력이나 MCP `clientInfo`를 소유권 증거로 사용하지 않는다. 다중 사용자·공유 계정 스키마는 후속 범위다. |
-| 동시성 | 내용 revision과 별도로 `state_version`을 둔다. 모든 사용자 변경은 기대 버전과 비교하고 다르면 충돌을 반환한다. |
+| 동시성 | 기록 버전(`revision`)과 별도로 상태 버전(`state_version`)을 둔다. 모든 사용자 변경은 기대 버전과 비교하고 다르면 충돌을 반환한다. |
 
 주제 연결·Node·관계 양 끝점·근거 revision·출처·검색 프로필/build·삭제 확인은 모두 같은 `brain_id` 범위여야 한다. UUID가 존재한다는 확인만으로 다른 범위의 참조를 허용하지 않는다. 복합 FK와 생성/변경 트랜잭션에서 같은 범위를 검증한다. 삭제한 기록도 정본과 이력을 보존하므로 출처와 작업의 FK 참조를 유지할 수 있다. 단일 brain 운영이라는 가정으로 이 검증을 생략하지 않는다.
 
@@ -62,7 +63,7 @@ erDiagram
 
 삭제는 사용자 재확인 후 `deleted_at`에 서버의 현재 UTC 시각을 설정하는 soft delete다. 같은 트랜잭션에서 `state_version/index_generation`을 증가시킨다. 목록·상세·이력·Node·그래프·검색·QA·수정은 `deleted_at IS NULL`인 기록만 대상으로 한다. 삭제한 데이터는 내부적으로 보존하지만 삭제 목록·`include_deleted`·복원·undo 경로는 제공하지 않는다. 보관 기한이나 자동 삭제도 두지 않는다.
 
-### `capture_revisions` — 변경하지 않는 저장본
+### `capture_revisions` — 불변 기록 버전
 
 | 필드 | 타입·기본값 | 의미·제약 |
 | --- | --- | --- |
@@ -97,7 +98,7 @@ erDiagram
 - `idea`는 구상·목표·향후 단계를 포함하며 일정·알림·반복 일정 테이블을 만들지 않는다. `context`는 특정 대상·상황의 조건이지 모든 대화에 항상 적용되는 지시가 아니다. `artifact`는 현재 Markdown 안의 재사용할 텍스트·코드를 뜻한다.
 - 유형이 Node의 종류·발화자·확인 상태·완료 여부를 대신하지 않는다. `decision`에는 명시적으로 선택한 내용이 있어야 하며 유형만으로 선택·실행 사실을 추정하지 않는다.
 
-### `knowledge_nodes` — 선택적인 의미 구간
+### `knowledge_nodes` — 선택적인 세부 항목
 
 - `id: UUID PK`, `revision_id: UUID FK`, `ordinal: integer`
 - `UNIQUE(revision_id, ordinal)`. 같은 본문과 의미를 승계할 때 ordinal과 필드 비교로 이전 Node와 새 Node를 대응시킨다.
@@ -120,7 +121,7 @@ erDiagram
 | 본문 변경, Node 입력 생략, 이전에 구조가 있었거나 이미 stale | 옛 span을 복제하지 않음, Node 없음, `stale` |
 | 본문 변경, Node 입력 생략, 이전 상태가 absent | Node 없음, `absent` |
 
-`current`는 제출한 구조가 현재 본문 범위를 가리킨다는 뜻이며 내용의 사실성이나 의미 추출 정확성을 검증했다는 뜻이 아니다. `stale`은 응답과 화면에서 구조 재정리가 필요함을 표시한다. 전체 본문과 검색 청크는 계속 사용할 수 있지만 이전 Node·Node 태그·관계를 새 본문에 연결하지 않는다. 재정리는 명시적인 수정으로 Node를 제출해 처리하며 서버의 추가 LLM 호출을 필수로 하지 않는다.
+`current`는 제출한 구조가 현재 본문 범위를 가리킨다는 뜻이며 내용의 사실성이나 의미 추출 정확성을 검증했다는 뜻이 아니다. `stale`은 응답과 화면에서 구조 재정리가 필요함을 표시한다. 전체 본문과 검색 청크는 계속 사용할 수 있지만 이전 Node·Node 주제·관계를 새 본문에 연결하지 않는다. 재정리는 명시적인 수정으로 Node를 제출해 처리하며 서버의 추가 LLM 호출을 필수로 하지 않는다.
 
 ### `concepts`, `concept_aliases`, `revision_concepts`, `node_concepts` — 주제와 연결
 
@@ -140,7 +141,7 @@ erDiagram
 - `source_body_start/end: integer?`: 둘 다 null이거나 유효한 본문 구간. Node도 있으면 해당 Node 안의 구간
 - `target_revision_id: UUID FK`, `target_node_id: UUID?`
 - `target_body_start/end: integer?`: source와 같은 구간 규칙
-- `relation_type: related_to | clarifies | corrects | supports | contradicts | merged_from | supersedes`
+- `relation_type: related_to | clarifies | corrects | supports | contradicts | merged_from | supersedes`. 한국어 표시는 [관계 유형과 표시 이름](../project/domain-language.md#관계-유형과-표시-이름)을 따른다.
 - `evidence_revision_id: UUID FK`, `evidence_start/end: integer?`, `created_at`
 - `scope_note: string?`, `evidence_note: string?`: `supersedes`에서는 둘 다 비어 있지 않아야 함
 - `withdrawn_at: datetime?`, `withdrawal_reason: string?`: 기본 null. 명시적인 `relation_retract`에서 최초 철회 시각·이유를 기록

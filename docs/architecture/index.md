@@ -1,6 +1,6 @@
 # 아키텍처 인덱스
 
-지원 목표는 Windows·macOS·Linux의 로컬 네이티브 실행이며 WSL은 선택 사항이다. Codex와 자체 웹을 진입점으로 사용한다. 로컬 MCP는 지식 CRUD를 제공하며, 웹 질문의 지식 조회·모델 호출·답변 생성 흐름은 FastAPI 서버 내부의 LangGraph로 처리한다. 모델은 자체 웹의 ChatGPT OAuth 로그인으로 연결한다.
+지원 목표는 Windows·macOS·Linux의 로컬 네이티브 실행이며 WSL은 선택 사항이다. Codex와 자체 웹을 진입점으로 사용한다. 로컬 MCP는 기록 CRUD를 제공하며, 웹 질문의 지식 조회·모델 호출·답변 생성 흐름은 FastAPI 서버 내부의 LangGraph로 처리한다. 모델은 자체 웹의 ChatGPT OAuth 로그인으로 연결한다.
 
 제품 범위는 [제품 개요](../project/product-brief.md)에서 확인한다. 아래 문서는 현재 구조·기술 계약과 제안을 구분한다. KURE-v2의 WSL 기술 실험은 [별도 보고서](../research/kure-v2-feasibility/report.md)에 기록했으며 제품 구현·전체 OS 지원 완료와 구분한다.
 
