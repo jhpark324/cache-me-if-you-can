@@ -11,10 +11,7 @@ import tempfile
 import tomllib
 from uuid import uuid4
 
-import httpx
-
 from second_brain.brand import MCP_SERVER_KEY
-from second_brain.codex_integration import install, runtime_config, server_config
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -91,6 +88,9 @@ class Codex:
 
 
 async def run(args):
+    import httpx
+    from second_brain.codex_integration import install, runtime_config, server_config
+
     if args.port == 0:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))

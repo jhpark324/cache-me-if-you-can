@@ -17,13 +17,10 @@ import socket
 import sys
 import tempfile
 import tomllib
-from uuid import uuid4
-
-import httpx
+from uuid import UUID, uuid4
 
 from check_codex import Codex
 from second_brain.brand import DEFAULT_PORT, MCP_SERVER_KEY
-from second_brain.codex_integration import server_config
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "docs/skills/cache-me/SKILL.md"
@@ -38,10 +35,17 @@ def committed(record):
         "kinds", "visibility", "completion_state", "event_time", "concept_hints")}
 
 
+class ModelTurnError(RuntimeError):
+    def __init__(self, scenario):
+        self.scenario = scenario
+        super().__init__(f"Model turn {scenario['name']} did not complete: {scenario.get('turn_status', 'interrupted')}")
+
+
 class SkillProbe(Codex):
     def __init__(self, process):
         super().__init__(process, False)
         self.current = None
+        self.pending_turn_messages = []
 
     async def notification(self, message):
         method = message.get("method")
@@ -61,6 +65,21 @@ class SkillProbe(Codex):
             return
         if self.current is None:
             return
+        params = message.get("params", {})
+        if params.get("threadId") not in (None, self.current.get("thread_id")):
+            return
+        if method in ("item/completed", "turn/completed") and not self.current.get("turn_id"):
+            self.pending_turn_messages.append(message)
+            return
+        event_turn = params.get("turnId") or (params.get("turn", {}).get("id") if method == "turn/completed" else None)
+        if self.current.get("turn_id") and event_turn not in (None, self.current["turn_id"]):
+            return
+        if method == "turn/completed":
+            self.current["turn_status"] = params["turn"]["status"]
+            self.current["completion_turn_id"] = event_turn
+            if params["turn"].get("error"):
+                error = params["turn"]["error"]
+                self.current["turn_error"] = {key: error.get(key) for key in ("message", "codexErrorInfo")}
         if method == "item/completed":
             item = message.get("params", {}).get("item", {})
             kind = item.get("type")
@@ -81,30 +100,38 @@ class SkillProbe(Codex):
                     self.current["skill_reads"].append({"command": command, "exit_code": item.get("exitCode"),
                         "body_observed": "## 호출과 범위" in output and "cache-me" in output})
 
-    async def model_turn(self, name, prompt, *, selected=False):
+    async def model_turn(self, name, prompt, *, selected=False, thread_id=None):
         scenario = {"name": name, "prompt": prompt, "structured_skill_selected": selected,
                     "skill_reads": [], "tool_calls": [], "model_messages": [], "confirmations": []}
+        if thread_id is None:
+            thread = await self.call("thread/start", {"cwd": self.workspace, "ephemeral": True,
+                "approvalPolicy": "on-request", "sandbox": "read-only",
+                "developerInstructions": f"검증에 쓰는 모든 기록은 합성 자료이고 연결된 {MCP_SERVER_KEY} 서버는 격리된 임시 저장소다. "
+                    "연결된 MCP 도구와 필요한 스킬 문서 읽기만 사용한다. 인증/설정 파일, 실제 앱 데이터는 읽거나 쓰지 않는다. "
+                    "저장·정정 결과에는 실제 반환된 제목·본문·유형·공개 범위·완료 상태를 보여준다."})
+            thread_id = thread["thread"]["id"]
+        scenario["thread_id"] = thread_id
         self.current = scenario
-        thread = await self.call("thread/start", {"cwd": self.workspace, "ephemeral": True,
-            "approvalPolicy": "on-request", "sandbox": "read-only",
-            "developerInstructions": f"검증에 쓰는 모든 기록은 합성 자료이고 연결된 {MCP_SERVER_KEY} 서버는 격리된 임시 저장소다. "
-                "연결된 MCP 도구와 필요한 스킬 문서 읽기만 사용한다. 인증/설정 파일, 실제 앱 데이터는 읽거나 쓰지 않는다. "
-                "저장·정정 결과에는 실제 반환된 제목·본문·유형·공개 범위·완료 상태를 보여준다."})
-        inputs = [{"type": "text", "text": prompt}]
-        if selected:
-            inputs.append({"type": "skill", "name": "cache-me", "path": str(SKILL)})
-        await self.call("turn/start", {"threadId": thread["thread"]["id"], "input": inputs})
-        while True:
-            line = await asyncio.wait_for(self.process.stdout.readline(), 300)
-            if not line:
-                raise RuntimeError("Codex closed during the isolated model turn")
-            message = json.loads(line)
-            await self.notification(message)
-            if message.get("method") == "turn/completed":
-                scenario["turn_status"] = message["params"]["turn"]["status"]
-                self.current = None
-                assert scenario["turn_status"] == "completed", "Model turn did not complete"
-                return scenario
+        try:
+            inputs = [{"type": "text", "text": prompt}]
+            if selected:
+                inputs.append({"type": "skill", "name": "cache-me", "path": str(SKILL)})
+            started = await self.call("turn/start", {"threadId": thread_id, "input": inputs})
+            scenario["turn_id"] = started["turn"]["id"]
+            pending, self.pending_turn_messages = self.pending_turn_messages, []
+            for message in pending:
+                await self.notification(message)
+            while "turn_status" not in scenario:
+                line = await asyncio.wait_for(self.process.stdout.readline(), 300)
+                if not line:
+                    raise RuntimeError("Codex closed during the isolated model turn")
+                await self.notification(json.loads(line))
+            if scenario["turn_status"] != "completed":
+                raise ModelTurnError(scenario)
+            return scenario
+        finally:
+            self.current = None
+            self.pending_turn_messages = []
 
     async def tool(self, thread_id, name, arguments):
         result = await self.call("mcpServer/tool/call", {"threadId": thread_id,
@@ -130,16 +157,122 @@ def assert_natural_skill_read(scenario):
 
 def assert_committed_content_shown(scenario, record):
     text = "\n".join(scenario["model_messages"])
-    assert record["title"] in text and record["body_markdown"] in text, "Committed title or body was not shown"
+    unquoted = "\n".join(line[1:].removeprefix(" ") if line.startswith(">") else line
+                         for line in text.split("\n"))
+    assert all(value in text or value in unquoted for value in (record["title"], record["body_markdown"])), "Committed title or body was not shown"
+
+
+async def snapshot_records(codex, control_id):
+    page = await codex.tool(control_id, "capture_list", {"limit": 100})
+    assert page["next_cursor"] is None, "Boundary fixture exceeded the verification window"
+    return {item["id"]: committed(await codex.tool(control_id, "capture_get", {"capture_id": item["id"]}))
+            for item in page["items"]}
+
+
+def assert_boundary_records(scenario, before, after, groups, *, exact_body=None):
+    """Check committed storage and write operations, not phrasing in the prompt."""
+    created = [value for id, value in after.items() if id not in before]
+    scenario["committed"] = created
+    writes = [call for call in scenario["tool_calls"] if call["tool"] in MUTATIONS or call["tool"] == "capture_delete_prepare"]
+    assert all(call["tool"] == "capture_create" and call["server"] == MCP_SERVER_KEY for call in writes), "Unexpected mutation outside record creation"
+    logical_creates = {}
+    for call in writes:
+        payload = call["arguments"]["input"]
+        request_id = str(UUID(payload["request_id"]))
+        if request_id in logical_creates:
+            assert logical_creates[request_id] == payload, "A request ID was reused with different input"
+        else:
+            logical_creates[request_id] = payload
+    assert len(logical_creates) == len(groups), "Unexpected number of logical record creates"
+    payloads, request_ids = list(logical_creates.values()), list(logical_creates)
+    assert all(after.get(id) == value for id, value in before.items()), "Existing records changed or disappeared"
+    assert len(created) == len(groups), "Committed record count differs from the intended units"
+    assert all(record["title"] and record["visibility"] == "private" for record in created)
+    for payload in payloads:
+        assert any(record["body_markdown"] == payload["body_markdown"] and record["title"] == payload.get("title")
+                   for record in created), "A submitted body was not found in committed storage"
+    for group in groups:
+        matches = [record for record in created if all(term in record["body_markdown"] for term in group["required"])]
+        assert len(matches) == 1, "A semantic unit was omitted, duplicated, or split"
+        record = matches[0]
+        searchable = json.dumps({key: record[key] for key in ("title", "body_markdown", "concept_hints")}, ensure_ascii=False)
+        assert not any(term in searchable for term in group.get("forbidden", [])), "Unrelated context leaked into a record"
+        assert_committed_content_shown(scenario, record)
+    if exact_body is not None:
+        assert len(created) == 1 and created[0]["body_markdown"] == exact_body, "The supplied document was rewritten or split"
+    scenario["request_ids"] = request_ids
+
+
+async def run_boundary_scenarios(codex, control_id, summary, save, nonce):
+    async def context_turn(name, prompt, thread_id=None):
+        before = await snapshot_records(codex, control_id)
+        scenario = await codex.model_turn(name, prompt, thread_id=thread_id)
+        summary["scenarios"].append(scenario)
+        assert not any(call["tool"] in MUTATIONS or call["tool"] == "capture_delete_prepare"
+                       for call in scenario["tool_calls"]), "Context-only turn changed records"
+        assert await snapshot_records(codex, control_id) == before
+        scenario["passed"] = True
+        save()
+        return scenario["thread_id"]
+
+    async def save_turn(name, prompt, groups, *, thread_id=None, exact_body=None):
+        before = await snapshot_records(codex, control_id)
+        scenario = await codex.model_turn(name, prompt, thread_id=thread_id)
+        summary["scenarios"].append(scenario)
+        assert any(read["body_observed"] for turn in summary["scenarios"]
+                   if turn["thread_id"] == scenario["thread_id"] for read in turn["skill_reads"]), "Natural request did not visibly read the new skill in this thread"
+        assert_boundary_records(scenario, before, await snapshot_records(codex, control_id), groups, exact_body=exact_body)
+        scenario["passed"] = True
+        save()
+
+    for scope in ("recent", "all"):
+        project_a, project_b = f"별무리-{nonce}-{scope}", f"등대-{nonce}-{scope}"
+        thread_id = await context_turn(f"boundary_{scope}_first_topic",
+            f"합성 사례를 이야기할게. {project_a} 프로젝트의 문서 사이트는 정적 HTML로 만들기로 했어. "
+            "서버 없이 배포할 수 있다는 이유야. 아직 저장하지 말고 내용만 확인해줘.")
+        if scope == "recent":
+            await save_turn("boundary_recent_initial_save",
+                "cache-me, 이 내용을 비공개로 기억해줘.",
+                [{"required": [project_a, "HTML"], "forbidden": [project_b, "토요일"]}], thread_id=thread_id)
+        await context_turn(f"boundary_{scope}_topic_change",
+            f"이제 다른 이야기를 할게. {project_b} 프로젝트의 독서 모임은 격주 토요일에 열기로 했어. "
+            "참여자들이 책을 끝낼 시간을 확보하려는 결정이야. 아직 저장하지 말고 확인만 해줘.", thread_id)
+        if scope == "recent":
+            prompt = "cache-me, 방금 이야기한 내용을 비공개로 기억해줘."
+            groups = [{"required": [project_b, "토요일"], "forbidden": [project_a, "HTML"]}]
+        else:
+            prompt = "cache-me, 이 대화에서 지금까지 이야기한 내용을 모두 비공개로 기억해줘."
+            groups = [{"required": [project_a, "HTML"], "forbidden": [project_b, "토요일"]},
+                      {"required": [project_b, "토요일"], "forbidden": [project_a, "HTML"]}]
+        await save_turn(f"boundary_{scope}_save", prompt, groups, thread_id=thread_id)
+
+    project = f"종이문-{nonce}"
+    await save_turn("boundary_related_decision",
+        f"합성 사례야. {project} 앱의 로컬 저장소는 SQLite로 결정했어. 오프라인에서도 기록을 읽어야 하기 때문이야. "
+        "PostgreSQL도 검토했지만 별도 서버 운영이 필요해 이번에는 선택하지 않았어. "
+        "cache-me, 이 결정과 이유를 비공개로 기억해줘.",
+        [{"required": [project, "SQLite", "오프라인", "PostgreSQL"]}])
+
+    document = (f"# 합성 운영 메모 {nonce}\n\n"
+                "## 문서 사이트\n정적 HTML로 배포한다.\n\n"
+                "## 독서 모임\n격주 토요일에 만난다.")
+    await save_turn("boundary_original_document",
+        "cache-me, 아래 문서를 원문 그대로 비공개로 저장해줘.\n\n" + document,
+        [{"required": [nonce, "HTML", "토요일"]}], exact_body=document)
 
 
 async def run(args):
+    import httpx
+    from second_brain.codex_integration import server_config
+
     summary = {"started_at": datetime.now(timezone.utc).isoformat(), "status": "running",
         "client": "actual Codex app-server and existing account model", "isolated_storage": True,
         "installation_scope": "existing_user_installation" if args.global_only else "temporary_repo_skill",
+        "scenario_scope": "boundaries" if args.boundaries_only else "installed" if args.global_only else "full",
         "actual_user_records_modified": False, "credentials_read_or_copied_by_harness": False,
         "skill_sha256": hashlib.sha256(SKILL.read_bytes()).hexdigest(), "scenarios": [],
-        "limits": ["Model selection is probabilistic; these are observed independent sessions.",
+        "limits": ["Model selection is probabilistic; boundary cases reuse the recorded thread IDs while other cases use independent sessions.",
+                   "Partial-failure recovery is specified by the skill but not injected into these live scenarios.",
                    "Desktop skill-picker rendering and human deletion confirmation are not tested.",
                    "The explicit global case sends $cache-me as plain text; model behavior is checked, but automatic body injection is not captured."]}
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -232,6 +365,12 @@ async def run(args):
                     save()
                     assert (await codex.tool(control_id, "capture_list", {"limit": 100}))["items"] == []
                     nonce = uuid4().hex[:8]
+                    if args.boundaries_only:
+                        await run_boundary_scenarios(codex, control_id, summary, save, nonce)
+                        assert (config_path.read_bytes() if config_path.exists() else b"") == config_bytes, "Existing Codex configuration changed"
+                        summary["existing_config_unchanged"] = True
+                        summary["status"] = "passed"
+                        return
                     memo_title = f"[cache-me 검증 {nonce}] 회의 메모"
                     memo_body = "파란 노트는 책상 오른쪽 서랍에 두었다. 이 문장은 격리 검증용 합성 메모다."
                     plan_title = f"[cache-me 검증 {nonce}] 물주기 계획"
@@ -323,6 +462,7 @@ async def run(args):
                         assert committed(await find_exact(plan_title)) == committed(completed)
                         scenario["passed"] = True
                         save()
+                    await run_boundary_scenarios(codex, control_id, summary, save, nonce)
                     assert (config_path.read_bytes() if config_path.exists() else b"") == config_bytes, "Existing Codex configuration changed"
                     summary["existing_config_unchanged"] = True
                     summary["status"] = "passed"
@@ -338,6 +478,8 @@ async def run(args):
     except Exception as exc:
         summary["status"] = "failed"
         summary["error"] = {"type": type(exc).__name__, "message": str(exc)}
+        if isinstance(exc, ModelTurnError):
+            summary["scenarios"].append(exc.scenario)
         raise
     finally:
         summary["finished_at"] = datetime.now(timezone.utc).isoformat()
@@ -347,7 +489,9 @@ async def run(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="실제 Codex 모델의 cache-me 스킬 선택·저장·조회·정정을 임시 저장소에서 검사")
-    parser.add_argument("--global-only", action="store_true", help="repo 스킬 없이 실제 사용자 설치본의 일반 텍스트 $cache-me 저장 1회만 검사")
+    scope = parser.add_mutually_exclusive_group()
+    scope.add_argument("--global-only", action="store_true", help="repo 스킬 없이 실제 사용자 설치본의 일반 텍스트 $cache-me 저장 1회만 검사")
+    scope.add_argument("--boundaries-only", action="store_true", help="같은 대화의 주제 전환·저장 범위·기록 단위 4개 사례(9턴)만 검사")
     parser.add_argument("--output", type=Path)
     arguments = parser.parse_args()
     if arguments.output is None:
