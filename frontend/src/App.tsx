@@ -277,13 +277,23 @@ export default function App() {
   const pendingConnections =
     homeGraph?.nodes.filter(
       (node) =>
-        node.kind === "capture" &&
-        ["pending", "running"].includes(node.concept_state?.status || ""),
+        node.kind === "capture" && node.concept_state?.status === "pending",
+    ) || [];
+  const runningConnections =
+    homeGraph?.nodes.filter(
+      (node) =>
+        node.kind === "capture" && node.concept_state?.status === "running",
     ) || [];
   const failedConnections =
     homeGraph?.nodes.filter(
       (node) =>
         node.kind === "capture" && node.concept_state?.status === "failed",
+    ) || [];
+  const reviewConnections =
+    homeGraph?.nodes.filter(
+      (node) =>
+        node.kind === "capture" &&
+        node.concept_state?.status === "needs_review",
     ) || [];
   useEffect(() => {
     const area = searchArea.current;
@@ -893,6 +903,8 @@ export default function App() {
       return !v;
     });
   }
+  const sourceIsExcerpt =
+    source !== null && source.text !== source.capture.body_markdown;
   const sourceContent = (
     <>
       <HStack className="panel-heading">
@@ -946,12 +958,15 @@ export default function App() {
               <p className="notice">출처가 변경되어 재검토가 필요합니다.</p>
             )}
             <VStack className="source-excerpt">
+              {sourceIsExcerpt && <Heading level={3}>참조한 부분</Heading>}
               <Markdown>{source.text}</Markdown>
             </VStack>
-            <details>
-              <summary>기록 전체 보기</summary>
-              <Markdown>{source.capture.body_markdown}</Markdown>
-            </details>
+            {sourceIsExcerpt && (
+              <details>
+                <summary>기록 전체 보기</summary>
+                <Markdown>{source.capture.body_markdown}</Markdown>
+              </details>
+            )}
             <Button
               onClick={() => {
                 void openCapture(source.capture.id);
@@ -1377,8 +1392,8 @@ export default function App() {
               )}
               {selected.concept_state?.status === "needs_review" && (
                 <p className="notice">
-                  주제를 확정하지 못했습니다. 주제 정정에서 직접 선택할 수
-                  있어요.
+                  확정하기 어려운 주제는 연결을 보류했어요. 주제 정정에서
+                  확인하고 직접 선택할 수 있어요.
                 </p>
               )}
               <Markdown>{selected.body_markdown}</Markdown>
@@ -1629,7 +1644,9 @@ export default function App() {
             homeGraph.nodes.length > 0 &&
             !hasRetrieval &&
             (pendingConnections.length > 0 ||
+              runningConnections.length > 0 ||
               failedConnections.length > 0 ||
+              reviewConnections.length > 0 ||
               !homeGraph.edges.length ||
               Boolean(homeGraphError)) && (
               <HStack
@@ -1637,10 +1654,12 @@ export default function App() {
                 role="status"
                 aria-label="주제 연결 상태"
               >
-                {pendingConnections.length > 0 && (
+                {(pendingConnections.length > 0 ||
+                  runningConnections.length > 0) && (
                   <p>
-                    표시 중인 기록 {pendingConnections.length}개의 주제 연결을
-                    기다리고 있어요.
+                    표시 중인 기록의 주제 연결: 처리 중{" "}
+                    {runningConnections.length}개 · 대기{" "}
+                    {pendingConnections.length}개.
                   </p>
                 )}
                 {failedConnections.length > 0 && (
@@ -1663,8 +1682,29 @@ export default function App() {
                     </button>
                   </>
                 )}
+                {reviewConnections.length > 0 && (
+                  <>
+                    <p>
+                      표시 중인 기록 {reviewConnections.length}개에 확인이
+                      필요한 주제가 있어요.
+                    </p>
+                    <button
+                      className="text-button"
+                      onClick={() =>
+                        void openCapture(
+                          reviewConnections[0].source?.capture_id ||
+                            reviewConnections[0].id,
+                        )
+                      }
+                    >
+                      주제 검토가 필요한 기록 확인 <ChevronRight />
+                    </button>
+                  </>
+                )}
                 {!pendingConnections.length &&
+                  !runningConnections.length &&
                   !failedConnections.length &&
+                  !reviewConnections.length &&
                   !homeGraph.edges.length && (
                     <p>
                       아직 표시할 연결이 없습니다. 기록에 주제를 지정하거나
