@@ -140,6 +140,30 @@ async function openSettings(page: Page) {
   await expect(page.getByRole("dialog")).toBeVisible();
 }
 
+for (const viewport of [{ width: 1280, height: 600 }, { width: 390, height: 640 }]) {
+  test(`설정 하단까지 스크롤할 수 있다 (${viewport.width})`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await fixture(page);
+    await page.goto("/");
+    await openSettings(page);
+    await expect(page.getByRole("combobox", { name: "답변 모델", exact: true })).toBeEnabled();
+    const dialog = page.getByRole("dialog");
+    const box = (await dialog.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 2000);
+    const backup = page.getByRole("button", { name: "백업 다운로드" });
+    await expect(backup).toBeInViewport();
+    const scroll = page.getByRole("group", { name: "설정 내용", exact: true });
+    await scroll.focus();
+    await page.keyboard.press("Home");
+    await expect(page.getByRole("button", { name: "설정 닫기" })).toBeInViewport();
+    await page.keyboard.press("End");
+    await expect(backup).toBeInViewport();
+    await page.keyboard.press("Escape");
+    await expect(dialog).not.toBeVisible();
+  });
+}
+
 test("재시작 후 모델 목록을 자동으로 불러오고 추론 수준 선택을 보존한다", async ({
   page,
 }) => {

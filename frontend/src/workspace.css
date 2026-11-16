@@ -386,6 +386,12 @@ select,
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+.settings-content-dialog {
+  overflow: hidden;
+}
+.settings-scroll {
+  flex: 1 1 auto;
+}
 .toast {
   background: var(--color-background-card);
 }

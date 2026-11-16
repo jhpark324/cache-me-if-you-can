@@ -10,6 +10,7 @@ import {
 } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { ScrollableArea } from "@astryxdesign/core/ScrollableArea";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Tooltip } from "@astryxdesign/core/Tooltip";
 import { Token } from "@astryxdesign/core/Token";
@@ -1905,17 +1906,24 @@ export default function App() {
       <Dialog
         isOpen={settingsOpen}
         onOpenChange={setSettingsOpen}
-        className="settings-dialog"
+        className="settings-dialog settings-content-dialog"
         aria-describedby={undefined}
         width="min(48rem, 94vw)"
         maxHeight="90dvh"
         purpose="info"
       >
         {settingsOpen && (
-          <SettingsPanel
-            onClose={() => setSettingsOpen(false)}
-            onToast={setToast}
-          />
+          <ScrollableArea
+            className="settings-scroll"
+            label="설정 내용"
+            minHeight={0}
+            overscroll="contain"
+          >
+            <SettingsPanel
+              onClose={() => setSettingsOpen(false)}
+              onToast={setToast}
+            />
+          </ScrollableArea>
         )}
       </Dialog>
       <VStack className={`toast ${toast ? "is-visible" : ""}`} role="status">
