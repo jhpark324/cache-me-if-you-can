@@ -21,7 +21,7 @@ KURE-v2는 문서마다 단일 벡터를 만드는 모델이 아니다. 토큰�
 | SQLite | 정리본과 변경 이력, 현재 상태, 주제·관계, 색인 작업과 활성 임베딩 프로필 |
 | LanceDB OSS | 검색용 청크·메타데이터, 토큰별 다중 벡터 MaxSim·BM25와 순위 결합 |
 | 임베딩 어댑터 | 질문·문서 입력 계약, 모델 로딩·CPU 추론, 마스킹·정규화·가변 길이×128 검증 |
-| 공통 지식 서비스 | 검색 후보의 현재 버전·삭제 여부·파생 출처 확인, 유효한 저장본 반환 |
+| 공통 지식 서비스 | 본문·주제 후보 병렬 수집과 순위 결합, 현재 버전·삭제 여부·파생 출처 확인, 유효한 저장본 반환 |
 | LangGraph | 질문 해석·필요한 검색·추가 조회·근거 확인·답변 생성 흐름 제어 |
 
 LanceDB는 로컬 디렉터리에 embedded 방식으로 연결한다. 별도 DB 서버를 추가하지 않으며 각 OS의 사용자 데이터 경로에 SQLite와 Lance 데이터를 둔다. Windows·macOS·Linux에서 직접 실행하는 것이 요구사항이며 WSL은 선택 사항이다. 네이티브 패키지·CPU 명령어·파일 I/O와 미해결 아키텍처는 [운영체제 지원 설계](platform-support.md)를 따른다. [LanceDB 시작하기](https://docs.lancedb.com/quickstart)
@@ -78,11 +78,13 @@ PyLate를 설치하지 않고 실제 인코딩했다. 검증한 Sentence Transfo
 
 ## 키워드와 의미 검색
 
-LanceDB의 다중 벡터 MaxSim과 BM25 전문 검색을 결합하고 초기 순위 결합은 기본 RRF를 사용한다. RRF는 두 결과의 순위를 결합하며 MaxSim 자체나 별도 LLM reranker를 뜻하지 않는다. 질문 벡터 행렬과 검색 문자열을 명시적으로 전달한다. MultiVectorEncoder 출력의 2차원 배열을 여러 독립 질문의 배치로 오해하지 않는다. [다중 벡터 검색](https://docs.lancedb.com/search/multivector-search), [Hybrid 검색](https://docs.lancedb.com/search/hybrid-search)
+LanceDB의 본문 검색은 다중 벡터 MaxSim과 BM25 전문 검색을 기본 RRF로 결합한다. 공통 지식 서비스는 이 본문 순위와 별도의 주제 연결 후보 순위를 다시 결합한다. RRF는 후보 순위를 결합하는 방식이며 MaxSim 자체나 별도 LLM reranker를 뜻하지 않는다. 질문 벡터 행렬과 검색 문자열을 명시적으로 전달한다. MultiVectorEncoder 출력의 2차원 배열을 여러 독립 질문의 배치로 오해하지 않는다. [다중 벡터 검색](https://docs.lancedb.com/search/multivector-search), [Hybrid 검색](https://docs.lancedb.com/search/hybrid-search)
 
 FTS는 ICU 토크나이저, `stem=False`, `remove_stop_words=False`, `ascii_folding=False`를 기준으로 한다. 제품 구현에는 `create_index(config=FTS(...))`를 사용한다. ICU는 한국어 형태소 분석 품질을 보장하지 않으므로 조사·어미·띄어쓰기·짧은 식별자 실패를 평가하고 필요하면 `lindera/ko-dic`을 비교한다. 코드 기호와 정확한 제품 번호는 의미 검색만으로 일치를 보장하지 않는다. [FTS와 토크나이저](https://docs.lancedb.com/search/full-text-search)
 
-날짜·유형·소유자 조건은 vector와 FTS 양쪽에 동일하게 적용한다. 기록 ID 직접 조회와 정확한 개수·날짜 집계는 SQLite에서 처리한다. 본인 검색에는 `private` 기록도 포함한다. 미래 공유 검색 권한은 별도 명세다. 여러 청크가 같은 기록을 가리키면 기록 단위 중복을 제거하면서 근거 위치를 보존한다. [LanceDB 필터](https://docs.lancedb.com/search/filtering)
+주제 후보는 질문에 명확히 일치하는 Concept 이름·별칭에서 SQLite의 현재 기록·Node 연결로 찾는다. 본문 검색과 독립적으로 병렬 수집하며 선택할 주제와 주제별 기록 수를 제한한다. 새로운 그래프 DB나 Concept 설명 벡터 색인을 추가하지 않는다. 연결된 본문 구간 선별·순위 결합과 제한은 [검색·맥락 계약](retrieval-and-context.md#주제와-node-편집)을 따른다. 기존 검색 모델 준비와 색인 상태 검증은 주제 후보가 있어도 생략하지 않는다.
+
+날짜·유형·주제·소유자 조건은 vector·FTS·주제 연결 후보에 동일하게 적용한다. 기록 ID 직접 조회와 정확한 개수·날짜 집계는 SQLite에서 처리한다. 본인 검색에는 `private` 기록도 포함한다. 미래 공유 검색 권한은 별도 명세다. 여러 경로나 청크가 같은 기록을 가리키면 기록 단위 중복을 제거하면서 근거 위치를 보존한다. [LanceDB 필터](https://docs.lancedb.com/search/filtering)
 
 작은 데이터는 정확 검색으로 시작하되 다중 벡터는 청크 수뿐 아니라 총 토큰 벡터 수로 비용을 판단한다. ANN 활성화 전 정확 검색 대비 회수율·지연·실제 실행 계획·미색인 행 수를 검증한다. 생성 API 성공만으로 ANN이 사용된다고 가정하지 않는다. 새 행을 건너뛰는 `fast_search`는 기본으로 쓰지 않는다. [색인과 유지 관리](https://docs.lancedb.com/indexing/reindexing)
 
