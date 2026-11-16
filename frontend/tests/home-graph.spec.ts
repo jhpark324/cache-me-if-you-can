@@ -62,7 +62,7 @@ function graph(indices = records.map((_, i) => i)) {
     truncated: false,
   };
 }
-async function fixture(page: Page, empty = false) {
+async function fixture(page: Page, empty = false, sourceBody?: string) {
   const calls: string[] = [];
   await page.route("**/api/v1/**", async (route) => {
     const u = new URL(route.request().url()),
@@ -109,12 +109,14 @@ async function fixture(page: Page, empty = false) {
       return send(records.find((r) => path.endsWith(r.id)));
     if (path === "/sources/resolve") {
       const r = records.find((r) => r.id === body.capture_id)!;
+      const capture =
+        sourceBody === undefined ? r : { ...r, body_markdown: sourceBody };
       return send({
         source: body,
         is_current: true,
         current_revision_id: r.revision_id,
-        text: r.body_markdown,
-        capture: r,
+        text: capture.body_markdown,
+        capture,
         node: null,
         review_state: "valid",
       });
@@ -198,6 +200,74 @@ test("홈 canvas가 검색·출처에서 유지되고 검색 위치·키보드 �
   await expect(page.locator(".source-panel")).toContainText(records[0].title);
   expect(errors).toEqual([]);
 });
+
+for (const viewport of [
+  { width: 1440, height: 900 },
+  { width: 390, height: 844 },
+]) {
+  test(`그래프에서 연 긴 출처를 끝까지 스크롤한다 (${viewport.width}px)`, async ({
+    page,
+  }) => {
+    const lastParagraph = "긴 출처의 마지막 문단까지 읽었습니다.";
+    const body = [
+      ...Array.from(
+        { length: 60 },
+        (_, i) =>
+          `${i + 1}번째 문단입니다. 배운 내용을 내 언어로 설명하고 다음 질문과 연결하며 기록 전체를 끝까지 읽습니다.`,
+      ),
+      lastParagraph,
+    ].join("\n\n");
+    await page.setViewportSize(viewport);
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fixture(page, false, body);
+    await page.goto("/");
+    await ready(page);
+    await page
+      .getByRole("button", { name: "연결 목록 보기", exact: true })
+      .click();
+    const trigger = page.locator(".graph-list").getByRole("button", {
+      name: records[0].title + " 지식",
+      exact: true,
+    });
+    await trigger.click();
+
+    const panel = page.locator(
+      viewport.width > 800 ? ".source-panel" : ".source-mobile",
+    );
+    const excerptEnd = panel
+      .locator(".source-excerpt")
+      .getByText(lastParagraph, { exact: true });
+    await expect(excerptEnd).toBeVisible();
+    await expect(excerptEnd).not.toBeInViewport();
+    const box = (await panel.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 100_000);
+    await expect(excerptEnd).toBeInViewport();
+    const openRecord = panel.getByRole("button", {
+      name: "현재 기록 열기",
+      exact: true,
+    });
+    await expect(openRecord).toBeInViewport();
+
+    await panel.getByText("기록 전체 보기", { exact: true }).click();
+    const fullBodyEnd = panel
+      .locator("details")
+      .getByText(lastParagraph, { exact: true });
+    await expect(fullBodyEnd).toBeVisible();
+    await expect(fullBodyEnd).not.toBeInViewport();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 100_000);
+    await expect(fullBodyEnd).toBeInViewport();
+    await expect(openRecord).toBeInViewport();
+
+    if (viewport.width <= 800) {
+      await page.keyboard.press("Escape");
+      await expect(panel).not.toBeVisible();
+      await expect(trigger).toBeFocused();
+    }
+  });
+}
+
 test("빠른 목록 필터는 이전 결과를 무시하고 홈 그래프와 질문은 전체 범위를 유지한다", async ({
   page,
 }) => {
