@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import re
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import RLock
@@ -16,13 +17,14 @@ from sqlalchemy import func, or_, select
 from .chunking import MarkdownChunker
 from .db import new_id, utcnow
 from .embedding import KureEmbedding, EmbeddingError, MODEL_ID, MODEL_REVISION
-from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, ConceptEnrichmentJob, EmbeddingProfile,
+from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, ConceptAlias, ConceptEnrichmentJob, EmbeddingProfile,
                      IndexBuild, IndexJob, KnowledgeNode, LocalBrain, NodeConcept, Relation,
                      RevisionConcept, RevisionKind)
 from .records import DomainError, SourceValidationBudget, SourceValidationLimit, digest
 from .record_filters import matches_record_filters, record_filter_predicates
 from .schemas import InputModel, RecordKinds
 from .record_kinds import normalize_record_kinds
+from .topic_retrieval import matched_topic_ids, RECORDS_PER_TOPIC
 
 
 class EventFilter(InputModel):
@@ -350,13 +352,7 @@ class SearchService:
             return False
         return self.records._source_status(session, _ref(capture))["review_state"] == "valid"
 
-    def search(self, value: dict | SearchInput) -> dict:
-        data = self._input(SearchInput, value)
-        self._require()
-        try:
-            query = self.embedding.encode_query(data.query)
-        except EmbeddingError as exc:
-            raise self._embedding_error(exc) from exc
+    def _body_candidates(self, data: SearchInput, query) -> list[dict]:
         with self.db.read() as session:
             captures = list(session.scalars(select(Capture).where(Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None))))
             allowed = []
@@ -365,8 +361,7 @@ class SearchService:
                 if self._eligible(session, capture) and self._matches(session, capture, revision, data):
                     allowed.append((capture.id, capture.current_revision_id, capture.index_generation))
         if not allowed:
-            return self.records._page([], data.limit, data.cursor,
-                data.model_dump(mode="json", exclude={"cursor", "limit"}), digest([]), lambda x: x)
+            return []
         filters = "brain_id = " + _quote(self.brain_id) + " AND profile_id = " + _quote(self.profile_id) + " AND (" + " OR ".join(
             "(capture_id = " + _quote(cid) + " AND revision_id = " + _quote(rid) + f" AND index_generation = {generation})"
             for cid, rid, generation in allowed) + ")"
@@ -386,43 +381,161 @@ class SearchService:
             for rank, row in enumerate(rows, 1):
                 item = scored.setdefault(row["id"], {"row": row, "score": 0.0})
                 item["score"] += 1.0 / (60 + rank)
-        ranked = sorted(scored.values(), key=lambda x: (-x["score"], x["row"]["id"]))
+        return sorted(scored.values(), key=lambda x: (-x["score"], x["row"]["id"]))
+
+    def _topic_candidates(self, data: SearchInput, query) -> list[dict]:
+        candidates = {}
         with self.db.read() as session:
-            grouped = {}
-            for scored_row in ranked:
-                row = scored_row["row"]
-                capture = session.get(Capture, row["capture_id"])
-                if not self._eligible(session, capture) or capture.current_revision_id != row["revision_id"] or capture.index_generation != row["index_generation"]:
-                    continue
-                revision = session.get(CaptureRevision, capture.current_revision_id)
-                if not self._matches(session, capture, revision, data):
-                    continue
-                start, end = row["body_start"], row["body_end"]
-                if not 0 <= start < end <= len(revision.body_markdown):
-                    continue
-                nodes = self.records._nodes(session, revision.id) if revision.node_status == "current" else []
-                matched_nodes = [n.id for n in nodes if n.body_start < end and n.body_end > start]
-                span = {"body_start": start, "body_end": end}
-                if capture.id in grouped:
-                    hit = grouped[capture.id]
-                    if span not in hit["matched_spans"]:
-                        hit["matched_spans"].append(span)
-                    hit["matched_node_ids"] = sorted(set(hit["matched_node_ids"] + matched_nodes))
-                    continue
-                grouped[capture.id] = {"source": _ref(capture, start=start, end=end),
-                    "title": revision.title, "excerpt": revision.body_markdown[start:min(end, start + 480)],
-                    "matched_spans": [span], "matched_node_ids": matched_nodes,
-                    "score": scored_row["score"], "score_kind": "rrf", "index_profile_id": self.profile_id,
-                    "index_generation": capture.index_generation}
-            results = list(grouped.values())
-            snapshot = digest([[h["source"], h["index_generation"], h["matched_spans"]] for h in results])
-            return self.records._page(results, data.limit, data.cursor,
-                data.model_dump(mode="json", exclude={"cursor", "limit"}), snapshot, lambda x: x)
+            catalog = {}
+            for concept_id, name, alias in session.execute(select(Concept.id, Concept.name, ConceptAlias.alias)
+                    .outerjoin(ConceptAlias, ConceptAlias.concept_id == Concept.id)
+                    .where(Concept.brain_id == self.brain_id)):
+                concept = catalog.setdefault(concept_id, {"id": concept_id, "name": name, "aliases": []})
+                if alias is not None:
+                    concept["aliases"].append(alias)
+            for concept_id in matched_topic_ids(data.query, list(catalog.values())):
+                captures = session.scalars(select(Capture).join(CaptureRevision, Capture.current_revision_id == CaptureRevision.id)
+                    .where(Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None),
+                           *record_filter_predicates(concept_ids=[concept_id]))
+                    .order_by(Capture.updated_at.desc(), Capture.id))
+                count = 0
+                for capture in captures:
+                    revision = session.get(CaptureRevision, capture.current_revision_id)
+                    if not self._eligible(session, capture) or not self._matches(session, capture, revision, data):
+                        continue
+                    record_topic = session.scalar(select(RevisionConcept.concept_id).where(
+                        RevisionConcept.revision_id == revision.id, RevisionConcept.concept_id == concept_id))
+                    spans = None if record_topic else list(session.execute(select(KnowledgeNode.body_start, KnowledgeNode.body_end)
+                        .join(NodeConcept, NodeConcept.node_id == KnowledgeNode.id)
+                        .where(KnowledgeNode.revision_id == revision.id, NodeConcept.concept_id == concept_id)
+                        .order_by(KnowledgeNode.ordinal)))
+                    if data.concept_ids:
+                        filter_ids = list(map(str, data.concept_ids))
+                        record_filter = session.scalar(select(RevisionConcept.concept_id).where(
+                            RevisionConcept.revision_id == revision.id, RevisionConcept.concept_id.in_(filter_ids)))
+                        if not record_filter:
+                            filter_spans = list(session.execute(select(KnowledgeNode.body_start, KnowledgeNode.body_end)
+                                .join(NodeConcept, NodeConcept.node_id == KnowledgeNode.id)
+                                .where(KnowledgeNode.revision_id == revision.id, NodeConcept.concept_id.in_(filter_ids))))
+                            spans = filter_spans if spans is None else [
+                                (max(start, left), min(end, right)) for start, end in spans
+                                for left, right in filter_spans if start < right and end > left]
+                    if spans == []:
+                        continue
+                    if spans is not None:
+                        spans = sorted(set(spans))
+                    previous = candidates.get(capture.id)
+                    if previous is None:
+                        candidates[capture.id] = {"capture_id": capture.id, "revision_id": revision.id,
+                            "index_generation": capture.index_generation, "spans": spans}
+                    elif previous["spans"] is not None:
+                        previous["spans"] = None if spans is None else sorted(set(previous["spans"] + spans))
+                    count += 1
+                    if count >= RECORDS_PER_TOPIC:
+                        break
+
+        ranked = []
+        table = self._table
+        columns = ["id", "capture_id", "revision_id", "index_generation", "body_start", "body_end", "_distance"]
+        for candidate in candidates.values():
+            filters = ("brain_id = " + _quote(self.brain_id) + " AND profile_id = " + _quote(self.profile_id)
+                + " AND capture_id = " + _quote(candidate["capture_id"])
+                + " AND revision_id = " + _quote(candidate["revision_id"])
+                + f" AND index_generation = {candidate['index_generation']}")
+            if candidate["spans"] is not None:
+                filters += " AND (" + " OR ".join(f"(body_start < {end} AND body_end > {start})"
+                    for start, end in candidate["spans"]) + ")"
+            try:
+                rows = table.search(query, query_type="vector", vector_column_name="vector").metric("cosine") \
+                    .bypass_vector_index().where(filters, prefilter=True).select(columns).limit(1).to_list()
+            except Exception as exc:
+                raise DomainError("SEARCH_FAILED", "검색을 완료하지 못했습니다. 설정에서 검색 준비 상태를 확인해 주세요.", retryable=True) from exc
+            for row in rows:
+                # A chunk crossing a Node boundary must not turn unrelated text
+                # into evidence for that Node's topic.
+                spans = [(row["body_start"], row["body_end"])] if candidate["spans"] is None else [
+                    (max(row["body_start"], start), min(row["body_end"], end))
+                    for start, end in candidate["spans"]
+                    if row["body_start"] < end and row["body_end"] > start]
+                for start, end in sorted(set(spans)):
+                    ranked.append({"row": {**row, "body_start": start, "body_end": end},
+                        "score": -row["_distance"], "bounded": candidate["spans"] is not None})
+        return sorted(ranked, key=lambda item: (-item["score"], item["row"]["capture_id"], item["row"]["body_start"]))
+
+    def _record_hits(self, session, ranked: list[dict], data: SearchInput) -> list[dict]:
+        grouped = {}
+        for scored_row in ranked:
+            row = scored_row["row"]
+            capture = session.get(Capture, row["capture_id"])
+            if not self._eligible(session, capture) or capture.current_revision_id != row["revision_id"] or capture.index_generation != row["index_generation"]:
+                continue
+            revision = session.get(CaptureRevision, capture.current_revision_id)
+            if not self._matches(session, capture, revision, data):
+                continue
+            start, end = row["body_start"], row["body_end"]
+            if not 0 <= start < end <= len(revision.body_markdown):
+                continue
+            nodes = self.records._nodes(session, revision.id) if revision.node_status == "current" else []
+            matched_nodes = [n.id for n in nodes if n.body_start < end and n.body_end > start]
+            span = {"body_start": start, "body_end": end}
+            if capture.id in grouped:
+                hit = grouped[capture.id]
+                if span not in hit["matched_spans"]:
+                    hit["matched_spans"].append(span)
+                if scored_row.get("bounded") and span not in hit["_bounded_spans"]:
+                    hit["_bounded_spans"].append(span)
+                hit["matched_node_ids"] = sorted(set(hit["matched_node_ids"] + matched_nodes))
+                continue
+            grouped[capture.id] = {"source": _ref(capture, start=start, end=end),
+                "title": revision.title, "excerpt": revision.body_markdown[start:min(end, start + 480)],
+                "matched_spans": [span], "matched_node_ids": matched_nodes,
+                "_bounded_spans": [span] if scored_row.get("bounded") else [],
+                "score": scored_row["score"], "score_kind": "rrf", "index_profile_id": self.profile_id,
+                "index_generation": capture.index_generation}
+        return list(grouped.values())
+
+    def search(self, value: dict | SearchInput, *, _for_context: bool = False) -> dict:
+        data = self._input(SearchInput, value)
+        self._require()
+        try:
+            query = self.embedding.encode_query(data.query)
+        except EmbeddingError as exc:
+            raise self._embedding_error(exc) from exc
+        # Topic discovery is independent of the body's top-40 candidate lists.
+        # Both branches share the one query embedding and own their DB sessions.
+        with ThreadPoolExecutor(max_workers=2, thread_name_prefix="cache-me-search") as executor:
+            body = executor.submit(self._body_candidates, data, query)
+            topics = executor.submit(self._topic_candidates, data, query)
+            body_candidates, topic_candidates = body.result(), topics.result()
+        with self.db.read() as session:
+            body_hits = self._record_hits(session, body_candidates, data)
+            topic_hits = self._record_hits(session, topic_candidates, data)
+        results = body_hits
+        if topic_hits:
+            combined = {}
+            for channel in (body_hits, topic_hits):
+                for rank, hit in enumerate(channel, 1):
+                    key = (hit["source"]["capture_id"], hit["source"]["revision_id"])
+                    if key not in combined:
+                        combined[key] = {**hit, "score": 0.0, "matched_spans": [], "matched_node_ids": [], "_bounded_spans": []}
+                    result = combined[key]
+                    result["score"] += 1.0 / (60 + rank)
+                    for span in hit["matched_spans"]:
+                        if span not in result["matched_spans"]:
+                            result["matched_spans"].append(span)
+                            if span in hit["_bounded_spans"]:
+                                result["_bounded_spans"].append(span)
+                    result["matched_node_ids"] = sorted(set(result["matched_node_ids"] + hit["matched_node_ids"]))
+            results = sorted(combined.values(), key=lambda hit: (-hit["score"], hit["source"]["capture_id"]))
+        snapshot = digest([[h["source"], h["index_generation"], h["matched_spans"]] for h in results])
+        return self.records._page(results, data.limit, data.cursor,
+            data.model_dump(mode="json", exclude={"cursor", "limit"}), snapshot,
+            lambda hit: hit if _for_context else {key: value for key, value in hit.items() if key != "_bounded_spans"})
 
     def context(self, value: dict | ContextInput) -> dict:
         data = self._input(ContextInput, value)
         search_data = data.model_dump(mode="json", exclude={"subject_hint", "situation_hint", "as_of"})
-        hits = self.search(search_data)
+        hits = self.search(search_data, _for_context=True)
         items, limitations, conflicts, relation_views = [], [], [], []
         characters = 0
         captured_ids, relation_ids = set(), set()
@@ -478,10 +591,14 @@ class SearchService:
                 nodes = self.records._nodes(session, revision.id) if revision.node_status == "current" else []
                 seed_items = []
                 for span in hit["matched_spans"]:
+                    bounded = span in hit.get("_bounded_spans", [])
                     overlapping = [n for n in nodes if n.body_start < span["body_end"] and n.body_end > span["body_start"]]
                     for node in overlapping or [None]:
-                        start = min(span["body_start"], node.body_start) if node else span["body_start"]
-                        end = max(span["body_end"], node.body_end) if node else span["body_end"]
+                        # Topic-only evidence keeps the exact allowed range even
+                        # when an unrelated, broader Node overlaps it. Body hits
+                        # retain their existing full-Node context expansion.
+                        start = min(span["body_start"], node.body_start) if node and not bounded else span["body_start"]
+                        end = max(span["body_end"], node.body_end) if node and not bounded else span["body_end"]
                         item = add_item(_ref(capture, start=start, end=end), node_hint=node)
                         if item is not None and item not in seed_items:
                             seed_items.append(item)
