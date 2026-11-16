@@ -927,6 +927,13 @@ summary:hover {
 .source-panel details {
   margin: 24px 0 10px;
 }
+.source-scroll {
+  flex: 1;
+  overscroll-behavior: contain;
+}
+.source-scroll > * {
+  flex-shrink: 0;
+}
 .editor-dialog,
 .settings-dialog,
 .confirm-dialog,
