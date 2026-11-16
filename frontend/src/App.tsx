@@ -1518,6 +1518,11 @@ export default function App() {
             <Suspense fallback={<Loading text="그래프를 여는 중" />}>
               <Graph
                 data={exampleMode ? exampleGraph : displayGraph}
+                allowTopicExploration={!searched}
+                onTopicSelectionChange={() => {
+                  sourceTrigger.current = null;
+                  closeSource();
+                }}
                 selectedId={
                   exampleMode
                     ? undefined
@@ -1530,6 +1535,7 @@ export default function App() {
                   exampleMode
                     ? undefined
                     : (id) => {
+                        setKind("");
                         setConcept(id);
                         navigateView("library");
                       }

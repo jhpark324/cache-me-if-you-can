@@ -81,6 +81,115 @@ svg.lucide {
   outline: 2px solid var(--accent);
   outline-offset: 4px;
 }
+
+/* Topic exploration shares the map's current, bounded set of connections. */
+.topic-explorer {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: calc(var(--spacing-12) * 2 + var(--spacing-4));
+  inset-inline-start: var(--spacing-6);
+  width: min(18.5rem, calc(100% - var(--spacing-12)));
+  max-height: min(30rem, calc(100% - 14rem));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-background-surface);
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-container);
+  color: var(--color-text-primary);
+}
+.topic-explorer-toggle.astryx-button {
+  flex-shrink: 0;
+  justify-content: flex-start;
+  min-height: 2.75rem;
+  padding: var(--spacing-3) var(--spacing-4);
+}
+.topic-explorer-content {
+  min-height: 0;
+  overflow: auto;
+  padding: var(--spacing-1) var(--spacing-4) var(--spacing-4);
+}
+.topic-scope {
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+.topic-rows {
+  min-height: 0;
+  max-height: 14rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.topic-choice.astryx-button,
+.topic-record-open.astryx-button {
+  height: auto;
+  min-height: 2.75rem;
+  padding: var(--spacing-3) var(--spacing-2);
+  justify-content: flex-start;
+  text-align: left;
+  font-weight: 400;
+}
+.topic-choice-name {
+  display: inline-block;
+  max-width: calc(100% - 2rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.topic-choice-count {
+  margin-inline-start: var(--spacing-3);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.topic-record-title,
+.topic-record-via {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.topic-record-title {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.topic-record-via {
+  margin-block-start: var(--spacing-1);
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+.topic-back.astryx-button {
+  align-self: flex-start;
+  padding-inline: 0;
+  color: var(--color-accent);
+}
+.topic-selected-heading {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.topic-count-note {
+  padding-block-start: var(--spacing-2);
+  border-block-start: thin solid var(--color-border);
+}
+.graph-world[data-render-state="fallback"] .topic-explorer {
+  inset-block-start: 14rem;
+}
+.graph-world .graph-label-layer > span[data-topic-related="true"] {
+  color: var(--color-accent);
+}
+.graph-label-layer > span[data-topic-dimmed="true"] {
+  visibility: hidden;
+}
+@media (max-width: 50rem) {
+  .topic-explorer {
+    inset-inline-start: var(--spacing-4);
+    inset-block-start: calc(var(--spacing-12) * 3);
+    width: calc(100% - var(--spacing-8));
+    max-height: min(23rem, 48%);
+  }
+  .topic-rows { max-height: 10rem; }
+}
 a {
   color: var(--accent);
 }
@@ -1994,10 +2103,10 @@ summary:hover {
   background: var(--color-text-primary);
 }
 .legend-concept {
-  background: var(--color-text-purple);
+  background: var(--color-text-primary);
 }
 .legend-node {
-  background: var(--color-text-cyan);
+  background: var(--color-icon-secondary);
 }
 .graph-controls {
   position: absolute;
@@ -2371,13 +2480,7 @@ summary:hover {
   z-index: 2;
 }
 .legend-capture {
-  background: conic-gradient(
-    var(--color-text-success),
-    var(--color-text-warning),
-    var(--color-text-info),
-    var(--color-text-purple),
-    var(--color-text-success)
-  );
+  background: var(--color-text-secondary);
 }
 
 @media (max-width: 800px) {
