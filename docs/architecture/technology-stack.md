@@ -20,7 +20,7 @@ FastAPI가 웹·MCP의 공통 기록 서비스를 제공하고, LangGraph가 질
 | 로그인과 모델 | 자체 ChatGPT OAuth + OpenAI Async SDK | 웹 로그인으로 모델을 연결하고 FastAPI가 직접 호출한다. OAuth 갱신과 요청 제약을 관리해야 한다. |
 | 답변 흐름 | LangChain 1.4.7 `create_agent` + LangGraph + Pydantic 계약 | 읽기 도구를 선택하는 ReAct 루프, 도구 총 8회·에이전트 모델 9회·별도 검토 1회·90초 제한. 자체 OAuth `BaseChatModel` 어댑터와 내장 PII middleware를 연결한다. |
 | 웹 | React + TypeScript + Vite | 로컬 SPA로 구성하고 빌드 결과를 FastAPI가 제공한다. 라우팅·상태 관리는 앱에서 선택한다. |
-| 웹 UI | Radix Themes + Lucide React + Pretendard | 검색·출처·편집 상태와 시각 규칙을 통일한다. 검정·회색·흰색 중심의 구성과 라이브러리·타임라인은 [웹 명세](../specs/workspace.md)를 따른다. |
+| 웹 UI | Astryx + Lucide React + Pretendard | 어두운 중립색 표면과 절제된 따뜻한 포인트 색, 입력·대화상자·행 구성의 토큰을 통일한다. 라이브러리·타임라인의 동작은 [웹 명세](../specs/workspace.md), 구성요소·테마 작업은 [Astryx 가이드](../guides/astryx.md)를 따른다. |
 | 지식 그래프 시각화 | 3d-force-graph + Three.js + three-spritetext | 제한된 기록·관계를 3D로 표현한다. 렌더링과 기록·검색 도메인의 책임을 분리한다. |
 | 의존성과 배포 | uv + 프론트 lockfile + 정적 웹 번들 | 개발 의존성을 고정하고 실행 시 Python 서버와 빌드된 웹을 한 단위로 제공한다. |
 

@@ -71,7 +71,7 @@ AI 답변이나 추가 설명은 자동으로 장기 지식에 저장하지 않�
 
 로컬 MCP CRUD, 자체 웹의 저장·조회·정정·삭제와 검색 기반 단일턴 응답, 오른쪽 출처 패널, 저장 후 내용 표시, soft delete, 삭제 전 재확인은 현재 범위다. 첫 화면·주변 그래프·운영 범위는 [MVP 기획](mvp-scope.md)을 따른다. 구현 기준과 실제 통합 검증 조건은 [기술 스택 선정](../architecture/technology-stack.md)에서 확인한다.
 
-웹은 검정·회색·흰색 중심의 화면에서 핵심 메뉴와 검색을 유지하고 본문에서 기록 라이브러리·타임라인·3D 그래프를 탐색한다. 그래프는 `3d-force-graph` + Three.js + `three-spritetext`를 사용하며 노드·연결선 상한을 둔다. [웹 명세](../specs/workspace.md), [ADR-004](../decisions/ADR-004-graph-visualization-library.md)
+웹은 어두운 중립색 표면과 절제된 따뜻한 포인트 색을 사용하며 핵심 메뉴와 검색을 유지하고 본문에서 기록 라이브러리·타임라인·3D 그래프를 탐색한다. 그래프는 `3d-force-graph` + Three.js + `three-spritetext`를 사용하며 노드·연결선 상한을 둔다. [웹 명세](../specs/workspace.md), [Astryx 가이드](../guides/astryx.md), [ADR-004](../decisions/ADR-004-graph-visualization-library.md)
 
 | 단계 | 다룰 범위 |
 | --- | --- |

@@ -1,3 +1,5 @@
+import { VStack } from "@astryxdesign/core/VStack";
+import { Text } from "@astryxdesign/core/Text";
 import { Markdown } from "./Markdown";
 import type { AnswerResult, SourceRef } from "./types";
 
@@ -53,11 +55,11 @@ export default function AnswerResponse({
             return true;
           });
           return (
-            <div className="answer-paragraph" key={part.part_id}>
+            <VStack className="answer-paragraph" key={part.part_id} gap={0}>
               <Markdown
                 after={
                   sources.length ? (
-                    <span className="answer-citations">
+                    <Text type="inherit" className="answer-citations">
                       {sources.map((source) => {
                         const key = sourceKey(source);
                         const number = numbers.get(key)!;
@@ -74,29 +76,35 @@ export default function AnswerResponse({
                           </button>
                         );
                       })}
-                    </span>
+                    </Text>
                   ) : undefined
                 }
               >
                 {part.text}
               </Markdown>
-            </div>
+            </VStack>
           );
         })}
       </article>
       {limitations.length > 0 && (
         <details className="answer-scope">
           <summary aria-label="답변 범위 자세히">
-            <span>확인 범위에 제한이 있어요</span>
-            <span className="answer-scope-action" aria-hidden="true">
+            <Text type="inherit">확인 범위에 제한이 있어요</Text>
+            <Text
+              type="inherit"
+              className="answer-scope-action"
+              aria-hidden="true"
+            >
               자세히
-            </span>
+            </Text>
           </summary>
-          <div className="answer-scope-notes">
+          <VStack className="answer-scope-notes" gap={0}>
             {limitations.map((note) => (
-              <p key={note}>{note}</p>
+              <Text as="p" type="inherit" key={note}>
+                {note}
+              </Text>
             ))}
-          </div>
+          </VStack>
         </details>
       )}
     </>

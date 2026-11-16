@@ -8,7 +8,12 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { KIND_LABELS, type CaptureSummary, type Concept } from "./types";
-import "./RecordBrowser.css";
+import { Button } from "@astryxdesign/core/Button";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Text } from "@astryxdesign/core/Text";
+import { Tooltip } from "@astryxdesign/core/Tooltip";
+import { VStack } from "@astryxdesign/core/VStack";
 
 export type RecordSort = "created_desc" | "title_asc";
 
@@ -142,40 +147,40 @@ function RecordRow({
         title={title}
       >
         {!timeline && <FileText className="rb-file" aria-hidden="true" />}
-        <span className="rb-record-copy">
-          <span className="rb-record-title">{title}</span>
-          {preview && <span className="rb-record-preview">{preview}</span>}
+        <VStack as="span" className="rb-record-copy">
+          <Text className="rb-record-title">{title}</Text>
+          {preview && <Text className="rb-record-preview">{preview}</Text>}
           {hasStatus && (
-            <span className="rb-record-status" aria-hidden="true">
+            <HStack as="span" className="rb-record-status" aria-hidden="true">
               {record.visibility === "private" && (
-                <span>
+                <Text>
                   <Lock aria-hidden="true" />
                   비공개
-                </span>
+                </Text>
               )}
-              {record.review_state === "needs_review" && <span>검토 필요</span>}
+              {record.review_state === "needs_review" && <Text>검토 필요</Text>}
               {record.index_state.status !== "ready" && (
-                <span>{indexLabel(record.index_state.status)}</span>
+                <Text>{indexLabel(record.index_state.status)}</Text>
               )}
-            </span>
+            </HStack>
           )}
-        </span>
-        <span className="rb-record-kinds" aria-hidden="true">
+        </VStack>
+        <HStack as="span" className="rb-record-kinds" aria-hidden="true">
           {record.kinds.map((kind) => (
-            <span key={kind}>{KIND_LABELS[kind] || kind}</span>
+            <Text key={kind}>{KIND_LABELS[kind] || kind}</Text>
           ))}
-        </span>
+        </HStack>
         {!timeline && (
-          <span className="rb-record-date" aria-hidden="true">
+          <Text className="rb-record-date" aria-hidden="true">
             {date ? (
               <time dateTime={record.created_at}>{fullDate.format(date)}</time>
             ) : (
               "저장일 미상"
             )}
-          </span>
+          </Text>
         )}
         <ChevronRight className="rb-chevron" aria-hidden="true" />
-        <span className="sr-only" id={descriptionId}>
+        <Text className="sr-only" id={descriptionId}>
           {record.kinds.map((kind) => KIND_LABELS[kind] || kind).join(", ")}
           {record.visibility === "private" ? ", 비공개" : ""}
           {record.review_state === "needs_review" ? ", 검토 필요" : ""}
@@ -183,7 +188,7 @@ function RecordRow({
             ? `, ${indexLabel(record.index_state.status)}`
             : ""}
           {date ? `, 저장일 ${fullDate.format(date)}` : ", 저장일 미상"}
-        </span>
+        </Text>
       </button>
     </li>
   );
@@ -232,20 +237,26 @@ export function RecordBrowser({
       aria-labelledby={headingId}
     >
       <header className="rb-toolbar">
-        <div className="rb-heading">
-          <div className="rb-heading-copy">
-            <h1 id={headingId}>{timeline ? "타임라인" : "모든 기록"}</h1>
-            <span className="rb-count" aria-live="polite" aria-atomic="true">
+        <HStack className="rb-heading">
+          <HStack className="rb-heading-copy">
+            <Heading level={1} id={headingId}>
+              {timeline ? "타임라인" : "모든 기록"}
+            </Heading>
+            <Text className="rb-count" aria-live="polite" aria-atomic="true">
               불러온 {records.length.toLocaleString("ko-KR")}개
-            </span>
-          </div>
-          <button className="rb-create" type="button" onClick={onCreate}>
-            <Plus aria-hidden="true" />새 기록
-          </button>
-        </div>
-        <div className="rb-filters" role="group" aria-label="기록 필터">
+            </Text>
+          </HStack>
+          <Button
+            label="새 기록"
+            icon={<Plus aria-hidden="true" />}
+            variant="primary"
+            className="rb-create"
+            onClick={onCreate}
+          />
+        </HStack>
+        <HStack className="rb-filters" role="group" aria-label="기록 필터">
           <label className="rb-filter">
-            <span className="sr-only">기록 유형</span>
+            <Text className="sr-only">기록 유형</Text>
             <select
               aria-label="기록 유형"
               value={kind}
@@ -260,7 +271,7 @@ export function RecordBrowser({
             </select>
           </label>
           <label className="rb-filter rb-concept-filter">
-            <span className="sr-only">주제</span>
+            <Text className="sr-only">주제</Text>
             <select
               aria-label="주제"
               value={concept}
@@ -283,13 +294,16 @@ export function RecordBrowser({
             </select>
           </label>
           {filtered && (
-            <button className="rb-reset" type="button" onClick={onReset}>
-              필터 초기화
-            </button>
+            <Button
+              label="필터 초기화"
+              variant="ghost"
+              className="rb-reset"
+              onClick={onReset}
+            />
           )}
           {timeline ? (
             <label className="rb-filter rb-period">
-              <span>저장 월</span>
+              <Text>저장 월</Text>
               <input
                 type="month"
                 aria-label="저장 월"
@@ -299,7 +313,7 @@ export function RecordBrowser({
             </label>
           ) : (
             <label className="rb-filter rb-sort">
-              <span className="sr-only">기록 정렬</span>
+              <Text className="sr-only">기록 정렬</Text>
               <select
                 aria-label="기록 정렬"
                 value={sort}
@@ -312,61 +326,62 @@ export function RecordBrowser({
               </select>
             </label>
           )}
-        </div>
+        </HStack>
         {conceptError && (
-          <div className="rb-notice">
-            <p role="alert">주제를 불러오지 못했습니다. {conceptError}</p>
-            <button
-              type="button"
+          <HStack className="rb-notice">
+            <Text as="p" display="block" role="alert">
+              주제를 불러오지 못했습니다. {conceptError}
+            </Text>
+            <Button
+              label="주제 다시 불러오기"
+              icon={<RefreshCw aria-hidden="true" />}
+              variant="secondary"
               className="rb-retry"
               onClick={onRetryConcepts}
-              disabled={conceptLoading}
-            >
-              <RefreshCw aria-hidden="true" />
-              주제 다시 불러오기
-            </button>
-          </div>
+              isDisabled={conceptLoading}
+            />
+          </HStack>
         )}
       </header>
-      <div className="rb-scroll" data-record-scroll>
+      <VStack className="rb-scroll" data-record-scroll>
         {error && (
-          <div className="rb-notice rb-list-error">
-            <p role="alert">기록을 불러오지 못했습니다. {error}</p>
-            <button
-              type="button"
+          <HStack className="rb-notice rb-list-error">
+            <Text as="p" display="block" role="alert">
+              기록을 불러오지 못했습니다. {error}
+            </Text>
+            <Button
+              label="다시 불러오기"
+              icon={<RefreshCw aria-hidden="true" />}
+              variant="secondary"
               className="rb-retry"
               onClick={onRetry}
-              disabled={loading}
-            >
-              <RefreshCw aria-hidden="true" />
-              다시 불러오기
-            </button>
-          </div>
+              isDisabled={loading}
+            />
+          </HStack>
         )}
         {!loading && !error && !records.length && (
-          <div className="rb-empty">
-            <h2>
+          <VStack className="rb-empty">
+            <Heading level={2}>
               {filtered
                 ? "이 조건의 기록이 없어요"
                 : "아직 저장한 기록이 없어요"}
-            </h2>
-            <p>
+            </Heading>
+            <Text as="p" display="block">
               {filtered
                 ? "다른 유형이나 주제, 기간으로 살펴보세요."
                 : "생각과 경험을 첫 기록으로 남겨 보세요."}
-            </p>
-            <button
-              type="button"
+            </Text>
+            <Button
+              label={filtered ? "필터 초기화" : "첫 기록 남기기"}
+              variant="secondary"
               className="rb-secondary"
               onClick={filtered ? onReset : onCreate}
-            >
-              {filtered ? "필터 초기화" : "첫 기록 남기기"}
-            </button>
-          </div>
+            />
+          </VStack>
         )}
         {records.length > 0 &&
           (timeline ? (
-            <div
+            <VStack
               className="rb-timeline-groups"
               aria-label="저장일별 기록"
               aria-busy={loading}
@@ -381,8 +396,8 @@ export function RecordBrowser({
                       : "저장일 미상 기록"
                   }
                 >
-                  <div className="rb-date-heading">
-                    <h2>
+                  <VStack className="rb-date-heading">
+                    <Heading level={2}>
                       {group.date ? (
                         <time dateTime={group.key}>
                           {monthDay.format(group.date)}
@@ -390,22 +405,22 @@ export function RecordBrowser({
                       ) : (
                         "저장일 미상"
                       )}
-                    </h2>
+                    </Heading>
                     {group.date && (
-                      <span className="rb-weekday">
+                      <Text className="rb-weekday">
                         {group.date.getFullYear()} ·{" "}
                         {weekday.format(group.date)}
-                      </span>
+                      </Text>
                     )}
                     {index === 0 && group.date && (
-                      <span
-                        className="rb-recent"
-                        title="현재 목록에서 가장 최근 저장일"
+                      <Tooltip
+                        content="현재 목록에서 가장 최근 저장일"
+                        hasHoverIndication={false}
                       >
-                        최근
-                      </span>
+                        <Text className="rb-recent">최근</Text>
+                      </Tooltip>
                     )}
-                  </div>
+                  </VStack>
                   <ul className="rb-date-records">
                     {group.records.map((record) => (
                       <RecordRow
@@ -418,7 +433,7 @@ export function RecordBrowser({
                   </ul>
                 </section>
               ))}
-            </div>
+            </VStack>
           ) : (
             <ul
               className="rb-records"
@@ -436,27 +451,26 @@ export function RecordBrowser({
             </ul>
           ))}
         {loading && (
-          <div
+          <HStack
             className={`rb-loading${records.length ? "" : " rb-loading-initial"}`}
             role="status"
           >
             <LoaderCircle aria-hidden="true" />
             기록을 불러오는 중
-          </div>
+          </HStack>
         )}
         {cursor && !error && (
-          <div className="rb-footer">
-            <button
-              type="button"
+          <HStack className="rb-footer">
+            <Button
+              label="기록 더 보기"
+              variant="secondary"
               className="rb-secondary"
               onClick={onLoadMore}
-              disabled={loading}
-            >
-              기록 더 보기
-            </button>
-          </div>
+              isDisabled={loading}
+            />
+          </HStack>
         )}
-      </div>
+      </VStack>
     </section>
   );
 }

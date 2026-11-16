@@ -1,38 +1,15 @@
 /* Workspace UI contract: docs/specs/workspace.md. */
-:root {
-  --canvas: #000;
-  --ink: #f2f2f2;
-  --muted: #b4b4b4;
-  --quiet: #a2a2a2;
-  --accent: #eee;
-  --line: #292929;
-  --edge: #666;
-}
-.radix-themes {
-  --default-font-family:
-    Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --color-panel-solid: #101010;
-  --color-panel-translucent: #101010;
-  --gray-1: #080808;
-  --gray-2: #111;
-  --gray-3: #1b1b1b;
-  --gray-4: #262626;
-  --gray-5: #333;
-  --gray-6: #454545;
-  --gray-11: #c7c7c7;
-  --gray-12: #f2f2f2;
-}
 body {
   font-weight: 400;
   letter-spacing: -0.01em;
 }
 * {
   scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-color: var(--color-border-emphasized) transparent;
 }
 ::selection {
-  background: #444;
-  color: #fff;
+  background: var(--color-border-emphasized);
+  color: var(--color-text-primary);
 }
 a {
   text-underline-offset: 3px;
@@ -41,7 +18,7 @@ a {
   display: none !important;
 }
 .glass {
-  background: #101010;
+  background: var(--color-background-surface);
   border: 1px solid var(--line);
   border-radius: 12px;
   box-shadow: none;
@@ -59,9 +36,9 @@ a {
   flex: 0 0 208px;
   width: 208px;
   padding: 28px 14px 18px;
-  background: #0c0c0c;
+  background: var(--color-background-surface);
   border: 0;
-  border-right: 1px solid #252525;
+  border-right: 1px solid var(--color-border);
   border-radius: 0;
   box-shadow: none;
 }
@@ -81,7 +58,7 @@ a {
 .nav-drawer .brand-second {
   font-size: 13px;
   font-weight: 400;
-  color: #a2a2a2;
+  color: var(--color-text-secondary);
   letter-spacing: 0;
   margin-top: 2px;
 }
@@ -99,15 +76,15 @@ a {
   gap: 11px;
   font-size: 14px;
   font-weight: 400;
-  color: #aaa;
+  color: var(--color-text-secondary);
 }
 .nav-button:hover {
-  color: #eee;
-  background: #191919;
+  color: var(--color-text-primary);
+  background: var(--color-background-card);
 }
 .nav-button.active {
-  color: #f2f2f2;
-  background: #242424;
+  color: var(--color-text-primary);
+  background: var(--color-overlay-pressed);
   font-weight: 500;
   box-shadow: none;
 }
@@ -119,7 +96,7 @@ a {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  background: #eee;
+  background: var(--color-text-primary);
   border-radius: 2px;
 }
 .nav-button svg {
@@ -132,7 +109,7 @@ a {
 }
 .local-label {
   padding: 18px 12px 0;
-  color: #a2a2a2;
+  color: var(--color-text-secondary);
   font-size: 12px;
 }
 .main-content {
@@ -146,16 +123,16 @@ a {
   flex-shrink: 0;
 }
 .search-dock {
-  background: #101010;
-  border: 1px solid #666;
+  background: var(--color-background-surface);
+  border: 1px solid var(--color-border-emphasized);
   border-radius: 12px;
   box-shadow: none;
   backdrop-filter: none;
   max-height: min(520px, calc(100dvh - 210px));
 }
 .search-dock:focus-within {
-  border-color: #ddd;
-  box-shadow: 0 0 0 1px #ddd;
+  border-color: var(--color-text-primary);
+  box-shadow: 0 0 0 1px var(--color-text-primary);
 }
 .search-form {
   min-height: 62px;
@@ -165,19 +142,19 @@ a {
 .search-form > svg {
   width: 19px;
   height: 19px;
-  color: #aaa;
+  color: var(--color-text-secondary);
 }
 .search-form input {
   font-family: inherit;
   font-size: 16px;
   font-weight: 400;
-  color: #eee;
+  color: var(--color-text-primary);
 }
 .search-form input::placeholder {
-  color: #a2a2a2;
+  color: var(--color-text-secondary);
   opacity: 1;
 }
-.search-form .rt-Button {
+.search-form .astryx-button {
   width: 42px;
   min-width: 42px;
   min-height: 42px;
@@ -186,44 +163,15 @@ a {
   border-radius: 7px;
   box-shadow: none;
 }
-.rt-BaseButton.rt-variant-solid {
-  background: #eee;
-  color: #111;
-}
-.rt-BaseButton.rt-variant-solid:hover {
-  background: #fff;
-}
-.rt-BaseButton.rt-variant-soft {
-  background: #242424;
-  color: #eee;
-  box-shadow: inset 0 0 0 1px #444;
-}
-.rt-BaseButton.rt-variant-soft:hover {
-  background: #303030;
-}
-.rt-BaseButton.rt-variant-ghost:hover {
-  background: #242424;
-  color: #fff;
-}
-.rt-Badge {
-  background: #262626;
-  color: #c7c7c7;
-}
-.rt-DialogContent {
-  background: #101010;
-  border: 1px solid #333;
-  border-radius: 12px;
-  box-shadow: 0 24px 70px #0008;
-}
 .answer-area {
   padding: 12px 24px 24px;
   max-height: 420px;
-  border-top: 1px solid #292929;
+  border-top: 1px solid var(--color-border);
 }
 .answer-area > .section-heading {
   position: sticky;
   top: -12px;
-  background: #101010;
+  background: var(--color-background-surface);
   padding: 8px 0;
   margin: 0 0 10px;
   z-index: 2;
@@ -233,7 +181,7 @@ a {
   line-height: 1.85;
 }
 .section-kicker {
-  color: #b4b4b4;
+  color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 400;
 }
@@ -241,7 +189,7 @@ a {
   display: none;
 }
 .graph-stage {
-  background: #000;
+  background: var(--color-background-body);
 }
 .graph-stage.is-reading .graph-canvas {
   opacity: 0.75;
@@ -253,10 +201,10 @@ a {
   pointer-events: auto;
 }
 .main-content.is-browsing {
-  background: #000;
+  background: var(--color-background-body);
 }
 .record-detail {
-  background: #0e0e0e;
+  background: var(--color-background-surface);
   width: min(100%, 860px);
   padding: 28px 32px;
   border-radius: 12px;
@@ -277,9 +225,9 @@ a {
   width: 408px;
   padding: 24px;
   border: 0;
-  border-left: 1px solid #292929;
+  border-left: 1px solid var(--color-border);
   border-radius: 0;
-  background: #0e0e0e;
+  background: var(--color-background-surface);
   box-shadow: none;
 }
 .source-panel h2,
@@ -295,37 +243,37 @@ a {
   line-height: 1.9;
 }
 .source-excerpt {
-  border-color: #888;
+  border-color: var(--color-icon-secondary);
   background: transparent;
 }
 .source-mobile {
-  background: #0e0e0e;
+  background: var(--color-background-surface);
 }
 .eyebrow,
 .part-label {
-  color: #b4b4b4;
+  color: var(--color-text-secondary);
   letter-spacing: 0;
 }
 .chip,
 .notice {
-  color: #ddd;
-  border-color: #444;
-  background: #1b1b1b;
+  color: var(--color-text-primary);
+  border-color: var(--color-border-emphasized);
+  background: var(--color-background-card);
 }
 input,
 textarea,
 select {
-  accent-color: #ccc;
+  accent-color: var(--color-text-secondary);
 }
 select,
 .field input,
 .field textarea {
-  border-color: #666;
-  background: #141414;
-  color: #eee;
+  border-color: var(--color-border-emphasized);
+  background: var(--color-background-card);
+  color: var(--color-text-primary);
 }
 .editor-dialog .dialog-actions {
-  background: #101010;
+  background: var(--color-background-surface);
 }
 .graph-empty .empty-orbits {
   display: none;
@@ -337,18 +285,18 @@ select,
 }
 .graph-empty p {
   font-size: 14px;
-  color: #a2a2a2;
+  color: var(--color-text-secondary);
 }
-.example-banner .rt-Badge {
-  background: #262626;
-  color: #ddd;
+.example-banner .astryx-token {
+  background: var(--color-overlay-pressed);
+  color: var(--color-text-primary);
 }
 .stage-footer {
-  color: #a2a2a2;
+  color: var(--color-text-secondary);
 }
 .nav-drawer.sidebar {
-  background: #0c0c0c;
-  border: 1px solid #333;
+  background: var(--color-background-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   width: min(280px, calc(100vw - 32px));
   padding: 24px 14px;
@@ -390,7 +338,7 @@ select,
     font-size: 16px;
     min-width: 0;
   }
-  .search-form .rt-Button {
+  .search-form .astryx-button {
     width: 40px;
     min-width: 40px;
     min-height: 44px;
@@ -439,16 +387,107 @@ select,
   overscroll-behavior: contain;
 }
 .toast {
-  background: #191919;
+  background: var(--color-background-card);
 }
 
 /* Form boundaries remain discernible on every dialog surface. */
-.rt-DialogContent :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
-  border-color: #666;
-  background-color: #141414;
-  color: #eee;
+
+/* Native dialogs must stay absent from layout and the accessibility tree while closed. */
+dialog:not([open]) {
+  display: none !important;
 }
-.rt-DialogContent :is(input, textarea)::placeholder {
-  color: #a2a2a2;
-  opacity: 1;
+
+/* Astryx supplies control states; app styles only set the surrounding geometry. */
+.app-shell {
+  align-items: stretch;
+}
+.astryx-button,
+.app-icon-button {
+  min-height: 44px;
+}
+.app-icon-button {
+  min-width: 44px;
+}
+button[aria-disabled="true"] {
+  cursor: default;
+}
+.nav-button.active {
+  color: var(--color-text-accent);
+  background: var(--color-accent-muted);
+}
+.nav-button.active::before {
+  background: var(--color-accent);
+}
+.search-dock:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+.search-form > .app-icon-button {
+  flex: none;
+}
+.search-form > .app-icon-button[data-variant="primary"] {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.search-form > .app-icon-button[aria-disabled="true"] {
+  background: var(--color-overlay-pressed);
+  color: var(--color-text-secondary);
+}
+.graph-controls {
+  align-items: center;
+  border: 1px solid var(--color-border-emphasized);
+  background: var(--color-background-surface);
+  padding: var(--spacing-1);
+  border-radius: var(--radius-container);
+}
+.graph-controls .app-icon-button {
+  margin: 0;
+}
+.nav-drawer.sidebar {
+  flex-direction: column;
+  align-items: stretch;
+}
+dialog :is(h1, h2):focus {
+  outline: none;
+}
+dialog .dialog-heading {
+  padding: 0;
+  margin: 0;
+}
+.confirm-dialog > p {
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+:is(.settings-dialog, .editor-dialog, .confirm-dialog, .source-mobile) {
+  padding: var(--spacing-2) !important;
+  border-radius: var(--radius-container);
+}
+select,
+.body-editor {
+  background: var(--color-background-card);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-emphasized);
+  accent-color: var(--color-accent);
+}
+.record-browser .rb-create {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.record-browser .rb-create:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-accent) 88%,
+    var(--color-text-primary)
+  );
+}
+.record-browser :is(button, select, input):focus-visible {
+  outline-color: var(--color-accent);
+}
+.nav-heading h2 {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+.nav-drawer .nav-heading {
+  margin: 0 0 var(--spacing-3);
+  padding-inline: var(--spacing-3);
 }

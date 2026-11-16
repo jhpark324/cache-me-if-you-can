@@ -7,6 +7,7 @@
 | [저장소·배포 전 점검](repository-readiness.md) | 등록 후보, CI 범위, 라이선스와 지원 환경 |
 | [SDD 작업 절차](sdd-workflow.md) | 기능 명세를 기준으로 구현하고 검증하는 절차 |
 | [버전 정책](versioning.md) | 개발·안정화 단계의 버전 증가, 호환성 범위와 버전 파일 관리 |
+| [Astryx 프런트엔드 작업](astryx.md) | 디자인 시스템 사용, 테마·구성요소·레이아웃과 검증 지침 |
 | [공개 문서 관리](documentation.md) | 사용자·기여자 문서와 개발 실행 기록의 경계 |
 | [PR 작성 규칙](pull-request-convention.md) | PR 제목·설명·검증 결과 작성 |
 

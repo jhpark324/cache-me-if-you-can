@@ -1,3 +1,7 @@
+import {
+  MetadataList,
+  MetadataListItem,
+} from "@astryxdesign/core/MetadataList";
 import type { Capture } from "./types";
 
 const timestamp = new Intl.DateTimeFormat("ko-KR", {
@@ -30,19 +34,22 @@ export function RecordDates({
   if (!saved && !changed) return null;
 
   return (
-    <dl className="record-dates" aria-label="기록 날짜">
+    <MetadataList
+      className="record-dates"
+      orientation="horizontal"
+      role="group"
+      aria-label="기록 날짜"
+    >
       {saved && (
-        <div>
-          <dt>저장일</dt>
-          <dd><time dateTime={capture.created_at}>{saved}</time></dd>
-        </div>
+        <MetadataListItem label="저장일">
+          <time dateTime={capture.created_at}>{saved}</time>
+        </MetadataListItem>
       )}
       {changed && changed !== saved && (
-        <div>
-          <dt>{isCurrent ? "최근 변경" : "이 저장본"}</dt>
-          <dd><time dateTime={changedAt}>{changed}</time></dd>
-        </div>
+        <MetadataListItem label={isCurrent ? "최근 변경" : "이 저장본"}>
+          <time dateTime={changedAt}>{changed}</time>
+        </MetadataListItem>
       )}
-    </dl>
+    </MetadataList>
   );
 }
