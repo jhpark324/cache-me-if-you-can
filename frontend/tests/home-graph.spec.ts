@@ -62,7 +62,12 @@ function graph(indices = records.map((_, i) => i)) {
     truncated: false,
   };
 }
-async function fixture(page: Page, empty = false, sourceBody?: string) {
+async function fixture(
+  page: Page,
+  empty = false,
+  sourceBody?: string,
+  sourceText?: string,
+) {
   const calls: string[] = [];
   await page.route("**/api/v1/**", async (route) => {
     const u = new URL(route.request().url()),
@@ -115,7 +120,7 @@ async function fixture(page: Page, empty = false, sourceBody?: string) {
         source: body,
         is_current: true,
         current_revision_id: r.revision_id,
-        text: capture.body_markdown,
+        text: sourceText ?? capture.body_markdown,
         capture,
         node: null,
         review_state: "valid",
@@ -238,6 +243,8 @@ for (const viewport of [
       .locator(".source-excerpt")
       .getByText(lastParagraph, { exact: true });
     await expect(excerptEnd).toBeVisible();
+    await expect(panel.locator("details")).toHaveCount(0);
+    await expect(panel.getByText(lastParagraph, { exact: true })).toHaveCount(1);
     await expect(excerptEnd).not.toBeInViewport();
     const box = (await panel.boundingBox())!;
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -249,17 +256,6 @@ for (const viewport of [
     });
     await expect(openRecord).toBeInViewport();
 
-    await panel.getByText("기록 전체 보기", { exact: true }).click();
-    const fullBodyEnd = panel
-      .locator("details")
-      .getByText(lastParagraph, { exact: true });
-    await expect(fullBodyEnd).toBeVisible();
-    await expect(fullBodyEnd).not.toBeInViewport();
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.wheel(0, 100_000);
-    await expect(fullBodyEnd).toBeInViewport();
-    await expect(openRecord).toBeInViewport();
-
     if (viewport.width <= 800) {
       await page.keyboard.press("Escape");
       await expect(panel).not.toBeVisible();
@@ -267,6 +263,40 @@ for (const viewport of [
     }
   });
 }
+
+test("부분 출처는 참조 구간과 전체 본문을 나누어 보여준다", async ({ page }) => {
+  const excerpt = records[0].body_markdown.split("\n\n")[1];
+  await fixture(page, false, undefined, excerpt);
+  await page.goto("/");
+  await ready(page);
+  await page
+    .getByRole("button", { name: "연결 목록 보기", exact: true })
+    .click();
+  await page
+    .locator(".graph-list")
+    .getByRole("button", { name: records[0].title + " 지식", exact: true })
+    .click();
+
+  const panel = page.locator(".source-panel");
+  await expect(
+    panel.getByRole("heading", { name: "참조한 부분", exact: true }),
+  ).toBeVisible();
+  await expect(panel.locator(".source-excerpt")).toContainText(excerpt);
+  await expect(panel.locator(".source-excerpt")).not.toContainText(
+    records[0].title,
+  );
+  const fullBodyTitle = panel
+    .locator("details")
+    .getByText(records[0].title, { exact: true });
+  await expect(fullBodyTitle).not.toBeVisible();
+  await panel.getByText("기록 전체 보기", { exact: true }).click();
+  await expect(fullBodyTitle).toBeVisible();
+  await expect(
+    panel.locator("details").getByText(excerpt, { exact: true }),
+  ).toBeVisible();
+  await panel.getByRole("button", { name: "현재 기록 열기", exact: true }).click();
+  await expect(page.locator(".record-detail")).toContainText(excerpt);
+});
 
 test("빠른 목록 필터는 이전 결과를 무시하고 홈 그래프와 질문은 전체 범위를 유지한다", async ({
   page,

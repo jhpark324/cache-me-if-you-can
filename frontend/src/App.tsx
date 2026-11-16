@@ -893,6 +893,8 @@ export default function App() {
       return !v;
     });
   }
+  const sourceIsExcerpt =
+    source !== null && source.text !== source.capture.body_markdown;
   const sourceContent = (
     <>
       <HStack className="panel-heading">
@@ -946,12 +948,15 @@ export default function App() {
               <p className="notice">출처가 변경되어 재검토가 필요합니다.</p>
             )}
             <VStack className="source-excerpt">
+              {sourceIsExcerpt && <Heading level={3}>참조한 부분</Heading>}
               <Markdown>{source.text}</Markdown>
             </VStack>
-            <details>
-              <summary>기록 전체 보기</summary>
-              <Markdown>{source.capture.body_markdown}</Markdown>
-            </details>
+            {sourceIsExcerpt && (
+              <details>
+                <summary>기록 전체 보기</summary>
+                <Markdown>{source.capture.body_markdown}</Markdown>
+              </details>
+            )}
             <Button
               onClick={() => {
                 void openCapture(source.capture.id);
