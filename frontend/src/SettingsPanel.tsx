@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Dialog } from "@radix-ui/themes";
+import { Button } from "@astryxdesign/core/Button";
+import { DialogHeader } from "@astryxdesign/core/Dialog";
+import { Heading } from "@astryxdesign/core/Heading";
+import { HStack } from "@astryxdesign/core/HStack";
+import { Text } from "@astryxdesign/core/Text";
+import { VStack } from "@astryxdesign/core/VStack";
 import { ArrowDownToLine, LogIn, LogOut, RefreshCw, X } from "lucide-react";
 import { api, post, request, errorText } from "./api";
 import type { Settings } from "./types";
@@ -256,14 +261,15 @@ export default function SettingsPanel({
     )[settings?.index?.status || ""] || "검색 준비 상태 확인 필요";
   return (
     <>
-      <div className="panel-heading">
-        <Dialog.Title data-settings-heading tabIndex={-1}>
-          설정
-        </Dialog.Title>
-        <Tool label="설정 닫기" onClick={onClose}>
-          <X />
-        </Tool>
-      </div>
+      <DialogHeader
+        className="dialog-heading"
+        title="설정"
+        endContent={
+          <Tool label="설정 닫기" onClick={onClose}>
+            <X />
+          </Tool>
+        }
+      />
       <ErrorMessage error={error} />
       {loading ? (
         <Loading text="상태를 확인하는 중" />
@@ -271,68 +277,86 @@ export default function SettingsPanel({
         settings && (
           <>
             <section className="settings-section">
-              <h3>AI 연결</h3>
-              <p className="muted">
+              <Heading level={3}>AI 연결</Heading>
+              <Text as="p" display="block" className="muted">
                 ChatGPT 계정으로 저장한 지식에 질문하세요.
-              </p>
-              <div className="setting-row">
-                <span className="settings-account">
+              </Text>
+              <HStack
+                gap={3}
+                vAlign="center"
+                wrap="wrap"
+                className="setting-row"
+              >
+                <Text className="settings-account">
                   {settings.auth?.connected
                     ? settings.auth.email || "로그인됨"
                     : "로그인 필요"}
-                </span>
+                </Text>
                 <Button
-                  variant="soft"
-                  disabled={Boolean(busy)}
+                  label={
+                    settings.auth?.connected
+                      ? "로그아웃"
+                      : "Continue with ChatGPT"
+                  }
+                  icon={
+                    settings.auth?.connected ? (
+                      <LogOut aria-hidden="true" />
+                    ) : (
+                      <LogIn aria-hidden="true" />
+                    )
+                  }
+                  variant="secondary"
+                  isDisabled={Boolean(busy)}
                   onClick={() =>
                     void action(settings.auth?.connected ? "logout" : "login")
                   }
-                >
-                  {settings.auth?.connected ? (
-                    <>
-                      <LogOut />
-                      로그아웃
-                    </>
-                  ) : (
-                    <>
-                      <LogIn />
-                      Continue with ChatGPT
-                    </>
-                  )}
-                </Button>
-              </div>
+                />
+              </HStack>
               {(settings.auth?.connected ||
                 settings.auth?.active_account_id) && (
                 <Button
+                  label={
+                    settings.auth.connected ? "계정 변경" : "다른 계정으로 연결"
+                  }
                   variant="ghost"
-                  disabled={Boolean(busy)}
+                  isDisabled={Boolean(busy)}
                   onClick={() => void action("change-account")}
-                >
-                  {settings.auth.connected ? "계정 변경" : "다른 계정으로 연결"}
-                </Button>
+                />
               )}
               {settings.auth?.pending_login && (
-                <div className="concept-status notice">
-                  <span>ChatGPT 로그인을 기다리고 있어요.</span>
+                <HStack
+                  gap={3}
+                  vAlign="center"
+                  wrap="wrap"
+                  className="concept-status notice"
+                >
+                  <Text>ChatGPT 로그인을 기다리고 있어요.</Text>
                   <Button
-                    variant="soft"
-                    disabled={Boolean(busy)}
+                    label="로그인 취소"
+                    variant="secondary"
+                    isDisabled={Boolean(busy)}
                     onClick={() => void action("cancel-login")}
-                  >
-                    로그인 취소
-                  </Button>
-                </div>
+                  />
+                </HStack>
               )}
               {settings.auth?.error && (
-                <p className="notice">{settings.auth.error}</p>
+                <Text as="p" display="block" className="notice">
+                  {settings.auth.error}
+                </Text>
               )}
               {settings.auth?.request_blocked && (
-                <div className="notice concept-failure-help" role="status">
-                  <p>{settings.auth.request_blocked.message}</p>
-                  <p>
+                <VStack
+                  gap={2}
+                  className="notice concept-failure-help"
+                  role="status"
+                >
+                  <Text as="p" display="block">
+                    {settings.auth.request_blocked.message}
+                  </Text>
+                  <Text as="p" display="block">
                     원인을 해결한 뒤 기록 상세에서 주제 연결을 다시 시도하거나
                     답변 모델을 변경해 주세요.
-                  </p>
+                  </Text>
                   {settings.auth.request_blocked.code ===
                     "MODEL_USAGE_LIMIT" && (
                     <a
@@ -343,13 +367,13 @@ export default function SettingsPanel({
                       ChatGPT 사용량 확인
                     </a>
                   )}
-                </div>
+                </VStack>
               )}
               {settings.auth?.connected &&
                 settings.auth.plan_enabled === false && (
-                  <p className="notice">
+                  <Text as="p" display="block" className="notice">
                     이 계정의 AI 이용 가능 여부를 확인해 주세요.
-                  </p>
+                  </Text>
                 )}
               <label className="field">
                 답변 모델
@@ -391,7 +415,13 @@ export default function SettingsPanel({
                   ))}
                 </select>
               </label>
-              <p id="model-help" className="muted" role="status">
+              <Text
+                as="p"
+                display="block"
+                id="model-help"
+                className="muted"
+                role="status"
+              >
                 {!settings.auth?.connected
                   ? "ChatGPT에 로그인하면 사용할 수 있는 모델을 불러옵니다."
                   : modelsLoading
@@ -407,23 +437,24 @@ export default function SettingsPanel({
                               ? "이전에 선택한 모델을 사용할 수 없습니다. 다른 모델을 선택해 주세요."
                               : "질문에 답할 모델을 선택해 주세요."
                             : "ChatGPT에서 이 앱의 AI 이용 권한을 확인해 주세요."}
-              </p>
+              </Text>
               {canLoadModels && modelsError && (
                 <ErrorMessage error={modelsError} />
               )}
               {canLoadModels && (
                 <Button
+                  label={
+                    modelsLoading
+                      ? "모델 목록 불러오는 중…"
+                      : modelsError || !models.length
+                        ? "모델 목록 다시 불러오기"
+                        : "모델 목록 새로고침"
+                  }
+                  icon={<RefreshCw aria-hidden="true" />}
                   variant="ghost"
-                  disabled={Boolean(busy) || modelsLoading}
+                  isDisabled={Boolean(busy) || modelsLoading}
                   onClick={() => void refreshModels()}
-                >
-                  <RefreshCw />
-                  {modelsLoading
-                    ? "모델 목록 불러오는 중…"
-                    : modelsError || !models.length
-                      ? "모델 목록 다시 불러오기"
-                      : "모델 목록 새로고침"}
-                </Button>
+                />
               )}
               {settings.auth?.connected &&
                 selectedModel &&
@@ -452,91 +483,105 @@ export default function SettingsPanel({
                         ))}
                       </select>
                     </label>
-                    <p id="reasoning-help" className="muted">
+                    <Text
+                      as="p"
+                      display="block"
+                      id="reasoning-help"
+                      className="muted"
+                    >
                       답변을 만들 때 얼마나 깊이 생각할지 정합니다. 높을수록
                       응답이 오래 걸릴 수 있어요.
                       {selectedModel.default_reasoning_effort &&
                         ` 기본값: ${effortLabels[selectedModel.default_reasoning_effort] || selectedModel.default_reasoning_effort}.`}
-                    </p>
+                    </Text>
                   </>
                 ) : (
-                  <p className="muted">
+                  <Text as="p" display="block" className="muted">
                     이 모델은 선택할 수 있는 추론 수준을 제공하지 않습니다.
                     모델의 기본 설정을 사용합니다.
-                  </p>
+                  </Text>
                 ))}
             </section>
             <section className="settings-section">
-              <h3>검색 준비</h3>
-              <p className="muted">
+              <Heading level={3}>검색 준비</Heading>
+              <Text as="p" display="block" className="muted">
                 저장한 기록을 검색할 수 있도록 준비합니다. 원문은 그대로
                 유지됩니다.
-              </p>
-              <div className="setting-row">
-                <span>{indexStatus}</span>
+              </Text>
+              <HStack
+                gap={3}
+                vAlign="center"
+                wrap="wrap"
+                className="setting-row"
+              >
+                <Text>{indexStatus}</Text>
                 {(!settings.index?.ready ||
                   (settings.index.index_counts?.failed ?? 0) > 0) && (
                   <Button
-                    variant="soft"
-                    disabled={
+                    label={
+                      settings.index?.status === "preparing"
+                        ? "검색 준비 중…"
+                        : settings.index?.ready
+                          ? "검색 준비 다시 시도"
+                          : "검색 기능 준비"
+                    }
+                    icon={<RefreshCw aria-hidden="true" />}
+                    variant="secondary"
+                    isDisabled={
                       Boolean(busy) || settings.index?.status === "preparing"
                     }
                     onClick={() =>
                       void action(settings.index?.ready ? "retry" : "prepare")
                     }
-                  >
-                    <RefreshCw />
-                    {settings.index?.status === "preparing"
-                      ? "검색 준비 중…"
-                      : settings.index?.ready
-                        ? "검색 준비 다시 시도"
-                        : "검색 기능 준비"}
-                  </Button>
+                  />
                 )}
-              </div>
+              </HStack>
               {!settings.index?.ready && (
-                <p className="muted">
+                <Text as="p" display="block" className="muted">
                   첫 실행에 검색 모델을 내려받습니다. 준비 중에도 기록을 저장할
                   수 있어요.
-                </p>
+                </Text>
               )}
               {settings.index?.index_counts && (
-                <p className="muted">
+                <Text as="p" display="block" className="muted">
                   검색 가능 {settings.index.index_counts.ready}개 · 준비 대기{" "}
                   {settings.index.index_counts.pending}개 · 준비 실패{" "}
                   {settings.index.index_counts.failed}개
-                </p>
+                </Text>
               )}
               {settings.index?.error_code && (
-                <p className="notice">
+                <Text as="p" display="block" className="notice">
                   검색 기능을 준비하지 못했습니다. 연결 상태를 확인한 뒤 다시
                   시도해 주세요.
-                </p>
+                </Text>
               )}
             </section>
             <section className="settings-section">
-              <h3>내 데이터</h3>
-              <p className="data-path">{settings.data_dir || "로컬 저장소"}</p>
-              <p className="muted">
+              <Heading level={3}>내 데이터</Heading>
+              <Text as="p" display="block" className="data-path">
+                {settings.data_dir || "로컬 저장소"}
+              </Text>
+              <Text as="p" display="block" className="muted">
                 백업에는 삭제 표시된 내부 기록도 포함됩니다. 로그인 정보와 검색
                 준비 데이터는 제외합니다.
-              </p>
+              </Text>
               <Button
-                variant="soft"
-                disabled={Boolean(busy)}
+                label={busy === "backup" ? "백업 생성 중…" : "백업 다운로드"}
+                icon={<ArrowDownToLine aria-hidden="true" />}
+                variant="secondary"
+                isDisabled={Boolean(busy)}
                 onClick={() => void action("backup")}
-              >
-                <ArrowDownToLine />
-                {busy === "backup" ? "백업 생성 중…" : "백업 다운로드"}
-              </Button>
+              />
             </section>
           </>
         )
       )}
       {!loading && error && !settings && (
-        <Button variant="soft" onClick={() => void load()}>
-          다시 확인
-        </Button>
+        <Button
+          label="다시 확인"
+          variant="secondary"
+          onClick={() => void load()}
+        />
       )}
     </>
   );

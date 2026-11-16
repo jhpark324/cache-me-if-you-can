@@ -1,6 +1,15 @@
-import { useRef, useState, type FormEvent } from "react";
-import { AlertDialog, Button, Dialog, IconButton } from "@radix-ui/themes";
-import { Check, LoaderCircle, X } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { AlertDialog } from "@astryxdesign/core/AlertDialog";
+import { Button } from "@astryxdesign/core/Button";
+import { CheckboxInput } from "@astryxdesign/core/CheckboxInput";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { Field } from "@astryxdesign/core/Field";
+import { HStack } from "@astryxdesign/core/HStack";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/VStack";
+import { Check, X } from "lucide-react";
 import { api, errorText, uid } from "./api";
 import { Markdown } from "./Markdown";
 import {
@@ -46,8 +55,37 @@ export default function RecordEditor({
   );
   const saved = useRef(false);
   const resumeFocus = useRef<HTMLElement | null>(null);
-  const cancelDiscard = useRef<HTMLButtonElement>(null);
+  const editorForm = useRef<HTMLFormElement>(null);
   const busyRef = useRef(false);
+  useEffect(() => {
+    // Astryx first focuses its dialog heading; the editor starts at the title
+    // field once the native dialog has opened.
+    const frame = requestAnimationFrame(() => titleInput.current?.focus());
+    return () => cancelAnimationFrame(frame);
+  }, []);
+  useEffect(
+    () => () => {
+      // Wait for native dialog cleanup, but leave saved-record navigation and
+      // StrictMode's still-mounted form in control of focus.
+      requestAnimationFrame(() => {
+        if (saved.current || editorForm.current?.isConnected) return;
+        const target =
+          opener.current?.isConnected &&
+          !opener.current.closest("dialog:not([open])")
+            ? opener.current
+            : document.getElementById("main");
+        target?.focus();
+      });
+    },
+    [],
+  );
+  function changeDiscard(open: boolean) {
+    setConfirmDiscard(open);
+    if (!open)
+      requestAnimationFrame(() => {
+        if (resumeFocus.current?.isConnected) resumeFocus.current.focus();
+      });
+  }
   const initial = useRef({
     title: record?.title || "",
     content: record?.body_markdown || "",
@@ -147,41 +185,20 @@ export default function RecordEditor({
     }
   }
   return (
-    <Dialog.Root
-      open
-      onOpenChange={(open) => {
-        if (!open) requestClose();
-      }}
-    >
-      <Dialog.Content
+    <>
+      <Dialog
+        isOpen
+        purpose="info"
+        width="min(48rem, calc(100vw - var(--spacing-6)))"
+        maxHeight="90dvh"
         className="editor-dialog"
-        aria-describedby={undefined}
         aria-busy={busy}
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          titleInput.current?.focus();
-        }}
-        onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          // Saving navigates to the record heading in App. Cancel/discard
-          // returns to the opener, including a replacement for a closed menu.
-          if (!saved.current) {
-            const target =
-              opener.current?.isConnected &&
-              !opener.current.closest('[role="dialog"][data-state="closed"]')
-                ? opener.current
-                : document.getElementById("main");
-            target?.focus();
-          }
-        }}
-        onEscapeKeyDown={(event) => {
-          if (busyRef.current || confirmDiscard) event.preventDefault();
-        }}
-        onInteractOutside={(event) => {
-          if (busyRef.current || confirmDiscard) event.preventDefault();
+        onOpenChange={(open) => {
+          if (!open) requestClose();
         }}
       >
         <form
+          ref={editorForm}
           onSubmit={save}
           onKeyDown={(event) => {
             if (
@@ -195,217 +212,191 @@ export default function RecordEditor({
             }
           }}
         >
-          <div className="panel-heading">
-            <Dialog.Title>{record ? "기록 수정" : "새 기록"}</Dialog.Title>
-            <IconButton
-              type="button"
-              aria-label="편집 닫기"
-              title="편집 닫기"
-              variant="ghost"
-              onClick={requestClose}
-              disabled={busy}
-            >
-              <X aria-hidden="true" />
-            </IconButton>
-          </div>
-          {error && (
-            <p className="error" role="alert">
-              {error}
-            </p>
-          )}
-          <label className="field">
-            제목 <span className="optional">선택</span>
-            <input
+          <VStack gap={4}>
+            <DialogHeader
+              className="dialog-heading"
+              title={record ? "기록 수정" : "새 기록"}
+              hasDivider={false}
+              endContent={
+                <IconButton
+                  className="app-icon-button"
+                  type="button"
+                  label="편집 닫기"
+                  tooltip="편집 닫기"
+                  icon={<X aria-hidden="true" />}
+                  variant="ghost"
+                  onClick={requestClose}
+                  isDisabled={busy}
+                />
+              }
+            />
+            {error && (
+              <p className="error" role="alert">
+                {error}
+              </p>
+            )}
+            <TextInput
               ref={titleInput}
-              disabled={busy}
+              label="제목 선택"
+              isDisabled={busy}
+              hasAutoFocus
               data-editor-title
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={setTitle}
               placeholder="이 생각에 이름을 붙여보세요"
             />
-          </label>
-          <div className="section-heading">
-            <label htmlFor="record-body">내용</label>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => setPreview(!preview)}
-              disabled={busy}
-            >
-              {preview ? "편집하기" : "미리 보기"}
-            </button>
-          </div>
-          {preview ? (
-            <div className="editor-preview">
-              <Markdown>{content || "아직 내용이 없습니다."}</Markdown>
-            </div>
-          ) : (
-            <textarea
-              id="record-body"
-              disabled={busy}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="기억하고 싶은 내용을 적어주세요. Markdown을 사용할 수 있어요."
-              className="body-editor"
-              required
-            />
-          )}
-          <details className="editor-options">
-            <summary>유형과 공개 범위</summary>
-            <fieldset>
-              <legend>기록 유형</legend>
-              <div className="kind-options">
-                {kinds.map(([k, l]) => (
-                  <label
-                    key={k}
-                    className={`kind-option ${selectedKinds.includes(k) ? "checked" : ""}`}
-                  >
-                    <input
-                      type="checkbox"
-                      disabled={busy}
-                      checked={selectedKinds.includes(k)}
-                      onChange={(e) =>
-                        setKinds((prev) =>
-                          e.target.checked
-                            ? [...prev, k]
-                            : prev.filter((x) => x !== k),
-                        )
-                      }
-                    />
-                    {l}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
-            <div className="field-row">
-              <label className="field">
-                공개 범위
-                <select
-                  aria-label="공개 범위"
-                  aria-describedby="visibility-hint"
-                  disabled={busy}
-                  value={visibility}
-                  onChange={(e) =>
-                    setVisibility(e.target.value as "public" | "private")
-                  }
-                >
-                  <option value="public">공개</option>
-                  <option value="private">비공개</option>
-                </select>
-                <span className="field-hint" id="visibility-hint">
-                  현재는 내 기기에서만 사용합니다.
-                </span>
-              </label>
-              <label className="field">
-                완료 상태
-                <select
-                  aria-label="완료 상태"
-                  disabled={busy}
-                  value={completion}
-                  onChange={(e) => setCompletion(e.target.value)}
-                >
-                  <option value="">해당 없음</option>
-                  <option value="incomplete">미완료</option>
-                  <option value="completed">완료</option>
-                </select>
-              </label>
-            </div>
-            <label className="field">
-              주제 힌트
-              <input
-                disabled={busy}
-                value={hints}
-                onChange={(e) => setHints(e.target.value)}
-                placeholder="학습, 데이터베이스"
-              />
-              <span className="field-hint">
-                쉼표로 구분합니다. 저장 후 주제를 연결합니다.
-              </span>
-            </label>
-          </details>
-          {sources?.length ? (
-            <p className="muted">
-              참조한 출처 {sources.length}개를 함께 저장합니다.
-            </p>
-          ) : null}
-          <div className="dialog-actions">
-            <Button
-              variant="soft"
-              color="gray"
-              type="button"
-              onClick={requestClose}
-              disabled={busy}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={busy || !content.trim()}>
-              {busy ? (
-                <LoaderCircle className="spin" aria-hidden="true" />
-              ) : (
-                <Check aria-hidden="true" />
-              )}
-              {busy ? "저장 중…" : "저장"}
-            </Button>
-          </div>
-        </form>
-        <AlertDialog.Root
-          open={confirmDiscard}
-          onOpenChange={setConfirmDiscard}
-        >
-          <AlertDialog.Content
-            className="confirm-dialog"
-            onOpenAutoFocus={(event) => {
-              event.preventDefault();
-              cancelDiscard.current?.focus();
-            }}
-            onCloseAutoFocus={(event) => {
-              event.preventDefault();
-              if (resumeFocus.current?.isConnected) resumeFocus.current.focus();
-            }}
-            onEscapeKeyDown={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              event.stopImmediatePropagation();
-              setConfirmDiscard(false);
-            }}
-            onKeyDown={(event) => {
-              // Handle rapid reopen/escape while the primitive's document
-              // listener is changing layers during its exit animation.
-              if (event.key === "Escape") {
-                event.preventDefault();
-                event.stopPropagation();
-                setConfirmDiscard(false);
-              }
-            }}
-          >
-            <AlertDialog.Title>작성 중인 내용을 버릴까요?</AlertDialog.Title>
-            <AlertDialog.Description>
-              저장하지 않은 변경 내용이 사라집니다.
-            </AlertDialog.Description>
-            <div className="dialog-actions">
-              <AlertDialog.Cancel>
-                <Button
-                  ref={cancelDiscard}
-                  type="button"
-                  variant="soft"
-                  color="gray"
-                >
-                  계속 작성
-                </Button>
-              </AlertDialog.Cancel>
-              <Button
-                type="button"
-                color="red"
-                onClick={() => {
-                  if (!busyRef.current) onClose();
-                }}
+            <VStack gap={2}>
+              <HStack
+                className="section-heading"
+                hAlign="between"
+                vAlign="center"
+                gap={2}
               >
-                버리기
-              </Button>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Root>
-      </Dialog.Content>
-    </Dialog.Root>
+                <Text type="label">내용</Text>
+                <Button
+                  label={preview ? "편집하기" : "미리 보기"}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPreview(!preview)}
+                  isDisabled={busy}
+                />
+              </HStack>
+              {preview ? (
+                <VStack className="editor-preview">
+                  <Markdown>{content || "아직 내용이 없습니다."}</Markdown>
+                </VStack>
+              ) : (
+                <Field
+                  label="내용"
+                  inputID="record-body"
+                  isLabelHidden
+                  isDisabled={busy}
+                >
+                  <textarea
+                    id="record-body"
+                    disabled={busy}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="기억하고 싶은 내용을 적어주세요. Markdown을 사용할 수 있어요."
+                    className="body-editor"
+                    required
+                  />
+                </Field>
+              )}
+            </VStack>
+            <details className="editor-options">
+              <summary>유형과 공개 범위</summary>
+              <VStack gap={4}>
+                <fieldset>
+                  <legend>기록 유형</legend>
+                  <HStack className="kind-options" gap={3} wrap="wrap">
+                    {kinds.map(([kind, label]) => (
+                      <CheckboxInput
+                        key={kind}
+                        label={label}
+                        isDisabled={busy}
+                        value={selectedKinds.includes(kind)}
+                        onChange={(checked) =>
+                          setKinds((previous) =>
+                            checked
+                              ? [...previous, kind]
+                              : previous.filter((value) => value !== kind),
+                          )
+                        }
+                      />
+                    ))}
+                  </HStack>
+                </fieldset>
+                <HStack
+                  className="field-row"
+                  gap={4}
+                  wrap="wrap"
+                  vAlign="start"
+                >
+                  <Field
+                    label="공개 범위"
+                    inputID="record-visibility"
+                    description="현재는 내 기기에서만 사용합니다."
+                    descriptionID="visibility-hint"
+                    isDisabled={busy}
+                  >
+                    <select
+                      id="record-visibility"
+                      aria-describedby="visibility-hint"
+                      disabled={busy}
+                      value={visibility}
+                      onChange={(e) =>
+                        setVisibility(e.target.value as "public" | "private")
+                      }
+                    >
+                      <option value="public">공개</option>
+                      <option value="private">비공개</option>
+                    </select>
+                  </Field>
+                  <Field
+                    label="완료 상태"
+                    inputID="record-completion"
+                    isDisabled={busy}
+                  >
+                    <select
+                      id="record-completion"
+                      disabled={busy}
+                      value={completion}
+                      onChange={(e) => setCompletion(e.target.value)}
+                    >
+                      <option value="">해당 없음</option>
+                      <option value="incomplete">미완료</option>
+                      <option value="completed">완료</option>
+                    </select>
+                  </Field>
+                </HStack>
+                <TextInput
+                  label="주제 힌트"
+                  isDisabled={busy}
+                  value={hints}
+                  onChange={setHints}
+                  placeholder="학습, 데이터베이스"
+                  description="쉼표로 구분합니다. 저장 후 주제를 연결합니다."
+                />
+              </VStack>
+            </details>
+            {sources?.length ? (
+              <Text as="p" type="supporting">
+                참조한 출처 {sources.length}개를 함께 저장합니다.
+              </Text>
+            ) : null}
+            <HStack className="dialog-actions" hAlign="end" gap={2} wrap="wrap">
+              <Button
+                label="취소"
+                variant="secondary"
+                type="button"
+                onClick={requestClose}
+                isDisabled={busy}
+              />
+              <Button
+                label={busy ? "저장 중…" : "저장"}
+                icon={<Check aria-hidden="true" />}
+                variant="primary"
+                type="submit"
+                isLoading={busy}
+                isDisabled={busy || !content.trim()}
+              />
+            </HStack>
+          </VStack>
+        </form>
+      </Dialog>
+      <AlertDialog
+        isOpen={confirmDiscard}
+        onOpenChange={changeDiscard}
+        title="작성 중인 내용을 버릴까요?"
+        description="저장하지 않은 변경 내용이 사라집니다."
+        cancelLabel="계속 작성"
+        actionLabel="버리기"
+        onAction={() => {
+          if (!busyRef.current) onClose();
+        }}
+      />
+    </>
   );
 }

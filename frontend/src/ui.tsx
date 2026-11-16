@@ -1,5 +1,7 @@
-import { IconButton, Tooltip } from "@radix-ui/themes";
-import { LoaderCircle } from "lucide-react";
+import { HStack } from "@astryxdesign/core/HStack";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Spinner } from "@astryxdesign/core/Spinner";
+import { Text } from "@astryxdesign/core/Text";
 
 export function Tool({
   label,
@@ -13,31 +15,30 @@ export function Tool({
   disabled?: boolean;
 }) {
   return (
-    <Tooltip content={label}>
-      <IconButton
-        type="button"
-        aria-label={label}
-        variant="ghost"
-        onClick={onClick}
-        disabled={disabled}
-      >
-        {children}
-      </IconButton>
-    </Tooltip>
+    <IconButton
+      className="app-icon-button"
+      type="button"
+      label={label}
+      tooltip={label}
+      icon={children}
+      variant="ghost"
+      onClick={onClick}
+      isDisabled={disabled}
+    />
   );
 }
 export function ErrorMessage({ error }: { error: string }) {
   return error ? (
-    <p className="error" role="alert">
+    <Text as="p" className="error" role="alert">
       {error}
-    </p>
+    </Text>
   ) : null;
 }
 export function Loading({ text }: { text: string }) {
   return (
-    <div className="loading" role="status">
-      <LoaderCircle />
-      {text}
-    </div>
+    <HStack className="loading" role="status" gap={2} vAlign="center">
+      <Spinner size="sm" aria-hidden="true" />
+      <Text type="supporting">{text}</Text>
+    </HStack>
   );
 }

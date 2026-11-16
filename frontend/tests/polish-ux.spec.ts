@@ -15,7 +15,7 @@ test("도움말이 화면높이로 늘어나지 않고 목록 필터를 바로 �
   await page.goto("/");
   const menu = page.getByRole("button", { name: "메뉴 열기", exact: true });
   await menu.focus();
-  const tip = page.locator(".rt-TooltipContent");
+  const tip = page.getByRole("tooltip", { name: "메뉴 열기" });
   await expect(tip).toBeVisible();
   const rect = await tip.boundingBox();
   expect(rect!.height).toBeLessThan(60);

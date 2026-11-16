@@ -1,6 +1,9 @@
 import { useEffect, useId, useRef, useState } from "react";
-import "./Graph.css";
-import { IconButton, Tooltip } from "@radix-ui/themes";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Tooltip } from "@astryxdesign/core/Tooltip";
+import { HStack } from "@astryxdesign/core/HStack";
+import { VStack } from "@astryxdesign/core/VStack";
+import { Text } from "@astryxdesign/core/Text";
 import { Crosshair, List, Minus, Pause, Play, Plus, X } from "lucide-react";
 import type {
   ForceGraph3DInstance,
@@ -581,11 +584,13 @@ export default function Graph({
       data-render-state={failed ? "fallback" : ready ? "ready" : "loading"}
       aria-label={fullStage ? "지식 연결 지도" : "선택 기록의 연결"}
     >
-      <div ref={host} className="graph-canvas" aria-hidden="true" />
+      <VStack ref={host} className="graph-canvas" aria-hidden="true" />
       {!failed && (
-        <div className="graph-label-layer" aria-hidden="true">
+        <VStack className="graph-label-layer" aria-hidden="true">
           {data.nodes.map((node) => (
-            <span
+            <Text
+              type="inherit"
+              color="inherit"
               key={node.id}
               className="graph-label"
               data-node-id={node.id}
@@ -601,27 +606,45 @@ export default function Graph({
               {node.kind === "retrieved_chunk" ? (
                 <>
                   <small className="graph-label-context">
-                    <span className="graph-label-state">{typeName(node)}</span>
-                    <span className="graph-label-capture">
+                    <Text
+                      type="inherit"
+                      color="inherit"
+                      className="graph-label-state"
+                    >
+                      {typeName(node)}
+                    </Text>
+                    <Text
+                      type="inherit"
+                      color="inherit"
+                      className="graph-label-capture"
+                    >
                       {node.capture_label}
-                    </span>
+                    </Text>
                     {node.source?.body_start != null &&
                       node.source.body_end != null && (
-                        <span className="graph-label-range">
+                        <Text
+                          type="inherit"
+                          color="inherit"
+                          className="graph-label-range"
+                        >
                           {node.source.body_start}–{node.source.body_end}자
-                        </span>
+                        </Text>
                       )}
                   </small>
-                  <span className="graph-label-excerpt">
+                  <Text
+                    type="inherit"
+                    color="inherit"
+                    className="graph-label-excerpt"
+                  >
                     {node.label || "검색한 내용"}
-                  </span>
+                  </Text>
                 </>
               ) : (
                 node.label || node.name || typeName(node)
               )}
-            </span>
+            </Text>
           ))}
-        </div>
+        </VStack>
       )}
       {failed && (
         <p className="graph-fallback notice" role="status">
@@ -630,95 +653,95 @@ export default function Graph({
       )}
       {fullStage && (
         <>
-          <div className="graph-legend" aria-label="그래프 범례">
+          <HStack className="graph-legend" aria-label="그래프 범례">
             {hasRetrieval ? (
               <>
-                <span>
+                <Text type="inherit" color="inherit">
                   <i className="legend-retrieved" />
                   검색한 내용
-                </span>
-                <span>
+                </Text>
+                <Text type="inherit" color="inherit">
                   <i className="legend-cited" />
                   답변 출처
-                </span>
+                </Text>
               </>
             ) : (
               <>
-                <span>
+                <Text type="inherit" color="inherit">
                   <i className="legend-capture" />
                   기록
-                </span>
-                <span>
+                </Text>
+                <Text type="inherit" color="inherit">
                   <i className="legend-concept" />
                   주제
-                </span>
-                <span>
+                </Text>
+                <Text type="inherit" color="inherit">
                   <i className="legend-node" />
                   세부 항목
-                </span>
+                </Text>
               </>
             )}
-          </div>
-          <div className="graph-controls" aria-label="그래프 보기 조절">
+          </HStack>
+          <HStack className="graph-controls" aria-label="그래프 보기 조절">
             {onToggleMotion && (
               <Tooltip content={reduced ? "모션 켜기" : "모션 일시정지"}>
                 <IconButton
-                  variant="ghost"
-                  aria-label={reduced ? "모션 켜기" : "모션 일시정지"}
+                  className="app-icon-button"
                   onClick={onToggleMotion}
-                  disabled={motionDisabled}
-                >
-                  {reduced ? <Play /> : <Pause />}
-                </IconButton>
+                  isDisabled={motionDisabled}
+                  variant="ghost"
+                  label={reduced ? "모션 켜기" : "모션 일시정지"}
+                  icon={reduced ? <Play /> : <Pause />}
+                />
               </Tooltip>
             )}
             <Tooltip content="확대">
               <IconButton
-                variant="ghost"
-                aria-label="그래프 확대"
-                disabled={!ready || failed}
+                className="app-icon-button"
+                isDisabled={!ready || failed}
                 onClick={() => zoom(0.8)}
-              >
-                <Plus />
-              </IconButton>
+                variant="ghost"
+                label="그래프 확대"
+                icon={<Plus />}
+              />
             </Tooltip>
             <Tooltip content="축소">
               <IconButton
-                variant="ghost"
-                aria-label="그래프 축소"
-                disabled={!ready || failed}
+                className="app-icon-button"
+                isDisabled={!ready || failed}
                 onClick={() => zoom(1.25)}
-              >
-                <Minus />
-              </IconButton>
+                variant="ghost"
+                label="그래프 축소"
+                icon={<Minus />}
+              />
             </Tooltip>
             <Tooltip content="전체 보기">
               <IconButton
-                variant="ghost"
-                aria-label="그래프 화면 맞추기"
-                disabled={!ready || failed}
+                className="app-icon-button"
+                isDisabled={!ready || failed}
                 onClick={() => fitGraph.current?.(reduced ? 0 : 300)}
-              >
-                <Crosshair />
-              </IconButton>
+                variant="ghost"
+                label="그래프 화면 맞추기"
+                icon={<Crosshair />}
+              />
             </Tooltip>
             <Tooltip content="연결 목록">
               <IconButton
-                variant="ghost"
-                aria-label="연결 목록 보기"
+                className="app-icon-button"
                 ref={listTrigger}
                 aria-controls={listId}
                 aria-expanded={listOpen}
                 onClick={() => (listOpen ? closeList() : setListOpen(true))}
-              >
-                {listOpen ? <X /> : <List />}
-              </IconButton>
+                variant="ghost"
+                label="연결 목록 보기"
+                icon={listOpen ? <X /> : <List />}
+              />
             </Tooltip>
-          </div>
+          </HStack>
         </>
       )}
       {(!fullStage || listOpen) && (
-        <div
+        <VStack
           className="graph-list"
           aria-label="연결된 지식"
           id={listId}
@@ -732,21 +755,25 @@ export default function Graph({
           }}
         >
           {fullStage && (
-            <div className="graph-list-heading">
-              <span>연결된 지식</span>
+            <HStack className="graph-list-heading">
+              <Text type="inherit" color="inherit">
+                연결된 지식
+              </Text>
               <IconButton
-                variant="ghost"
-                aria-label="연결 목록 닫기"
+                className="app-icon-button"
                 onClick={closeList}
-              >
-                <X />
-              </IconButton>
-            </div>
+                variant="ghost"
+                label="연결 목록 닫기"
+                icon={<X />}
+              />
+            </HStack>
           )}
           {fullStage && (
-            <div className="graph-list-search">
+            <HStack className="graph-list-search">
               <label>
-                <span className="sr-only">연결 목록에서 찾기</span>
+                <Text type="inherit" color="inherit" className="sr-only">
+                  연결 목록에서 찾기
+                </Text>
                 <input
                   ref={listSearch}
                   type="search"
@@ -756,12 +783,17 @@ export default function Graph({
                   autoComplete="off"
                 />
               </label>
-              <span className="graph-result-count" aria-live="polite">
+              <Text
+                type="inherit"
+                color="inherit"
+                className="graph-result-count"
+                aria-live="polite"
+              >
                 {normalizedQuery
                   ? `${data.nodes.length}개 중 ${listedNodes.length}개`
                   : `${data.nodes.length}개 항목`}
-              </span>
-            </div>
+              </Text>
+            </HStack>
           )}
           {listedNodes.length === 0 && (
             <p className="graph-list-empty">일치하는 항목이 없어요.</p>
@@ -783,7 +815,9 @@ export default function Graph({
                   if (hovered.current === n.id) hovered.current = null;
                 }}
               >
-                <span>{n.label || n.name || "연결 기록"}</span>
+                <Text type="inherit" color="inherit">
+                  {n.label || n.name || "연결 기록"}
+                </Text>
                 {fullStage && (
                   <small>
                     {typeName(n)}
@@ -801,12 +835,12 @@ export default function Graph({
                 )}
               </button>
             ) : (
-              <span className="chip" key={n.id}>
+              <Text type="inherit" color="inherit" className="chip" key={n.id}>
                 {n.label || n.name || "주제"}
-              </span>
+              </Text>
             ),
           )}
-        </div>
+        </VStack>
       )}
       {data.retrieval_truncated && (
         <p className="graph-retrieval-note" role="status">

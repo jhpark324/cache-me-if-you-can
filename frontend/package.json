@@ -1,16 +1,20 @@
 {
   "name": "cache-me-web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run theme:check && tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "playwright test"
+    "test": "playwright test",
+    "theme:build": "astryx theme build src/theme/cacheMeTheme.ts --out src/theme/cache-me.css",
+    "theme:check": "astryx theme build src/theme/cacheMeTheme.ts --out src/theme/cache-me.css --check"
   },
   "dependencies": {
-    "@radix-ui/themes": "3.3.0",
+    "@astryxdesign/core": "0.7.16",
+    "@astryxdesign/theme-neutral": "0.7.16",
+    "@stylexjs/stylex": "0.19.0",
     "3d-force-graph": "1.80.1",
     "lucide-react": "0.468.0",
     "react": "19.2.0",
@@ -20,6 +24,7 @@
     "three-spritetext": "1.10.0"
   },
   "devDependencies": {
+    "@astryxdesign/cli": "0.7.16",
     "@playwright/test": "1.64.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

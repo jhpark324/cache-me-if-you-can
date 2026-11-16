@@ -1,6 +1,7 @@
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { createContext, useContext, type ReactNode } from "react";
+import { Text } from "@astryxdesign/core/Text";
 import type { Element, Root } from "hast";
 
 const TrailingContext = createContext<ReactNode>(undefined);
@@ -30,7 +31,9 @@ const components: Components = {
     </a>
   ),
   img: ({ alt }) => (
-    <span className="muted">{alt ? `[이미지: ${alt}]` : "[이미지]"}</span>
+    <Text type="inherit" color="secondary">
+      {alt ? `[이미지: ${alt}]` : "[이미지]"}
+    </Text>
   ),
 };
 

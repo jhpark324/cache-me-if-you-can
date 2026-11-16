@@ -4,20 +4,15 @@
   font-weight: 100 900;
   font-display: swap;
 }
-@property --aurora-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 35deg;
-}
 :root {
   color-scheme: dark;
-  --canvas: #000;
-  --ink: #fff;
-  --muted: rgba(255, 255, 255, 0.72);
-  --quiet: rgba(255, 255, 255, 0.58);
-  --accent: #eeeeee;
-  --line: #292929;
-  --edge: #444444;
+  --canvas: var(--color-background-body);
+  --ink: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --quiet: var(--color-text-secondary);
+  --accent: var(--color-accent);
+  --line: var(--color-border);
+  --edge: var(--color-border-emphasized);
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 * {
@@ -79,8 +74,8 @@ svg.lucide {
   flex-shrink: 0;
 }
 ::selection {
-  background: #444444;
-  color: #fff;
+  background: var(--color-border-emphasized);
+  color: var(--color-text-primary);
 }
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -108,44 +103,11 @@ a {
   padding: 15px 22px;
   z-index: 200;
   background: var(--accent);
-  color: #111;
+  color: var(--color-background-surface);
   border-radius: 10px;
 }
 .skip-link:focus {
   top: 20px;
-}
-.radix-themes {
-  --default-font-family: Pretendard, -apple-system, BlinkMacSystemFont, sans-serif;
-  --heading-font-family: var(--default-font-family);
-  --cursor-button: pointer;
-  --color-background: #000;
-  --color-panel-solid: #111114;
-  --color-panel-translucent: rgba(12, 12, 15, 0.94);
-  --gray-1: #08080a;
-  --gray-2: #111114;
-  --gray-3: #1b1b20;
-  --gray-4: #26262b;
-  --gray-5: #333339;
-  --gray-6: #45454d;
-  --gray-11: #c7c7c7;
-  --gray-12: #fff;
-  font-family: var(--default-font-family);
-}
-#root > .radix-themes {
-  min-height: 100dvh;
-}
-.rt-TooltipContent {
-  max-width: min(260px, calc(100vw - 24px));
-  background: #19191c;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  padding: 8px 10px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
-}
-.rt-TooltipText {
-  color: #fff;
-}
-.rt-TooltipArrow {
-  fill: #19191c;
 }
 .source-panel h2,
 .source-mobile h2,
@@ -155,43 +117,6 @@ a {
   word-break: keep-all;
   overflow-wrap: anywhere;
   text-wrap: balance;
-}
-.rt-Button,
-.rt-IconButton {
-  min-height: 44px;
-  transition:
-    background 0.18s,
-    color 0.18s,
-    box-shadow 0.18s;
-}
-.rt-IconButton {
-  min-width: 44px;
-}
-.rt-Button.rt-variant-ghost,
-.rt-IconButton.rt-variant-ghost {
-  box-sizing: border-box;
-}
-.rt-DialogContent {
-  font-family: var(--default-font-family);
-}
-.rt-BaseButton.rt-variant-solid {
-  background: var(--accent);
-  color: #111111;
-}
-.rt-BaseButton.rt-variant-soft {
-  background: rgba(238, 238, 238, 0.09);
-  color: var(--accent);
-  box-shadow: inset 0 0 0 1px rgba(238, 238, 238, 0.18);
-}
-.rt-BaseButton.rt-variant-soft:hover {
-  background: rgba(238, 238, 238, 0.17);
-}
-.rt-BaseButton.rt-variant-ghost {
-  color: var(--muted);
-}
-.rt-Badge {
-  font-size: 12px;
-  font-weight: 450;
 }
 .app-shell {
   position: relative;
@@ -203,41 +128,10 @@ a {
   overflow: hidden;
   background: var(--canvas);
 }
-.ambient {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      ellipse 390px 700px at -2% 25%,
-      rgba(33, 143, 163, 0.08),
-      transparent 75%
-    ),
-    radial-gradient(
-      ellipse 500px 700px at 98% 75%,
-      rgba(111, 75, 175, 0.07),
-      transparent 75%
-    );
-}
 .glass {
-  border: 1px solid var(--edge);
-  border-top-color: rgba(229, 243, 255, 0.42);
-  border-radius: 23px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.065),
-      rgba(255, 255, 255, 0.008) 35%,
-      rgba(255, 255, 255, 0.018)
-    ),
-    rgba(8, 9, 11, 0.82);
-  box-shadow:
-    inset 0 1px 0 rgba(245, 251, 255, 0.13),
-    inset 1px 0 0 rgba(224, 241, 255, 0.04),
-    0 18px 54px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(24px) saturate(140%);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
 }
 .sidebar {
   position: relative;
@@ -395,8 +289,8 @@ nav {
     rgba(238, 238, 238, 0.55)
   );
   mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
+    linear-gradient(var(--color-text-primary) 0 0) content-box,
+    linear-gradient(var(--color-text-primary) 0 0);
   mask-composite: exclude;
   animation: aurora 12s linear infinite;
   opacity: 0.55;
@@ -433,7 +327,7 @@ nav {
 .search-form input::placeholder {
   color: rgba(255, 255, 255, 0.55);
 }
-.search-form .rt-Button {
+.search-form .astryx-button {
   width: 42px;
   min-width: 42px;
   border-radius: 12px;
@@ -677,7 +571,7 @@ nav {
 select {
   appearance: auto;
   color: var(--muted);
-  background: #0c0d10;
+  background: var(--color-background-surface);
   border: 1px solid var(--line);
   border-radius: 9px;
   padding: 9px 12px;
@@ -824,7 +718,7 @@ select {
   animation: spin 1.4s linear infinite;
 }
 .error {
-  color: #ffb6a9;
+  color: var(--color-text-error);
   font-size: 14px;
   line-height: 1.65;
   background: rgba(255, 100, 80, 0.06);
@@ -1016,12 +910,6 @@ summary:hover {
   line-height: 1.6;
   font-variant-numeric: tabular-nums;
 }
-.record-dates > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 12px;
-}
 .record-dates dt {
   min-width: 56px;
   color: var(--muted);
@@ -1043,17 +931,17 @@ summary:hover {
 .settings-dialog,
 .confirm-dialog,
 .source-mobile {
-  background: #101010;
+  background: var(--color-background-surface);
   border: 1px solid var(--line);
-  box-shadow: 0 24px 70px #0008;
+  box-shadow: 0 24px 70px var(--color-shadow);
   color: var(--ink);
 }
 .editor-dialog {
   max-width: 760px !important;
   padding: 30px !important;
 }
-.editor-dialog .rt-DialogTitle,
-.settings-dialog .rt-DialogTitle {
+.editor-dialog h2,
+.settings-dialog h2 {
   font-weight: 550;
   font-size: 22px;
   letter-spacing: -0.5px;
@@ -1164,7 +1052,7 @@ summary:hover {
   max-width: 440px !important;
   padding: 28px !important;
 }
-.confirm-dialog .rt-DialogDescription {
+.confirm-dialog p {
   color: var(--muted);
   font-size: 15px;
   line-height: 1.8;
@@ -1194,7 +1082,7 @@ summary:hover {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.settings-section > .rt-Button.rt-variant-ghost {
+.settings-section > .astryx-button[data-variant="ghost"] {
   margin: 8px 0;
 }
 .data-path {
@@ -1221,7 +1109,7 @@ summary:hover {
   background: rgba(24, 24, 29, 0.96);
   border: 1px solid var(--edge);
   border-radius: 12px;
-  box-shadow: 0 15px 45px #000;
+  box-shadow: 0 15px 45px var(--color-background-body);
   transition:
     opacity 0.2s,
     transform 0.25s var(--ease);
@@ -1238,11 +1126,6 @@ summary:hover {
 .mobile-only,
 .nav-scrim {
   display: none;
-}
-@keyframes aurora {
-  to {
-    --aurora-angle: 395deg;
-  }
 }
 @keyframes spin {
   to {
@@ -1290,7 +1173,7 @@ summary:hover {
     bottom: 16px;
     width: 380px;
     max-width: calc(100vw - 230px);
-    box-shadow: -30px 0 80px #000;
+    box-shadow: -30px 0 80px var(--color-background-body);
   }
   .record-date {
     display: none;
@@ -1356,7 +1239,7 @@ summary:hover {
   .search-form input {
     font-size: 15px;
   }
-  .search-form .rt-Button {
+  .search-form .astryx-button {
     min-width: 38px;
     width: 38px;
     height: 40px;
@@ -1672,7 +1555,7 @@ summary:hover {
   max-height: 350px;
   resize: vertical;
   padding: 14px;
-  background: #08090b;
+  background: var(--color-background-body);
   border: 1px solid var(--edge);
   border-radius: 10px;
   line-height: 1.85;
@@ -1708,7 +1591,7 @@ summary:hover {
   font-size: 15px;
   font-weight: 550;
 }
-.relation-card > .rt-Button {
+.relation-card > .astryx-button {
   margin-top: 8px;
 }
 .relation-card > p {
@@ -1761,7 +1644,7 @@ summary:hover {
   .relation-direction {
     gap: 8px;
   }
-  .concept-status > .rt-Button {
+  .concept-status > .astryx-button {
     width: 100%;
   }
 }
@@ -1804,7 +1687,7 @@ summary:hover {
   min-height: 0;
   width: 100%;
   scrollbar-width: thin;
-  scrollbar-color: #333 transparent;
+  scrollbar-color: var(--color-border) transparent;
   padding: 0 3px;
 }
 .sidebar-records .section-heading {
@@ -1874,7 +1757,7 @@ summary:hover {
   font-size: 10px;
   gap: 5px;
 }
-.sidebar-records .record-row-meta .rt-Badge {
+.sidebar-records .record-row-meta .astryx-token {
   font-size: 10px;
 }
 .sidebar-records .record-date,
@@ -1954,7 +1837,7 @@ summary:hover {
 .search-form input {
   font-size: 16px;
 }
-.search-form .rt-Button {
+.search-form .astryx-button {
   min-height: 42px;
 }
 .search-dock:before {
@@ -1969,7 +1852,7 @@ summary:hover {
   min-height: 0;
   padding: 22px 28px 26px;
   scrollbar-width: thin;
-  scrollbar-color: #444 transparent;
+  scrollbar-color: var(--color-border-emphasized) transparent;
 }
 .record-detail {
   pointer-events: auto;
@@ -2038,51 +1921,6 @@ summary:hover {
   color: var(--quiet);
   letter-spacing: 2.4px;
 }
-.empty-orbits {
-  position: relative;
-  width: 220px;
-  height: 150px;
-  margin: 0 auto 38px;
-  display: grid;
-  place-items: center;
-}
-.empty-orbits i {
-  position: absolute;
-  width: 210px;
-  height: 105px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 50%;
-  transform: rotate(-30deg);
-  box-shadow: 0 0 22px rgba(238, 238, 238, 0.025);
-}
-.empty-orbits i:nth-child(2) {
-  transform: rotate(30deg);
-  border-color: rgba(238, 238, 238, 0.19);
-}
-.empty-orbits i:nth-child(3) {
-  transform: rotate(90deg);
-  width: 150px;
-  height: 100px;
-}
-.empty-orbits > span {
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(238, 238, 238, 0.24);
-  width: 62px;
-  height: 62px;
-  border-radius: 22px;
-  background: radial-gradient(
-    ellipse at top left,
-    rgba(238, 238, 238, 0.12),
-    #090909 75%
-  );
-  color: var(--accent);
-  box-shadow: 0 0 65px rgba(238, 238, 238, 0.055);
-}
-.empty-orbits svg {
-  width: 26px;
-  height: 26px;
-}
 .stage-footer {
   position: absolute;
   z-index: 2;
@@ -2104,9 +1942,9 @@ summary:hover {
   left: 24px;
   bottom: 100px;
   max-width: min(440px, calc(100% - 48px));
-  color: #b3b3b3;
-  background: #101010;
-  border: 1px solid #333;
+  color: var(--color-text-secondary);
+  background: var(--color-background-surface);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 13px;
@@ -2153,13 +1991,13 @@ summary:hover {
   border-radius: 50%;
 }
 .legend-capture {
-  background: #eeeeee;
+  background: var(--color-text-primary);
 }
 .legend-concept {
-  background: #c4b5fd;
+  background: var(--color-text-purple);
 }
 .legend-node {
-  background: #7dd3fc;
+  background: var(--color-text-cyan);
 }
 .graph-controls {
   position: absolute;
@@ -2174,7 +2012,7 @@ summary:hover {
 .graph-controls svg {
   width: 17px;
 }
-.graph-controls .rt-IconButton {
+.graph-controls .app-icon-button {
   margin: 0;
 }
 .graph-world .graph-list {
@@ -2332,7 +2170,7 @@ summary:hover {
   .search-form input {
     font-size: 16px;
   }
-  .search-form .rt-Button {
+  .search-form .astryx-button {
     min-width: 42px;
     width: 42px;
     min-height: 44px;
@@ -2356,10 +2194,6 @@ summary:hover {
   .graph-empty {
     top: 46%;
     width: calc(100% - 42px);
-  }
-  .empty-orbits {
-    transform: scale(0.85);
-    margin-bottom: 20px;
   }
   .graph-empty .eyebrow {
     font-size: 8px;
@@ -2387,7 +2221,7 @@ summary:hover {
     gap: 0;
     padding: 3px;
   }
-  .graph-controls .rt-IconButton {
+  .graph-controls .app-icon-button {
     min-width: 38px;
   }
   .graph-world .graph-list {
@@ -2485,7 +2319,7 @@ summary:hover {
     top: 95px;
     gap: 10px;
   }
-  .example-banner .rt-Badge {
+  .example-banner .astryx-token {
     font-size: 10px;
   }
   .example-banner .text-button {
@@ -2518,11 +2352,11 @@ summary:hover {
   font-size: 12px;
   line-height: 21px;
   font-weight: 450;
-  color: #e4e4e4;
+  color: var(--color-text-primary);
   text-shadow:
-    0 1px 5px #000,
-    0 0 10px #000,
-    0 0 20px #000;
+    0 1px 5px var(--color-background-body),
+    0 0 10px var(--color-background-body),
+    0 0 20px var(--color-background-body);
   padding: 0 4px;
   background: rgba(0, 0, 0, 0.28);
   border-radius: 4px;
@@ -2530,14 +2364,20 @@ summary:hover {
 .graph-label-layer > span[data-kind="concept"] {
   font-size: 14px;
   font-weight: 550;
-  color: #fff;
+  color: var(--color-text-primary);
 }
 .graph-label-layer > span[data-highlighted="true"] {
   color: var(--accent);
   z-index: 2;
 }
 .legend-capture {
-  background: conic-gradient(#83e5be, #e7bb72, #8cbbf7, #b5a1f6, #83e5be);
+  background: conic-gradient(
+    var(--color-text-success),
+    var(--color-text-warning),
+    var(--color-text-info),
+    var(--color-text-purple),
+    var(--color-text-success)
+  );
 }
 
 @media (max-width: 800px) {
@@ -2569,7 +2409,7 @@ summary:hover {
   background-color: rgba(9, 10, 12, 0.96);
   animation: nav-enter 0.22s var(--ease);
 }
-.nav-drawer > .rt-IconButton {
+.nav-drawer > .app-icon-button {
   position: absolute;
   top: 25px;
   right: 16px;
@@ -2668,13 +2508,9 @@ summary:hover {
 .detail-error h2:focus {
   outline: none;
 }
-.rt-BaseButton:disabled {
-  opacity: 0.42;
-  cursor: not-allowed;
-}
-.source-panel .panel-heading .rt-IconButton,
-.source-mobile .panel-heading .rt-IconButton,
-.editor-dialog .panel-heading .rt-IconButton {
+.source-panel .panel-heading .app-icon-button,
+.source-mobile .panel-heading .app-icon-button,
+.editor-dialog .panel-heading .app-icon-button {
   min-width: 40px;
   min-height: 40px;
   margin: 0;
@@ -2685,7 +2521,7 @@ summary:hover {
   padding-top: 16px;
   padding-bottom: 16px;
   margin-bottom: -16px;
-  background: linear-gradient(transparent, #101012 25%);
+  background: linear-gradient(transparent, var(--color-background-surface) 25%);
   z-index: 1;
 }
 .search-shortcut {
@@ -2711,7 +2547,7 @@ summary:hover {
   .nav-toggle {
     display: inline-flex;
   }
-  .nav-toggle .rt-IconButton {
+  .nav-toggle .app-icon-button {
     margin: 0;
     width: 44px;
     height: 44px;
@@ -2727,12 +2563,12 @@ summary:hover {
   .active-filters button {
     min-height: 40px;
   }
-  .source-mobile .panel-heading .rt-IconButton,
-  .editor-dialog .panel-heading .rt-IconButton {
+  .source-mobile .panel-heading .app-icon-button,
+  .editor-dialog .panel-heading .app-icon-button {
     min-height: 44px;
     min-width: 44px;
   }
-  .dialog-actions .rt-Button {
+  .dialog-actions .astryx-button {
     min-height: 44px;
   }
   .editor-dialog .dialog-actions {
@@ -2765,9 +2601,6 @@ summary:hover {
     align-items: center;
     justify-content: center;
   }
-  .graph-empty .empty-orbits {
-    display: none;
-  }
   .graph-empty h2 {
     margin: 0 0 8px;
     font-size: 22px;
@@ -2780,7 +2613,7 @@ summary:hover {
     margin: 6px 0 0;
     min-height: 32px;
   }
-  .graph-empty > .rt-Button {
+  .graph-empty > .astryx-button {
     flex-shrink: 0;
   }
   .graph-legend {

@@ -1,6 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
+import { openLibrary } from "./navigation";
 const currentId = "31111111-1111-4111-8111-111111111111",
   otherId = "41111111-1111-4111-8111-111111111111";
+const concepts = [
+  { id: "topic-recall", name: "능동 회상", aliases: [] },
+  { id: "topic-reading", name: "읽기 습관", aliases: [] },
+];
 const makeCapture = (id: string, title: string, body: string) => ({
   id,
   title,
@@ -42,11 +47,23 @@ const ref = (record: any) => ({
 });
 async function fixture(
   page: Page,
-  { failed = false, mergeConflict = false } = {},
+  { failed = false, mergeConflict = false, withConcepts = false } = {},
 ) {
   const records = new Map([
-    [currentId, structuredClone(current)],
-    [otherId, structuredClone(other)],
+    [
+      currentId,
+      {
+        ...structuredClone(current),
+        concepts: withConcepts ? [concepts[0]] : [],
+      },
+    ],
+    [
+      otherId,
+      {
+        ...structuredClone(other),
+        concepts: withConcepts ? [concepts[1]] : [],
+      },
+    ],
   ]);
   if (failed) records.get(currentId)!.concept_state.status = "failed";
   let relations: any[] = [];
@@ -81,7 +98,8 @@ async function fixture(
         edges: [],
         truncated: false,
       });
-    if (path === "/concepts") return send({ items: [], next_cursor: null });
+    if (path === "/concepts")
+      return send({ items: withConcepts ? concepts : [], next_cursor: null });
     if (path === "/captures") {
       const query = url.searchParams.get("query") || "";
       return send({
@@ -201,6 +219,120 @@ async function span(page: Page, label: string, start: number, end: number) {
     .getByRole("button", { name: "선택한 구간 사용" })
     .click();
 }
+test("관리 대화상자는 작업 이름을 제공하고 Escape로 닫힌다", async ({
+  page,
+}) => {
+  await fixture(page);
+  await openCurrent(page);
+  for (const [action, title] of [
+    ["출처 재검토", "출처 재검토"],
+    ["주제 정정", "기록의 주제 정정"],
+    ["기록 병합", "기록 병합"],
+    ["관계 관리", "기록의 관계"],
+  ]) {
+    await page.getByRole("button", { name: action, exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: title, exact: true });
+    await expect(dialog).toBeVisible();
+    await expect(
+      dialog.getByRole("heading", { name: title, exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toHaveCount(0);
+  }
+});
+
+test("주제 정정을 취소하고 다시 열면 저장된 선택과 빈 검색어를 복원한다", async ({
+  page,
+}) => {
+  const f = await fixture(page, { withConcepts: true });
+  await openCurrent(page);
+  const opener = page.getByRole("button", { name: "주제 정정", exact: true });
+  const dialog = page.getByRole("dialog", {
+    name: "기록의 주제 정정",
+    exact: true,
+  });
+  await opener.click();
+  await expect(
+    dialog.getByRole("heading", { name: "기록의 주제 정정" }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[0].name }),
+  ).toBeChecked();
+  await dialog.getByRole("checkbox", { name: concepts[0].name }).uncheck();
+  await dialog.getByRole("checkbox", { name: concepts[1].name }).check();
+  await dialog
+    .getByRole("textbox", { name: "주제 찾기", exact: true })
+    .fill(concepts[1].name);
+  await dialog.getByRole("button", { name: "취소", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await opener.click();
+  await expect(
+    dialog.getByRole("textbox", { name: "주제 찾기", exact: true }),
+  ).toHaveValue("");
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[0].name }),
+  ).toBeChecked();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[1].name }),
+  ).not.toBeChecked();
+  await expect(dialog.getByText("1개 선택", { exact: false })).toBeVisible();
+  expect(f.writes).toEqual([]);
+  expect(f.records.get(currentId)?.concepts).toEqual([concepts[0]]);
+});
+
+test("다른 기록의 주제 정정에는 취소한 초안이 섞이지 않는다", async ({
+  page,
+}) => {
+  const f = await fixture(page, { withConcepts: true });
+  await openCurrent(page);
+  const dialog = page.getByRole("dialog", {
+    name: "기록의 주제 정정",
+    exact: true,
+  });
+  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
+  await expect(
+    dialog.getByRole("heading", { name: "기록의 주제 정정" }),
+  ).toBeVisible();
+  // Leave an empty selection unlike either record's saved topics, so reusing
+  // the first editor's state cannot accidentally match the second record.
+  await dialog.getByRole("checkbox", { name: concepts[0].name }).uncheck();
+  await dialog.getByRole("button", { name: "취소", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await openLibrary(page);
+  await page
+    .getByRole("button", { name: new RegExp("^" + other.title) })
+    .click();
+  await expect(page.locator(".record-detail h1")).toHaveText(other.title);
+  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[0].name }),
+  ).not.toBeChecked();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[1].name }),
+  ).toBeChecked();
+  await dialog.getByRole("checkbox", { name: concepts[0].name }).check();
+  await dialog.getByRole("button", { name: "취소", exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await openLibrary(page);
+  await page
+    .getByRole("button", { name: new RegExp("^" + current.title) })
+    .click();
+  await expect(page.locator(".record-detail h1")).toHaveText(current.title);
+  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[0].name }),
+  ).toBeChecked();
+  await expect(
+    dialog.getByRole("checkbox", { name: concepts[1].name }),
+  ).not.toBeChecked();
+  expect(f.writes).toEqual([]);
+  expect(f.records.get(currentId)?.concepts).toEqual([concepts[0]]);
+  expect(f.records.get(otherId)?.concepts).toEqual([concepts[1]]);
+});
+
 test("병합은 대상 버전과 출처를 보내고 충돌 후 초안·동일 요청을 보존한다", async ({
   page,
 }) => {
@@ -242,9 +374,11 @@ test("지원 관계 유형을 선택하고 명확히 설명함 관계의 방향�
   await page.getByRole("button", { name: "관계 추가", exact: true }).click();
   const relationType = page.getByLabel("관계의 의미", { exact: true });
   expect(
-    await relationType.locator("option").evaluateAll((options) =>
-      options.map((option) => (option as HTMLOptionElement).value),
-    ),
+    await relationType
+      .locator("option")
+      .evaluateAll((options) =>
+        options.map((option) => (option as HTMLOptionElement).value),
+      ),
   ).toEqual([
     "related_to",
     "clarifies",
@@ -419,9 +553,7 @@ test("로그인 시도 취소는 현재 연결된 계정의 로그아웃과 구�
   });
   await page.goto("/");
   await page.getByRole("button", { name: "설정", exact: true }).click();
-  await page
-    .getByRole("button", { name: "로그인 취소", exact: true })
-    .click();
+  await page.getByRole("button", { name: "로그인 취소", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "로그인 취소", exact: true }),
   ).toHaveCount(0);

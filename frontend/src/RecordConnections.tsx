@@ -1,11 +1,19 @@
 import {
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
   type FormEvent,
 } from "react";
-import { Button, Dialog, IconButton } from "@radix-ui/themes";
+import { Button } from "@astryxdesign/core/Button";
+import { DialogHeader } from "@astryxdesign/core/Dialog";
+import { Field } from "@astryxdesign/core/Field";
+import { HStack } from "@astryxdesign/core/HStack";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Text } from "@astryxdesign/core/Text";
+import { TextInput } from "@astryxdesign/core/TextInput";
+import { VStack } from "@astryxdesign/core/VStack";
 import {
   ArrowRight,
   Check,
@@ -86,6 +94,7 @@ export function ReferencePicker({
       precise ? "span" : "whole",
     );
   const sequence = useRef(0);
+  const fieldId = useId();
   useEffect(() => {
     if (precise && mode === "whole") setMode("span");
   }, [precise, mode]);
@@ -138,18 +147,24 @@ export function ReferencePicker({
     <fieldset className="reference-picker">
       <legend>{label}</legend>
       {value && (
-        <div className="reference-selection">
-          <div className="section-heading">
+        <VStack gap={3} className="reference-selection">
+          <HStack
+            gap={2}
+            vAlign="center"
+            hAlign="between"
+            className="section-heading"
+          >
             <strong>{value.capture.title || "제목 없는 기록"}</strong>
             <IconButton
+              className="app-icon-button"
               type="button"
               variant="ghost"
-              aria-label={`${label} 선택 해제`}
+              label={`${label} 선택 해제`}
+              tooltip={`${label} 선택 해제`}
               onClick={() => onChange(null)}
-            >
-              <X />
-            </IconButton>
-          </div>
+              icon={<X />}
+            />
+          </HStack>
           <p>
             {value.source.node_id
               ? "선택한 내용"
@@ -158,52 +173,52 @@ export function ReferencePicker({
                 : "기록 전체"}{" "}
             · {value.text}
           </p>
-        </div>
+        </VStack>
       )}
       <details open={!value}>
         <summary>{value ? "선택 변경" : "기록과 내용 선택"}</summary>
-        <label className="field">
-          <span className="picker-label">
-            <Search />
-            {label} 기록 찾기
-          </span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="제목이나 내용으로 검색"
-          />
-        </label>
+        <TextInput
+          label={`${label} 기록 찾기`}
+          startIcon={Search}
+          value={query}
+          onChange={setQuery}
+          placeholder="제목이나 내용으로 검색"
+        />
         <ErrorText error={error} />
         {loading && (
           <p className="muted" role="status">
             기록을 찾고 있어요
           </p>
         )}
-        <div className="source-candidates">
+        <VStack gap={3} className="source-candidates">
           {matches.map((r) => (
-            <button
+            <Button
+              label={r.title || "제목 없는 기록"}
               key={r.id}
               type="button"
               className="source-candidate"
               onClick={() => void selectCandidate(r.id)}
+              variant="ghost"
             >
-              <strong>{r.title || "제목 없는 기록"}</strong>
-              <span>{r.excerpt}</span>
-            </button>
+              <VStack as="span" gap={1}>
+                <strong>{r.title || "제목 없는 기록"}</strong>
+                <Text type="supporting">{r.excerpt}</Text>
+              </VStack>
+            </Button>
           ))}
-        </div>
+        </VStack>
         {!loading && !matches.length && (
           <p className="muted">선택할 기록이 없습니다.</p>
         )}
         {candidate && (
-          <section className="reference-preview">
+          <VStack as="section" className="reference-preview" gap={3}>
             <h4>{candidate.title || "제목 없는 기록"}</h4>
             {candidate.review_state === "needs_review" && (
               <p className="notice">이 기록의 출처를 먼저 재검토해 주세요.</p>
             )}
-            <label className="field">
-              {label} 사용할 내용
+            <Field label={`${label} 사용할 내용`} inputID={`${fieldId}-mode`}>
               <select
+                id={`${fieldId}-mode`}
                 aria-label={`${label} 사용할 내용`}
                 value={mode}
                 onChange={(e) => {
@@ -218,18 +233,18 @@ export function ReferencePicker({
                     <option value="node">세부 항목 선택</option>
                   )}
               </select>
-            </label>
+            </Field>
             {mode === "whole" ? (
               <>
                 <Markdown>{candidate.body_markdown}</Markdown>
                 <Button
+                  label="이 기록 선택"
                   type="button"
-                  variant="soft"
-                  disabled={candidate.review_state === "needs_review"}
+                  variant="secondary"
+                  isDisabled={candidate.review_state === "needs_review"}
                   onClick={() => onChange(whole(candidate))}
-                >
-                  <Check />이 기록 선택
-                </Button>
+                  icon={<Check />}
+                />
               </>
             ) : mode === "span" ? (
               <>
@@ -237,47 +252,56 @@ export function ReferencePicker({
                   원문에서 사용할 문장을 드래그하거나 Shift와 방향키로
                   선택하세요.
                 </p>
-                <textarea
-                  className="span-selector"
-                  aria-label={`${label} 원문 구간`}
-                  readOnly
-                  value={candidate.body_markdown}
-                  onSelect={(e) => {
-                    const {
-                      selectionStart: start,
-                      selectionEnd: end,
-                      value: text,
-                    } = e.currentTarget;
-                    setRange(
-                      end > start
-                        ? {
-                            start: Array.from(text.slice(0, start)).length,
-                            end: Array.from(text.slice(0, end)).length,
-                            text: text.slice(start, end),
-                          }
-                        : null,
-                    );
-                  }}
-                />
+                <Field
+                  label={`${label} 원문 구간`}
+                  inputID={`${fieldId}-span`}
+                  isLabelHidden
+                >
+                  <textarea
+                    id={`${fieldId}-span`}
+                    className="span-selector"
+                    aria-label={`${label} 원문 구간`}
+                    readOnly
+                    value={candidate.body_markdown}
+                    onSelect={(e) => {
+                      const {
+                        selectionStart: start,
+                        selectionEnd: end,
+                        value: text,
+                      } = e.currentTarget;
+                      setRange(
+                        end > start
+                          ? {
+                              start: Array.from(text.slice(0, start)).length,
+                              end: Array.from(text.slice(0, end)).length,
+                              text: text.slice(start, end),
+                            }
+                          : null,
+                      );
+                    }}
+                  />
+                </Field>
                 {range && <p className="selected-span">{range.text}</p>}
                 <Button
+                  label="선택한 구간 사용"
                   type="button"
-                  variant="soft"
-                  disabled={!range || candidate.review_state === "needs_review"}
+                  variant="secondary"
+                  isDisabled={
+                    !range || candidate.review_state === "needs_review"
+                  }
                   onClick={selectSpan}
-                >
-                  <Check />
-                  선택한 구간 사용
-                </Button>
+                  icon={<Check />}
+                />
               </>
             ) : (
-              <div className="source-candidates">
+              <VStack gap={3} className="source-candidates">
                 {candidate.nodes.map((n) => (
-                  <button
+                  <Button
+                    label={n.label || "세부 항목"}
                     type="button"
                     className="source-candidate"
                     key={n.id}
-                    disabled={candidate.review_state === "needs_review"}
+                    isDisabled={candidate.review_state === "needs_review"}
                     onClick={() =>
                       onChange({
                         capture: candidate,
@@ -285,14 +309,17 @@ export function ReferencePicker({
                         text: n.text,
                       })
                     }
+                    variant="ghost"
                   >
-                    <strong>{n.label || "세부 항목"}</strong>
-                    <span>{n.text}</span>
-                  </button>
+                    <VStack as="span" gap={1}>
+                      <strong>{n.label || "세부 항목"}</strong>
+                      <Text type="supporting">{n.text}</Text>
+                    </VStack>
+                  </Button>
                 ))}
-              </div>
+              </VStack>
             )}
-          </section>
+          </VStack>
         )}
       </details>
     </fieldset>
@@ -350,97 +377,117 @@ export function MergeDialog({
   }
   return (
     <form onSubmit={submit}>
-      <div className="panel-heading">
-        <Dialog.Title data-initial-focus tabIndex={-1}>
-          기록 병합
-        </Dialog.Title>
-        <IconButton
-          type="button"
-          aria-label="병합 닫기"
-          variant="ghost"
-          onClick={onClose}
-        >
-          <X />
-        </IconButton>
-      </div>
-      <p className="muted">
-        <strong>{record.title || "제목 없는 기록"}</strong>에 내용을 합칩니다.
-        선택한 원본 기록은 그대로 남습니다.
-      </p>
-      <ErrorText error={error} />
-      <ReferencePicker
-        label="병합할 출처"
-        value={null}
-        onChange={add}
-        excludeId={record.id}
-      />
-      {sources.length > 0 && (
-        <section className="merge-selections">
-          <h3>선택한 출처 {sources.length}개</h3>
-          {sources.map((source, i) => (
-            <div className="merge-source" key={JSON.stringify(source.source)}>
-              <div className="section-heading">
-                <strong>{source.capture.title || "제목 없는 기록"}</strong>
-                <IconButton
+      <VStack gap={4}>
+        <DialogHeader
+          className="dialog-heading"
+          title="기록 병합"
+          hasDivider={false}
+          endContent={
+            <IconButton
+              className="app-icon-button"
+              type="button"
+              label="병합 닫기"
+              tooltip="병합 닫기"
+              variant="ghost"
+              onClick={onClose}
+              icon={<X />}
+            />
+          }
+        />
+        <p className="muted">
+          <strong>{record.title || "제목 없는 기록"}</strong>에 내용을 합칩니다.
+          선택한 원본 기록은 그대로 남습니다.
+        </p>
+        <ErrorText error={error} />
+        <ReferencePicker
+          label="병합할 출처"
+          value={null}
+          onChange={add}
+          excludeId={record.id}
+        />
+        {sources.length > 0 && (
+          <VStack as="section" className="merge-selections" gap={3}>
+            <h3>선택한 출처 {sources.length}개</h3>
+            {sources.map((source, i) => (
+              <VStack
+                gap={3}
+                className="merge-source"
+                key={JSON.stringify(source.source)}
+              >
+                <HStack
+                  gap={2}
+                  vAlign="center"
+                  hAlign="between"
+                  className="section-heading"
+                >
+                  <strong>{source.capture.title || "제목 없는 기록"}</strong>
+                  <IconButton
+                    className="app-icon-button"
+                    type="button"
+                    variant="ghost"
+                    label={`병합 출처 ${i + 1} 제외`}
+                    tooltip={`병합 출처 ${i + 1} 제외`}
+                    onClick={() =>
+                      setSources((prev) =>
+                        prev.filter((_, index) => index !== i),
+                      )
+                    }
+                    icon={<X />}
+                  />
+                </HStack>
+                <Markdown>{source.text}</Markdown>
+                <Button
+                  label="최종 본문에 추가"
                   type="button"
                   variant="ghost"
-                  aria-label={`병합 출처 ${i + 1} 제외`}
                   onClick={() =>
-                    setSources((prev) => prev.filter((_, index) => index !== i))
+                    setBody(
+                      (prev) =>
+                        `${prev}\n\n## ${source.capture.title || "추가한 내용"}\n\n${source.text}`,
+                    )
                   }
-                >
-                  <X />
-                </IconButton>
-              </div>
-              <Markdown>{source.text}</Markdown>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() =>
-                  setBody(
-                    (prev) =>
-                      `${prev}\n\n## ${source.capture.title || "추가한 내용"}\n\n${source.text}`,
-                  )
-                }
-              >
-                <Plus />
-                최종 본문에 추가
-              </Button>
-            </div>
-          ))}
-        </section>
-      )}
-      <label className="field">
-        병합할 최종 내용
-        <textarea
-          className="body-editor"
-          aria-label="병합할 최종 내용"
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          required
-        />
-      </label>
-      <p className="field-hint">
-        선택한 내용이 최종 본문에 정확히 반영되었는지 확인해 주세요.
-      </p>
-      <div className="dialog-actions">
-        <Button
-          type="button"
-          color="gray"
-          variant="soft"
-          disabled={busy}
-          onClick={onClose}
+                  icon={<Plus />}
+                />
+              </VStack>
+            ))}
+          </VStack>
+        )}
+        <Field label="병합할 최종 내용" inputID="merge-body">
+          <textarea
+            id="merge-body"
+            className="body-editor"
+            aria-label="병합할 최종 내용"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            required
+          />
+        </Field>
+        <p className="field-hint">
+          선택한 내용이 최종 본문에 정확히 반영되었는지 확인해 주세요.
+        </p>
+        <HStack
+          gap={2}
+          vAlign="center"
+          hAlign="end"
+          wrap="wrap"
+          className="dialog-actions"
         >
-          취소
-        </Button>
-        <Button
-          type="submit"
-          disabled={busy || !sources.length || !body.trim()}
-        >
-          <Check />
-          {busy ? "병합 중…" : "이 기록에 병합"}
-        </Button>
-      </div>
+          <Button
+            label="취소"
+            type="button"
+            variant="secondary"
+            isDisabled={busy}
+            onClick={onClose}
+          />
+          <Button
+            label={busy ? "병합 중…" : "이 기록에 병합"}
+            type="submit"
+            isDisabled={busy || !sources.length || !body.trim()}
+            icon={<Check />}
+            variant="primary"
+          />
+        </HStack>
+      </VStack>
     </form>
   );
 }
@@ -490,44 +537,47 @@ function RelationCard({
       </p>
     );
   return (
-    <article className="relation-card">
-      <span className="part-label">
+    <VStack as="article" className="relation-card" gap={3}>
+      <Text type="inherit" className="part-label">
         {RELATION_LABELS[relation.relation_type]}
-      </span>
-      <div className="relation-direction">
-        <button
+      </Text>
+      <HStack gap={2} vAlign="center" className="relation-direction">
+        <Button
+          label={details.source.capture.title || "제목 없는 기록"}
           type="button"
           className="text-button"
           onClick={() => onSource(relation.source)}
-        >
-          {details.source.capture.title || "제목 없는 기록"}
-        </button>
+          variant="ghost"
+        />
         <ArrowRight aria-hidden="true" />
-        <button
+        <Button
+          label={details.target.capture.title || "제목 없는 기록"}
           type="button"
           className="text-button"
           onClick={() => onSource(relation.target)}
-        >
-          {details.target.capture.title || "제목 없는 기록"}
-        </button>
-      </div>
+          variant="ghost"
+        />
+      </HStack>
       {relation.scope_note && <p>{relation.scope_note}</p>}
-      <button
+      <Button
+        label={`근거 확인 · ${details.evidence.capture.title || "제목 없는 기록"}`}
         type="button"
         className="text-button"
         onClick={() => onSource(relation.evidence)}
-      >
-        <FileText />
-        근거 확인 · {details.evidence.capture.title || "제목 없는 기록"}
-      </button>
+        variant="ghost"
+        icon={<FileText />}
+      />
       {relation.evidence_note && (
         <p className="muted">{relation.evidence_note}</p>
       )}
-      <Button type="button" variant="ghost" onClick={() => onRetract(relation)}>
-        <Unlink />
-        관계 철회
-      </Button>
-    </article>
+      <Button
+        label="관계 철회"
+        type="button"
+        variant="ghost"
+        onClick={() => onRetract(relation)}
+        icon={<Unlink />}
+      />
+    </VStack>
   );
 }
 
@@ -672,20 +722,23 @@ export function RelationsDialog({
   }
   const precise = type === "supersedes";
   return (
-    <>
-      <div className="panel-heading">
-        <Dialog.Title data-initial-focus tabIndex={-1}>
-          기록의 관계
-        </Dialog.Title>
-        <IconButton
-          type="button"
-          aria-label="관계 관리 닫기"
-          variant="ghost"
-          onClick={onClose}
-        >
-          <X />
-        </IconButton>
-      </div>
+    <VStack gap={4}>
+      <DialogHeader
+        className="dialog-heading"
+        title="기록의 관계"
+        hasDivider={false}
+        endContent={
+          <IconButton
+            className="app-icon-button"
+            type="button"
+            label="관계 관리 닫기"
+            tooltip="관계 관리 닫기"
+            variant="ghost"
+            onClick={onClose}
+            icon={<X />}
+          />
+        }
+      />
       <p className="muted">{record.title || "제목 없는 기록"}</p>
       <ErrorText error={error} />
       {notice && (
@@ -695,173 +748,203 @@ export function RelationsDialog({
       )}
       {creating ? (
         <form onSubmit={create}>
-          <label className="field">
-            관계의 의미
-            <select
-              aria-label="관계의 의미"
-              value={type}
-              onChange={(e) => changeType(e.target.value as RelationType)}
-            >
-              {Object.entries(RELATION_LABELS).map(([key, label]) => (
-                <option value={key} key={key}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {precise ? (
-            <p className="notice">
-              새 조건 → 이전 조건 순서입니다. 양쪽 내용과 근거의 정확한 구간을
-              선택하세요.
-            </p>
-          ) : (
-            <p className="field-hint">
-              시작 기록 → 대상 기록 방향으로 저장합니다.
-            </p>
-          )}
-          <ReferencePicker
-            label={precise ? "새 조건" : "시작"}
-            value={source}
-            onChange={setSource}
-            initial={record}
-            precise={precise}
-          />
-          <ReferencePicker
-            label={precise ? "이전 조건" : "대상"}
-            value={target}
-            onChange={setTarget}
-            precise={precise}
-          />
-          <ReferencePicker
-            label="근거"
-            value={evidence}
-            onChange={setEvidence}
-            initial={record}
-            precise={precise}
-          />
-          <label className="field">
-            적용 범위{precise ? " · 필수" : ""}
-            <textarea
-              className="reason-input"
-              value={scope}
-              onChange={(e) => setScope(e.target.value)}
-              placeholder="누구의 어떤 상황과 시점에 해당하나요?"
-              required={precise}
+          <VStack gap={4}>
+            <Field label="관계의 의미" inputID="relation-type">
+              <select
+                id="relation-type"
+                aria-label="관계의 의미"
+                value={type}
+                onChange={(e) => changeType(e.target.value as RelationType)}
+              >
+                {Object.entries(RELATION_LABELS).map(([key, label]) => (
+                  <option value={key} key={key}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            {precise ? (
+              <p className="notice">
+                새 조건 → 이전 조건 순서입니다. 양쪽 내용과 근거의 정확한 구간을
+                선택하세요.
+              </p>
+            ) : (
+              <p className="field-hint">
+                시작 기록 → 대상 기록 방향으로 저장합니다.
+              </p>
+            )}
+            <ReferencePicker
+              label={precise ? "새 조건" : "시작"}
+              value={source}
+              onChange={setSource}
+              initial={record}
+              precise={precise}
             />
-          </label>
-          <label className="field">
-            근거 설명{precise ? " · 필수" : ""}
-            <textarea
-              className="reason-input"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="선택한 내용이 이 관계를 어떻게 뒷받침하나요?"
-              required={precise}
+            <ReferencePicker
+              label={precise ? "이전 조건" : "대상"}
+              value={target}
+              onChange={setTarget}
+              precise={precise}
             />
-          </label>
-          <div className="dialog-actions">
-            <Button
-              type="button"
-              variant="soft"
-              color="gray"
-              disabled={busy}
-              onClick={() => {
-                setCreating(false);
-                setError("");
-              }}
+            <ReferencePicker
+              label="근거"
+              value={evidence}
+              onChange={setEvidence}
+              initial={record}
+              precise={precise}
+            />
+            <Field
+              label={`적용 범위${precise ? " · 필수" : ""}`}
+              inputID="relation-scope"
             >
-              작성 취소
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                busy ||
-                !source ||
-                !target ||
-                !evidence ||
-                (precise && (!scope.trim() || !note.trim()))
-              }
+              <textarea
+                id="relation-scope"
+                className="reason-input"
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                placeholder="누구의 어떤 상황과 시점에 해당하나요?"
+                required={precise}
+              />
+            </Field>
+            <Field
+              label={`근거 설명${precise ? " · 필수" : ""}`}
+              inputID="relation-note"
             >
-              <Check />
-              {busy ? "저장 중…" : "관계 저장"}
-            </Button>
-          </div>
+              <textarea
+                id="relation-note"
+                className="reason-input"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                placeholder="선택한 내용이 이 관계를 어떻게 뒷받침하나요?"
+                required={precise}
+              />
+            </Field>
+            <HStack
+              gap={2}
+              vAlign="center"
+              hAlign="end"
+              wrap="wrap"
+              className="dialog-actions"
+            >
+              <Button
+                label="작성 취소"
+                type="button"
+                variant="secondary"
+                isDisabled={busy}
+                onClick={() => {
+                  setCreating(false);
+                  setError("");
+                }}
+              />
+              <Button
+                label={busy ? "저장 중…" : "관계 저장"}
+                type="submit"
+                isDisabled={
+                  busy ||
+                  !source ||
+                  !target ||
+                  !evidence ||
+                  (precise && (!scope.trim() || !note.trim()))
+                }
+                icon={<Check />}
+                variant="primary"
+              />
+            </HStack>
+          </VStack>
         </form>
       ) : retracting ? (
         <form onSubmit={retract}>
-          <h3>{RELATION_LABELS[retracting.relation_type]} 관계 철회</h3>
-          <p className="muted">
-            기록을 삭제하지 않고 이 관계의 사용을 중단합니다.
-          </p>
-          <label className="field">
-            철회 이유
-            <textarea
-              className="reason-input"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              required
-            />
-          </label>
-          <div className="dialog-actions">
-            <Button
-              type="button"
-              variant="soft"
-              color="gray"
-              disabled={busy}
-              onClick={() => {
-                setRetracting(null);
-                setError("");
-              }}
+          <VStack gap={4}>
+            <h3>{RELATION_LABELS[retracting.relation_type]} 관계 철회</h3>
+            <p className="muted">
+              기록을 삭제하지 않고 이 관계의 사용을 중단합니다.
+            </p>
+            <Field label="철회 이유" inputID="relation-reason">
+              <textarea
+                id="relation-reason"
+                className="reason-input"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                required
+              />
+            </Field>
+            <HStack
+              gap={2}
+              vAlign="center"
+              hAlign="end"
+              wrap="wrap"
+              className="dialog-actions"
             >
-              취소
-            </Button>
-            <Button type="submit" disabled={busy || !reason.trim()}>
-              <Unlink />
-              {busy ? "철회 중…" : "이유를 남기고 철회"}
-            </Button>
-          </div>
+              <Button
+                label="취소"
+                type="button"
+                variant="secondary"
+                isDisabled={busy}
+                onClick={() => {
+                  setRetracting(null);
+                  setError("");
+                }}
+              />
+              <Button
+                label={busy ? "철회 중…" : "이유를 남기고 철회"}
+                type="submit"
+                isDisabled={busy || !reason.trim()}
+                icon={<Unlink />}
+                variant="primary"
+              />
+            </HStack>
+          </VStack>
         </form>
       ) : (
         <>
-          <div className="section-heading">
+          <HStack
+            gap={2}
+            vAlign="center"
+            hAlign="between"
+            className="section-heading"
+          >
             <Button
-              variant="soft"
+              label="관계 추가"
+              variant="secondary"
               onClick={() => {
                 setCreating(true);
                 setNotice("");
                 setPreview(null);
               }}
-            >
-              <Plus />
-              관계 추가
-            </Button>
+              icon={<Plus />}
+            />
             <Button
+              label="새로고침"
               variant="ghost"
               onClick={() => void load()}
-              disabled={loading}
-            >
-              <RefreshCw />
-              새로고침
-            </Button>
-          </div>
+              isDisabled={loading}
+              icon={<RefreshCw />}
+            />
+          </HStack>
           {preview && (
-            <section className="reference-preview">
-              <div className="section-heading">
+            <VStack as="section" className="reference-preview" gap={3}>
+              <HStack
+                gap={2}
+                vAlign="center"
+                hAlign="between"
+                className="section-heading"
+              >
                 <h4>{preview.capture.title || "제목 없는 기록"}</h4>
                 <IconButton
+                  className="app-icon-button"
                   type="button"
                   variant="ghost"
-                  aria-label="관계 근거 닫기"
+                  label="관계 근거 닫기"
+                  tooltip="관계 근거 닫기"
                   onClick={() => setPreview(null)}
-                >
-                  <X />
-                </IconButton>
-              </div>
-              <span className="part-label">
+                  icon={<X />}
+                />
+              </HStack>
+              <Text type="inherit" className="part-label">
                 {preview.is_current ? "현재 저장본" : "당시 저장본"}
-              </span>
+              </Text>
               <Markdown>{preview.text}</Markdown>
-            </section>
+            </VStack>
           )}
           {items.map((relation) => (
             <RelationCard
@@ -885,12 +968,14 @@ export function RelationsDialog({
             <p className="muted">아직 연결한 관계가 없습니다.</p>
           )}
           {cursor && !loading && (
-            <Button variant="ghost" onClick={() => void load(cursor)}>
-              더 보기
-            </Button>
+            <Button
+              label="더 보기"
+              variant="ghost"
+              onClick={() => void load(cursor)}
+            />
           )}
         </>
       )}
-    </>
+    </VStack>
   );
 }

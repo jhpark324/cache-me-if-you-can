@@ -8,7 +8,15 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { Badge, Button, Dialog, IconButton, Tooltip } from "@radix-ui/themes";
+import { Button } from "@astryxdesign/core/Button";
+import { Dialog, DialogHeader } from "@astryxdesign/core/Dialog";
+import { IconButton } from "@astryxdesign/core/IconButton";
+import { Tooltip } from "@astryxdesign/core/Tooltip";
+import { Token } from "@astryxdesign/core/Token";
+import { HStack } from "@astryxdesign/core/HStack";
+import { VStack } from "@astryxdesign/core/VStack";
+import { Text } from "@astryxdesign/core/Text";
+import { Heading } from "@astryxdesign/core/Heading";
 import {
   ArrowLeft,
   ArrowUp,
@@ -16,7 +24,6 @@ import {
   Check,
   ChevronRight,
   FileText,
-  Layers3,
   LoaderCircle,
   Lock,
   Menu,
@@ -143,9 +150,7 @@ function KindBadges({ values }: { values: RecordKind[] }) {
   return (
     <>
       {values.map((k) => (
-        <Badge key={k} variant="soft" color="gray">
-          {KIND_LABELS[k] || k}
-        </Badge>
+        <Token key={k} color="gray" size="sm" label={KIND_LABELS[k] || k} />
       ))}
     </>
   );
@@ -528,7 +533,9 @@ export default function App() {
       if (
         (e.metaKey || e.ctrlKey) &&
         e.key.toLowerCase() === "k" &&
-        !document.querySelector('[role="dialog"], [role="alertdialog"]')
+        !document.querySelector(
+          'dialog[open], [role="dialog"], [role="alertdialog"]',
+        )
       ) {
         e.preventDefault();
         searchInput.current?.focus();
@@ -536,7 +543,12 @@ export default function App() {
       if (
         e.key === "Escape" &&
         !e.defaultPrevented &&
-        !(e.target instanceof Element && e.target.closest('[role="dialog"]'))
+        !(
+          e.target instanceof Element &&
+          e.target.closest(
+            'dialog[open], [role="dialog"], [role="alertdialog"]',
+          )
+        )
       ) {
         if (sourceOpen) closeSource();
         else setNavOpen(false);
@@ -883,32 +895,35 @@ export default function App() {
   }
   const sourceContent = (
     <>
-      <div className="panel-heading">
-        <div>
-          <span className="eyebrow">출처</span>
-          <h2 id="source-title" ref={sourceHeading} tabIndex={-1}>
+      <HStack className="panel-heading">
+        <VStack>
+          <Heading
+            level={2}
+            id="source-title"
+            ref={sourceHeading}
+            tabIndex={-1}
+          >
             {source?.capture.title || "저장된 기록"}
-          </h2>
-        </div>
+          </Heading>
+        </VStack>
         <Tool label="출처 닫기" onClick={closeSource}>
           <X />
         </Tool>
-      </div>
+      </HStack>
       {sourceLoading ? (
         <Loading text="출처를 불러오는 중" />
       ) : sourceError ? (
-        <div>
+        <VStack>
           <ErrorMessage error={sourceError} />
           {sourceSelection && (
             <Button
-              variant="soft"
               onClick={() => void openSource(sourceSelection)}
-            >
-              <RefreshCw />
-              출처 다시 불러오기
-            </Button>
+              variant="secondary"
+              label="출처 다시 불러오기"
+              icon={<RefreshCw />}
+            />
           )}
-        </div>
+        </VStack>
       ) : (
         source && (
           <>
@@ -916,36 +931,36 @@ export default function App() {
               capture={source.capture}
               isCurrent={source.is_current}
             />
-            <div className="metadata">
+            <HStack className="metadata">
               <KindBadges values={source.capture.kinds} />
-              <span>
+              <Text type="inherit" color="inherit">
                 {source.is_current
                   ? "현재 저장본"
                   : `과거 저장본 · 버전 ${source.capture.revision_no}`}
-              </span>
-            </div>
+              </Text>
+            </HStack>
             {!source.is_current && (
               <p className="notice">답변이 참조한 당시의 내용입니다.</p>
             )}
             {source.review_state === "needs_review" && (
               <p className="notice">출처가 변경되어 재검토가 필요합니다.</p>
             )}
-            <div className="source-excerpt">
+            <VStack className="source-excerpt">
               <Markdown>{source.text}</Markdown>
-            </div>
+            </VStack>
             <details>
               <summary>기록 전체 보기</summary>
               <Markdown>{source.capture.body_markdown}</Markdown>
             </details>
             <Button
-              variant="soft"
               onClick={() => {
                 void openCapture(source.capture.id);
                 closeSource();
               }}
-            >
-              현재 기록 열기 <ChevronRight />
-            </Button>
+              variant="secondary"
+              label="현재 기록 열기"
+              icon={<ChevronRight />}
+            />
           </>
         )
       )}
@@ -963,6 +978,19 @@ export default function App() {
   useEffect(() => {
     if (!compactNav) setNavOpen(false);
   }, [compactNav]);
+  const navWasOpen = useRef(false);
+  useEffect(() => {
+    const restoreMenu =
+      navWasOpen.current && !navOpen && compactNav && !menuDestination.current;
+    navWasOpen.current = navOpen;
+    if (!restoreMenu) return;
+    const frame = requestAnimationFrame(() => {
+      menuToggle.current
+        ?.querySelector("button")
+        ?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [navOpen, compactNav]);
   const sidebarContent = (
     <>
       <button
@@ -970,10 +998,14 @@ export default function App() {
         onClick={() => navigateView("home")}
         aria-label="Cache Me If You Can 홈"
       >
-        <span>
-          <span className="brand-first">Cache Me</span>
-          <span className="brand-second">If You Can</span>
-        </span>
+        <Text type="inherit" color="inherit">
+          <Text type="inherit" color="inherit" className="brand-first">
+            Cache Me
+          </Text>
+          <Text type="inherit" color="inherit" className="brand-second">
+            If You Can
+          </Text>
+        </Text>
       </button>
       {compactNav && (
         <Tool label="메뉴 닫기" onClick={() => setNavOpen(false)}>
@@ -999,7 +1031,7 @@ export default function App() {
           </button>
         ))}
       </nav>
-      <div className="sidebar-space" />
+      <VStack className="sidebar-space" />
       <button
         className="nav-button"
         onClick={() => {
@@ -1011,11 +1043,11 @@ export default function App() {
         <SettingsIcon />
         설정
       </button>
-      <div className="local-label">내 기기에 저장</div>
+      <HStack className="local-label">내 기기에 저장</HStack>
     </>
   );
   return (
-    <div
+    <HStack
       className={`app-shell ${sourceOpen ? "has-source" : ""}`}
       data-view={view}
       data-reduced-motion={reduced}
@@ -1035,27 +1067,30 @@ export default function App() {
           {sidebarContent}
         </aside>
       )}
-      <Dialog.Root open={navOpen && compactNav} onOpenChange={setNavOpen}>
-        <Dialog.Content
-          className="sidebar glass nav-drawer"
-          aria-describedby={undefined}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            if (menuDestination.current === "record") {
-              (
-                recordHeading.current ||
-                recordErrorHeading.current ||
-                document.getElementById("main")
-              )?.focus({ preventScroll: true });
-            } else if (!menuDestination.current)
-              menuToggle.current?.querySelector("button")?.focus();
-          }}
-        >
-          <Dialog.Title className="sr-only">기록과 탐색</Dialog.Title>
-          {sidebarContent}
-        </Dialog.Content>
-      </Dialog.Root>
-      <div className="workspace" inert={Boolean(sourceOpen && mobile)}>
+      <Dialog
+        isOpen={navOpen && compactNav}
+        onOpenChange={setNavOpen}
+        onKeyDownCapture={(event) => {
+          if (event.key !== "Escape") return;
+          // Close navigation on the first Escape, including a fading tooltip.
+          event.preventDefault();
+          event.stopPropagation();
+          setNavOpen(false);
+        }}
+        className="sidebar glass nav-drawer"
+        aria-describedby={undefined}
+        width="var(--sidebar-width)"
+        maxHeight="90dvh"
+        purpose="info"
+      >
+        <DialogHeader
+          className="nav-heading"
+          title="기록과 탐색"
+          hasDivider={false}
+        />
+        {sidebarContent}
+      </Dialog>
+      <VStack className="workspace" inert={Boolean(sourceOpen && mobile)}>
         <main
           id="main"
           className={`main-content ${view !== "home" ? "is-browsing" : ""} ${selected || detailLoading || detailError ? "has-detail" : ""} ${searched ? "is-searching" : ""} ${hasRetrieval ? "has-retrieval" : ""}`}
@@ -1066,26 +1101,33 @@ export default function App() {
             className="search-area"
             aria-label="지식 검색"
           >
-            <h1 className="sr-only">Cache Me If You Can — 지식 공간</h1>
-            <div className={`search-dock ${searched ? "has-answer" : ""}`}>
+            <Heading level={1} className="sr-only">
+              Cache Me If You Can — 지식 공간
+            </Heading>
+            <VStack className={`search-dock ${searched ? "has-answer" : ""}`}>
               <form className="search-form" onSubmit={runSearch}>
                 {compactNav ? (
-                  <span className="nav-toggle" ref={menuToggle}>
+                  <Text
+                    type="inherit"
+                    color="inherit"
+                    className="nav-toggle"
+                    ref={menuToggle}
+                  >
                     <Tooltip content="메뉴 열기">
                       <IconButton
+                        className="app-icon-button"
                         id="menu-toggle"
                         type="button"
-                        variant="ghost"
-                        aria-label="메뉴 열기"
                         onClick={() => {
                           menuDestination.current = null;
                           setNavOpen(true);
                         }}
-                      >
-                        <Menu />
-                      </IconButton>
+                        variant="ghost"
+                        label="메뉴 열기"
+                        icon={<Menu />}
+                      />
                     </Tooltip>
-                  </span>
+                  </Text>
                 ) : (
                   <Search aria-hidden="true" />
                 )}
@@ -1111,20 +1153,23 @@ export default function App() {
                     {navigator.platform.includes("Mac") ? "⌘ K" : "Ctrl K"}
                   </kbd>
                 )}
-                <Button
+                <IconButton
+                  className="app-icon-button"
                   type="submit"
-                  aria-label="검색"
-                  disabled={exampleMode || !query.trim()}
-                >
-                  {searching ? (
-                    <LoaderCircle
-                      className="search-loading-spinner"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <ArrowUp aria-hidden="true" />
-                  )}
-                </Button>
+                  isDisabled={exampleMode || !query.trim()}
+                  variant="primary"
+                  label="검색"
+                  icon={
+                    searching ? (
+                      <LoaderCircle
+                        className="search-loading-spinner"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <ArrowUp aria-hidden="true" />
+                    )
+                  }
+                />
               </form>
               <p className="sr-only" role="status" aria-atomic="true">
                 {searching ? searchStatus || "답변을 준비하고 있어요" : ""}
@@ -1135,14 +1180,18 @@ export default function App() {
                   aria-label="검색 응답"
                   aria-busy={searching}
                 >
-                  <div className="section-heading">
-                    <span className="section-kicker">
+                  <HStack className="section-heading">
+                    <Text
+                      type="inherit"
+                      color="inherit"
+                      className="section-kicker"
+                    >
                       <Sparkles /> {searching ? "답변 준비 중" : "검색 응답"}
-                    </span>
+                    </Text>
                     <Tool label="검색 응답 닫기" onClick={dismissSearch}>
                       <X />
                     </Tool>
-                  </div>
+                  </HStack>
                   {searching && !answer && (
                     <SearchLoading
                       key={searchAttempt}
@@ -1157,7 +1206,6 @@ export default function App() {
                         onOpenSource={openSource}
                       />
                       <Button
-                        variant="ghost"
                         onClick={() => {
                           recordOrigin.current = "library";
                           recordTrigger.current = null;
@@ -1166,10 +1214,10 @@ export default function App() {
                             sources: answer.sources,
                           });
                         }}
-                      >
-                        <Plus />
-                        답변을 기록으로 저장
-                      </Button>
+                        variant="ghost"
+                        label="답변을 기록으로 저장"
+                        icon={<Plus />}
+                      />
                     </>
                   )}
                   {!searching && !answer && !searchError && (
@@ -1179,10 +1227,10 @@ export default function App() {
                   )}
                 </section>
               )}
-            </div>
+            </VStack>
           </section>
           {view !== "home" && (
-            <div
+            <VStack
               className="record-browser-host"
               hidden={Boolean(selected || detailLoading || detailError)}
             >
@@ -1218,20 +1266,20 @@ export default function App() {
                   setMonth("");
                 }}
               />
-            </div>
+            </VStack>
           )}
           {detailLoading ? (
             <Loading text="기록을 불러오는 중" />
           ) : selected ? (
             <article className="record-detail glass">
-              <div className="section-heading">
+              <HStack className="section-heading">
                 <button className="text-button" onClick={returnToRecords}>
                   <ArrowLeft />
                   {recordOrigin.current === "timeline"
                     ? "타임라인"
                     : "모든 기록"}
                 </button>
-                <div className="row">
+                <HStack className="row">
                   <Tool
                     label="기록 수정"
                     onClick={() => setEditor({ record: selected })}
@@ -1245,39 +1293,50 @@ export default function App() {
                   >
                     <Trash2 />
                   </Tool>
-                </div>
-              </div>
+                </HStack>
+              </HStack>
               <ErrorMessage error={detailError} />
-              <h1 id="record-title" ref={recordHeading} tabIndex={-1}>
+              <Heading
+                level={1}
+                id="record-title"
+                ref={recordHeading}
+                tabIndex={-1}
+              >
                 {selected.title || "제목 없는 기록"}
-              </h1>
-              <div className="metadata">
+              </Heading>
+              <HStack className="metadata">
                 <KindBadges values={selected.kinds} />
                 {selected.visibility === "private" && (
-                  <span>
+                  <Text type="inherit" color="inherit">
                     <Lock />
                     비공개
-                  </span>
+                  </Text>
                 )}
-                <span>{date(selected.updated_at)}</span>
-                <span>버전 {selected.revision_no}</span>
-                <span>{indexLabel(selected.index_state.status)}</span>
+                <Text type="inherit" color="inherit">
+                  {date(selected.updated_at)}
+                </Text>
+                <Text type="inherit" color="inherit">
+                  버전 {selected.revision_no}
+                </Text>
+                <Text type="inherit" color="inherit">
+                  {indexLabel(selected.index_state.status)}
+                </Text>
                 {selected.completion_state && (
-                  <span>
+                  <Text type="inherit" color="inherit">
                     {selected.completion_state === "completed"
                       ? "완료"
                       : "미완료"}
-                  </span>
+                  </Text>
                 )}
-              </div>
+              </HStack>
               {selected.review_state === "needs_review" && (
                 <p className="notice">
                   출처가 변경되었습니다. 현재 내용의 근거를 다시 확인해 주세요.
                 </p>
               )}
               {selected.concept_state?.status === "failed" && (
-                <div className="concept-status notice">
-                  <div className="concept-failure-help">
+                <VStack className="concept-status notice">
+                  <VStack className="concept-failure-help">
                     <p>기록은 저장되었지만 주제를 연결하지 못했습니다.</p>
                     <p>
                       {CONCEPT_FAILURE_HELP[
@@ -1295,18 +1354,19 @@ export default function App() {
                         ChatGPT 사용량 확인
                       </a>
                     )}
-                  </div>
+                  </VStack>
                   <Button
-                    variant="soft"
-                    disabled={
+                    isDisabled={
                       conceptRetryBusy || !selected.concept_state.job_id
                     }
                     onClick={() => void retryConcept()}
-                  >
-                    <RefreshCw />
-                    {conceptRetryBusy ? "다시 요청 중…" : "주제 연결 다시 시도"}
-                  </Button>
-                </div>
+                    variant="secondary"
+                    label={
+                      conceptRetryBusy ? "다시 요청 중…" : "주제 연결 다시 시도"
+                    }
+                    icon={<RefreshCw />}
+                  />
+                </VStack>
               )}
               {["pending", "running"].includes(
                 selected.concept_state?.status || "",
@@ -1322,28 +1382,41 @@ export default function App() {
                 </p>
               )}
               <Markdown>{selected.body_markdown}</Markdown>
-              <div className="management-actions">
-                <Button variant="ghost" onClick={() => setMergeOpen(true)}>
-                  기록 병합
-                </Button>
-                <Button variant="ghost" onClick={() => setRelationsOpen(true)}>
-                  관계 관리
-                </Button>
-                <Button variant="ghost" onClick={() => setConceptOpen(true)}>
-                  주제 정정
-                </Button>
-                <Button variant="ghost" onClick={() => setReviewOpen(true)}>
-                  출처 재검토
-                </Button>
-              </div>
+              <HStack className="management-actions">
+                <Button
+                  onClick={() => setMergeOpen(true)}
+                  variant="ghost"
+                  label="기록 병합"
+                />
+                <Button
+                  onClick={() => setRelationsOpen(true)}
+                  variant="ghost"
+                  label="관계 관리"
+                />
+                <Button
+                  onClick={() => setConceptOpen(true)}
+                  variant="ghost"
+                  label="주제 정정"
+                />
+                <Button
+                  onClick={() => setReviewOpen(true)}
+                  variant="ghost"
+                  label="출처 재검토"
+                />
+              </HStack>
               {selected.concepts?.length > 0 && (
-                <div className="chips">
+                <HStack className="chips">
                   {selected.concepts.map((c) => (
-                    <span className="chip" key={c.id}>
+                    <Text
+                      type="inherit"
+                      color="inherit"
+                      className="chip"
+                      key={c.id}
+                    >
                       {c.name}
-                    </span>
+                    </Text>
                   ))}
-                </div>
+                </HStack>
               )}
               {selected.nodes?.length > 0 && (
                 <details>
@@ -1353,22 +1426,26 @@ export default function App() {
                   </summary>
                   {selected.nodes.map((n) => (
                     <section className="node-block" key={n.id}>
-                      <span className="part-label">
+                      <Text
+                        type="inherit"
+                        color="inherit"
+                        className="part-label"
+                      >
                         {n.label || NODE_LABELS[n.kind] || n.kind}
-                      </span>
+                      </Text>
                       <p>{n.text}</p>
-                      <span className="muted">
+                      <Text type="inherit" color="inherit" className="muted">
                         {ORIGIN_LABELS[n.origin] || n.origin} ·{" "}
                         {VERIFICATION_LABELS[n.verification_state] ||
                           n.verification_state}
-                      </span>
+                      </Text>
                     </section>
                   ))}
                 </details>
               )}
               {selected.sources?.length > 0 && (
-                <div className="detail-sources">
-                  <h3>이 기록의 출처</h3>
+                <VStack className="detail-sources">
+                  <Heading level={3}>이 기록의 출처</Heading>
                   {selected.sources.map((s, i) => (
                     <button
                       className="chip"
@@ -1385,16 +1462,15 @@ export default function App() {
                           : ""}
                     </button>
                   ))}
-                </div>
+                </VStack>
               )}
               <Button
-                variant="soft"
                 onClick={() => void showGraph()}
-                disabled={graphLoading}
-              >
-                <Network />
-                {graphLoading ? "연결을 불러오는 중" : "주변 지식 보기"}
-              </Button>
+                isDisabled={graphLoading}
+                variant="secondary"
+                label={graphLoading ? "연결을 불러오는 중" : "주변 지식 보기"}
+                icon={<Network />}
+              />
               {graph && (
                 <Suspense fallback={<Loading text="그래프를 여는 중" />}>
                   <Graph data={graph} onSource={openSource} reduced={reduced} />
@@ -1403,30 +1479,32 @@ export default function App() {
             </article>
           ) : detailError ? (
             <article className="detail-error glass">
-              <h2 ref={recordErrorHeading} tabIndex={-1}>
+              <Heading level={2} ref={recordErrorHeading} tabIndex={-1}>
                 기록을 열 수 없어요
-              </h2>
+              </Heading>
               <ErrorMessage error={detailError} />
-              <div className="detail-error-actions">
+              <HStack className="detail-error-actions">
                 {requestedRecordId && (
                   <Button
                     onClick={() => void openCapture(requestedRecordId, false)}
-                  >
-                    <RefreshCw />
-                    기록 다시 불러오기
-                  </Button>
+                    variant="secondary"
+                    label="기록 다시 불러오기"
+                    icon={<RefreshCw />}
+                  />
                 )}
-                <Button variant="soft" color="gray" onClick={goHome}>
-                  <ArrowLeft />
-                  지식 공간으로
-                </Button>
-              </div>
+                <Button
+                  onClick={goHome}
+                  variant="secondary"
+                  label="지식 공간으로"
+                  icon={<ArrowLeft />}
+                />
+              </HStack>
             </article>
           ) : (
-            <div className="home-view-marker" />
+            <VStack className="home-view-marker" />
           )}
         </main>
-        <div
+        <VStack
           className={`graph-stage ${searched || selected ? "is-reading" : ""} ${hasRetrieval ? "has-retrieval" : ""}`}
           style={hasRetrieval ? { top: searchBottom } : undefined}
           aria-label="내 지식 그래프"
@@ -1475,8 +1553,8 @@ export default function App() {
             </Suspense>
           )}
           {exampleMode && (
-            <div className="example-banner">
-              <Badge color="gray">예시 · 읽기 전용</Badge>
+            <HStack className="example-banner">
+              <Token color="gray" size="sm" label="예시 · 읽기 전용" />
               <button
                 className="text-button"
                 onClick={() => {
@@ -1486,58 +1564,53 @@ export default function App() {
               >
                 내 지식으로 돌아가기 <X />
               </button>
-            </div>
+            </HStack>
           )}
           {exampleMode && exampleSelection && (
-            <div className="example-selection glass">
-              <span className="eyebrow">예시 항목</span>
+            <VStack className="example-selection glass">
+              <Text type="inherit" color="inherit" className="eyebrow">
+                예시 항목
+              </Text>
               <p>{exampleSelection}</p>
               <small>
                 화면을 살펴보기 위한 예시입니다. 내 기록에 저장되지 않아요.
               </small>
-            </div>
+            </VStack>
           )}
           {homeGraphLoading && !homeGraph && (
-            <div className="graph-state">
+            <VStack className="graph-state">
               <Loading text="지식을 연결하는 중" />
-            </div>
+            </VStack>
           )}
           {homeGraphError && !homeGraph && (
-            <div className="graph-state graph-error glass">
+            <VStack className="graph-state graph-error glass">
               <ErrorMessage error={homeGraphError} />
-              <Button variant="soft" onClick={refreshHomeGraph}>
-                다시 불러오기
-              </Button>
-            </div>
+              <Button
+                onClick={refreshHomeGraph}
+                variant="secondary"
+                label="다시 불러오기"
+              />
+            </VStack>
           )}
           {homeGraph &&
             !displayGraph.nodes.length &&
             !homeGraphLoading &&
             !exampleMode && (
-              <div
+              <VStack
                 className={`graph-empty ${searched || selected ? "is-behind" : ""}`}
               >
-                <div className="empty-orbits" aria-hidden="true">
-                  <i />
-                  <i />
-                  <i />
-                  <span>
-                    <Layers3 />
-                  </span>
-                </div>
-                <h2>첫 번째 생각을 남겨보세요</h2>
+                <Heading level={2}>첫 번째 생각을 남겨보세요</Heading>
                 <p>기록한 생각이 연결되고, 나만의 지식이 됩니다.</p>
                 <Button
-                  variant="soft"
                   onClick={() => {
                     recordOrigin.current = "library";
                     recordTrigger.current = null;
                     setEditor({});
                   }}
-                >
-                  <Plus />
-                  기록 시작하기
-                </Button>
+                  variant="primary"
+                  label="기록 시작하기"
+                  icon={<Plus />}
+                />
                 {
                   <button
                     className="example-start text-button"
@@ -1549,7 +1622,7 @@ export default function App() {
                     예시 보기 <ChevronRight />
                   </button>
                 }
-              </div>
+              </VStack>
             )}
           {!exampleMode &&
             homeGraph &&
@@ -1559,7 +1632,7 @@ export default function App() {
               failedConnections.length > 0 ||
               !homeGraph.edges.length ||
               Boolean(homeGraphError)) && (
-              <div
+              <HStack
                 className="graph-connection-status"
                 role="status"
                 aria-label="주제 연결 상태"
@@ -1604,14 +1677,14 @@ export default function App() {
                     주세요.
                   </p>
                 )}
-              </div>
+              </HStack>
             )}
-          <div className="stage-footer">
-            <span>
+          <HStack className="stage-footer">
+            <Text type="inherit" color="inherit">
               {exampleMode
                 ? "예시 공간 · 내 기록과 별개"
                 : `내 지식 공간${homeGraph ? ` · ${homeGraph.nodes.length}개 항목` : ""}`}
-            </span>
+            </Text>
             <Tool
               label="그래프 새로고침"
               onClick={() => {
@@ -1622,9 +1695,9 @@ export default function App() {
             >
               <RefreshCw />
             </Tool>
-          </div>
-        </div>
-      </div>
+          </HStack>
+        </VStack>
+      </VStack>
       {sourceOpen && !mobile && (
         <aside
           className="source-panel glass"
@@ -1634,28 +1707,24 @@ export default function App() {
           {sourceContent}
         </aside>
       )}
-      <Dialog.Root
-        open={sourceOpen && mobile}
+      <Dialog
+        isOpen={sourceOpen && mobile}
         onOpenChange={(open) => {
           if (!open) closeSource();
         }}
+        className="source-mobile"
+        aria-describedby={undefined}
+        width="min(36rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content
-          className="source-mobile"
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            sourceHeading.current?.focus();
-          }}
-          onCloseAutoFocus={(event) => {
-            event.preventDefault();
-            requestAnimationFrame(() => sourceTrigger.current?.focus());
-          }}
-          aria-describedby={undefined}
-        >
-          <Dialog.Title className="sr-only">출처 상세</Dialog.Title>
-          {sourceContent}
-        </Dialog.Content>
-      </Dialog.Root>
+        <DialogHeader
+          className="dialog-heading"
+          title="출처 상세"
+          hasDivider={false}
+        />
+        {sourceOpen && mobile && sourceContent}
+      </Dialog>
       {editor && (
         <RecordEditor
           key={editor.record?.id || "new"}
@@ -1664,170 +1733,149 @@ export default function App() {
           onClose={() => setEditor(null)}
         />
       )}
-      <Dialog.Root
-        open={Boolean(deletePreview)}
+      <Dialog
+        isOpen={Boolean(deletePreview)}
         onOpenChange={(open) => {
           if (!open && !deleteBusy) setDeletePreview(null);
         }}
+        className="confirm-dialog"
+        width="min(36rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content className="confirm-dialog">
-          <Dialog.Title>이 기록을 삭제할까요?</Dialog.Title>
-          <Dialog.Description>
-            <strong>{deletePreview?.title || "선택한 기록"}</strong>은 삭제 후
-            검색하거나 다시 열 수 없습니다. 복원 기능은 제공하지 않습니다.
-          </Dialog.Description>
-          <ErrorMessage error={deleteError} />
-          <div className="dialog-actions">
-            <Button
-              variant="soft"
-              color="gray"
-              disabled={deleteBusy}
-              onClick={() => setDeletePreview(null)}
-            >
-              취소
-            </Button>
-            <Button
-              color="red"
-              disabled={deleteBusy}
-              onClick={() => void confirmDelete()}
-            >
-              {deleteBusy ? "삭제 중…" : "삭제하기"}
-            </Button>
-          </div>
-        </Dialog.Content>
-      </Dialog.Root>
-      <Dialog.Root
-        open={reviewOpen && Boolean(selected)}
+        <DialogHeader
+          className="dialog-heading"
+          title="이 기록을 삭제할까요?"
+        />
+        <Text as="p">
+          <strong>{deletePreview?.title || "선택한 기록"}</strong>은 삭제 후
+          검색하거나 다시 열 수 없습니다. 복원 기능은 제공하지 않습니다.
+        </Text>
+        <ErrorMessage error={deleteError} />
+        <HStack className="dialog-actions">
+          <Button
+            isDisabled={deleteBusy}
+            onClick={() => setDeletePreview(null)}
+            variant="secondary"
+            label="취소"
+          />
+          <Button
+            isDisabled={deleteBusy}
+            onClick={() => void confirmDelete()}
+            variant="destructive"
+            label={deleteBusy ? "삭제 중…" : "삭제하기"}
+          />
+        </HStack>
+      </Dialog>
+      <Dialog
+        isOpen={reviewOpen && Boolean(selected)}
+        aria-label="출처 재검토"
         onOpenChange={setReviewOpen}
+        className="editor-dialog"
+        aria-describedby={undefined}
+        width="min(60rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content
-          className="editor-dialog"
-          aria-describedby={undefined}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLElement>("[data-initial-focus]")
-              ?.focus();
-          }}
-        >
-          {selected && (
-            <SourceReview
-              record={selected}
-              onSaved={saved}
-              onClose={() => setReviewOpen(false)}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-      <Dialog.Root
-        open={conceptOpen && Boolean(selected)}
+        {reviewOpen && selected && (
+          <SourceReview
+            record={selected}
+            onSaved={saved}
+            onClose={() => setReviewOpen(false)}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        isOpen={conceptOpen && Boolean(selected)}
+        aria-label="기록의 주제 정정"
         onOpenChange={setConceptOpen}
+        className="settings-dialog"
+        aria-describedby={undefined}
+        width="min(48rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content
-          className="settings-dialog"
-          aria-describedby={undefined}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLElement>("[data-initial-focus]")
-              ?.focus();
-          }}
-        >
-          {selected && (
-            <ConceptEditor
-              record={selected}
-              onSaved={saved}
-              onClose={() => setConceptOpen(false)}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-      <Dialog.Root
-        open={mergeOpen && Boolean(selected)}
+        {conceptOpen && selected && (
+          <ConceptEditor
+            record={selected}
+            onSaved={saved}
+            onClose={() => setConceptOpen(false)}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        isOpen={mergeOpen && Boolean(selected)}
+        aria-label="기록 병합"
         onOpenChange={setMergeOpen}
+        className="editor-dialog"
+        aria-describedby={undefined}
+        width="min(60rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content
-          className="editor-dialog"
-          aria-describedby={undefined}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLElement>("[data-initial-focus]")
-              ?.focus();
-          }}
-        >
-          {selected && (
-            <MergeDialog
-              record={selected}
-              onSaved={saved}
-              onClose={() => setMergeOpen(false)}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-      <Dialog.Root
-        open={relationsOpen && Boolean(selected)}
+        {mergeOpen && selected && (
+          <MergeDialog
+            record={selected}
+            onSaved={saved}
+            onClose={() => setMergeOpen(false)}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        isOpen={relationsOpen && Boolean(selected)}
+        aria-label="기록의 관계"
         onOpenChange={setRelationsOpen}
+        className="editor-dialog"
+        aria-describedby={undefined}
+        width="min(60rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
       >
-        <Dialog.Content
-          className="editor-dialog"
-          aria-describedby={undefined}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLElement>("[data-initial-focus]")
-              ?.focus();
-          }}
-        >
-          {selected && (
-            <RelationsDialog
-              record={selected}
-              onClose={() => setRelationsOpen(false)}
-              onChanged={(message) => {
-                setGraph(null);
-                refreshHomeGraph();
-                searchController.current?.abort();
-                searchVersion.current++;
-                setSearched(false);
-                setSearching(false);
-                setAnswer(null);
-                setSearchError("");
-                sourceVersion.current++;
-                setSourceOpen(false);
-                setSource(null);
-                setToast(message);
-              }}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-      <Dialog.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <Dialog.Content
-          className="settings-dialog"
-          aria-describedby={undefined}
-          onOpenAutoFocus={(event) => {
-            event.preventDefault();
-            document
-              .querySelector<HTMLElement>("[data-settings-heading]")
-              ?.focus();
-          }}
-        >
-          {settingsOpen && (
-            <SettingsPanel
-              onClose={() => setSettingsOpen(false)}
-              onToast={setToast}
-            />
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-      <div className={`toast ${toast ? "is-visible" : ""}`} role="status">
+        {relationsOpen && selected && (
+          <RelationsDialog
+            record={selected}
+            onClose={() => setRelationsOpen(false)}
+            onChanged={(message) => {
+              setGraph(null);
+              refreshHomeGraph();
+              searchController.current?.abort();
+              searchVersion.current++;
+              setSearched(false);
+              setSearching(false);
+              setAnswer(null);
+              setSearchError("");
+              sourceVersion.current++;
+              setSourceOpen(false);
+              setSource(null);
+              setToast(message);
+            }}
+          />
+        )}
+      </Dialog>
+      <Dialog
+        isOpen={settingsOpen}
+        onOpenChange={setSettingsOpen}
+        className="settings-dialog"
+        aria-describedby={undefined}
+        width="min(48rem, 94vw)"
+        maxHeight="90dvh"
+        purpose="info"
+      >
+        {settingsOpen && (
+          <SettingsPanel
+            onClose={() => setSettingsOpen(false)}
+            onToast={setToast}
+          />
+        )}
+      </Dialog>
+      <VStack className={`toast ${toast ? "is-visible" : ""}`} role="status">
         {toast && (
           <>
             <Check />
             {toast}
           </>
         )}
-      </div>
-    </div>
+      </VStack>
+    </HStack>
   );
 }
