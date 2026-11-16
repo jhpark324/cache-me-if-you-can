@@ -14,7 +14,13 @@ const source = { capture_id: captureId, revision_id: revisionId };
 
 async function fixture(
   page: Page,
-  initial: "pending" | "failed" | "ready" | "empty" = "pending",
+  initial:
+    | "pending"
+    | "running"
+    | "needs_review"
+    | "failed"
+    | "ready"
+    | "empty" = "pending",
 ) {
   let status = initial;
   let graphReads = 0;
@@ -42,8 +48,12 @@ async function fixture(
       status,
       job_id: jobId,
       error_code: status === "failed" ? "MODEL_USAGE_LIMIT" : null,
+      unresolved_hints: status === "needs_review" ? ["복습 도구 선택"] : [],
     },
-    concepts: [],
+    concepts:
+      status === "needs_review"
+        ? [{ id: conceptId, name: "학습과 기억" }]
+        : [],
     concept_hints: [],
     nodes: [],
     sources: [],
@@ -209,15 +219,20 @@ test("주제 연결 완료를 자동 반영하고 세부 항목의 주제 간선
   await ready(page);
   const status = page.getByRole("status", { name: "주제 연결 상태" });
   await expect(status).toContainText(
-    "표시 중인 기록 1개의 주제 연결을 기다리고 있어요.",
+    "표시 중인 기록의 주제 연결: 처리 중 0개 · 대기 1개.",
   );
   await page.screenshot({ path: testInfo.outputPath("graph-pending.png") });
   await page
     .locator(".graph-world canvas")
     .evaluate((el) => el.setAttribute("data-identity", "same-canvas"));
+  f.setStatus("running");
+  await page.clock.fastForward(8100);
+  await expect(status).toContainText(
+    "표시 중인 기록의 주제 연결: 처리 중 1개 · 대기 0개.",
+  );
   f.setStatus("ready");
   await page.clock.fastForward(8100);
-  await expect.poll(() => f.graphReads).toBeGreaterThanOrEqual(2);
+  await expect.poll(() => f.graphReads).toBeGreaterThanOrEqual(3);
   await expect(page.locator(".graph-world .graph-label")).toHaveCount(3);
   await expect(status).toHaveCount(0);
   await expect(page.locator(".graph-world canvas")).toHaveAttribute(
@@ -226,6 +241,35 @@ test("주제 연결 완료를 자동 반영하고 세부 항목의 주제 간선
   );
   await ready(page);
   await page.screenshot({ path: testInfo.outputPath("graph-connected.png") });
+  expect(f.errors).toEqual([]);
+});
+
+test("확인이 필요한 주제는 연결 실패와 구분하고 기존 연결을 상세에서 보여준다", async ({
+  page,
+}) => {
+  const f = await fixture(page, "needs_review");
+  await page.goto("/");
+  await ready(page);
+  const status = page.getByRole("status", { name: "주제 연결 상태" });
+  await expect(status).toContainText(
+    "표시 중인 기록 1개에 확인이 필요한 주제가 있어요.",
+  );
+  await expect(status).not.toContainText("실패");
+  await page
+    .getByRole("button", { name: "주제 검토가 필요한 기록 확인", exact: true })
+    .click();
+  const detail = page.locator(".record-detail");
+  await expect(detail).toContainText("복습 방법을 정리한 기록");
+  await expect(detail).toContainText(
+    "확정하기 어려운 주제는 연결을 보류했어요. 주제 정정에서 확인하고 직접 선택할 수 있어요.",
+  );
+  await expect(detail).toContainText("학습과 기억");
+  await expect(
+    detail.getByRole("button", { name: "주제 정정", exact: true }),
+  ).toBeVisible();
+  expect(
+    f.writes.filter((write) => write.path.endsWith("/concept-retry")),
+  ).toHaveLength(0);
   expect(f.errors).toEqual([]);
 });
 
