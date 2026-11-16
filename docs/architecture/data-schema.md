@@ -6,7 +6,7 @@
 - 용어: [도메인 용어](../project/domain-language.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
-기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
+기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py), [고정 baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 테이블 추가 0002](../../backend/alembic/versions/0002_topic_backfill.py)가 구현되어 있다. 0002는 기존 주제를 작업으로 등록하지 않는다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
 
 ## 공통 규약
 
@@ -85,7 +85,7 @@ erDiagram
 
 주제·유형·Node·출처 등 내용 메타데이터 변경의 `change_kind`는 `edit`다. 완료 상태만 바꾸면 `completion_change`, 다른 내용 변경이 함께 있으면 `edit`, 병합 전용 명령은 `merge`, 출처 재검토 전용 명령은 `source_review`로 기록한다. 과거 revision과 그 Node는 변경하지 않는다. 새 revision에 Node를 승계하거나 제출할 때에는 새 Node ID를 만들며, 구조 상태와 안전한 승계 범위는 아래 규칙을 따른다.
 
-서버의 저장 후 주제 연결만 수행한 변경은 위 일반 수정과 구분해 `concept_enrichment`로 남긴다. 본문·의미 필드를 유지하면서 새 revision의 주제 연결만 바꾸고 작업의 `applied_revision_id`를 함께 기록한다. 상세한 원자적 반영·재시도·실패·명시적 정정 규칙은 [주제 연결 계약](ingestion-and-chunking.md)을 따른다.
+서버의 저장 후 분류나 주제 정의 변경 보강으로 주제 연결만 수행한 변경은 위 일반 수정과 구분해 `concept_enrichment`로 남긴다. 본문·의미 필드를 유지하면서 새 revision의 주제 연결만 바꾼다. 저장 후 분류는 작업의 `applied_revision_id`, 보강은 정의·내용·정책별 판단을 연결 변경과 함께 기록한다. 상세한 원자적 반영·재시도·실패·명시적 정정 규칙은 [주제 연결 계약](ingestion-and-chunking.md)을 따른다.
 
 `EventTime`은 `{expression?, precision, value?, timezone?}` 형태다. `precision`은 `unknown | year | month | day | instant`, `value`는 정밀도에 맞는 ISO 표현이다. 예를 들어 `2026-11`은 월 단위 값으로 보존하며 11월 1일 자정으로 바꾸지 않는다. 해석하지 못한 “지난 여름”은 원래 표현과 `unknown`으로 남긴다. 입력 경로만 보고 사건 시각을 저장 시각으로 채우지 않는다.
 
@@ -195,11 +195,15 @@ erDiagram
 | --- | --- |
 | `embedding_profiles` | `id`, `brain_id FK`, `model_id`, `model_revision`, `representation=multi_vector`, `token_dimension=128`, `dtype=float32`, `normalization`, `metric=cosine`, `scoring=maxsim`, `query_tokens=64`, `document_tokens=512`, `overlap_tokens=64`(강제 분할 시 최대값), `context_prefix_tokens=64`, `small_section_tokens=128`, `input_rules_version`, `chunk_rules_version=markdown-v1`, `runtime_versions`, `created_at`. 생성 후 불변 |
 | `concept_enrichment_jobs` | `id`, `brain_id FK`, `capture_id FK`, `requested_revision_id FK`, `expected_state_version`, `policy_version`, `status: pending \| running \| completed \| needs_review \| failed \| superseded`, `applied_revision_id? FK`, `unresolved_hints[]`, `attempt_count`, `available_at`, `lease_token?`, `lease_until?`, `error_code?`, `created_at`, `completed_at?`. UNIQUE `(capture_id, requested_revision_id, expected_state_version, policy_version)`; 본문을 복제하지 않음 |
+| `topic_backfill_jobs` | `id`, `brain_id`, `concept_id`, `definition_hash`, `policy_version`, `status: pending \| running \| completed \| partial \| failed \| superseded`, `candidate_ids[]`(최대 20개), `attempt_count`(최대 3), `call_count`(최대 4), `available_at`, `lease_token?`, `lease_until?`, `error_code?`, `created_at`, `completed_at?`. UNIQUE `(concept_id, definition_hash, policy_version)`, 같은 brain의 Concept를 복합 FK로 참조하며 호출 수는 재시도를 포함 |
+| `topic_backfill_decisions` | PK `(concept_id, definition_hash, capture_id, content_hash, policy_version)`, `brain_id`, `outcome: attach \| reject`, `created_at`. Concept·Capture를 같은 brain의 복합 FK로 참조하는 판단 캐시이며 본문·모델 응답 전문을 복제하지 않음 |
 | `index_builds` | `id`, `brain_id FK`, `profile_id FK`, `table_name UNIQUE`, `status: building \| active \| retired \| failed`, `created_at`, `activated_at?`. 전체 재색인용 물리 테이블 식별자 |
 | `capture_index_states` | PK `(capture_id, build_id)`, `revision_id`, `index_generation`, `status: pending \| ready \| failed \| excluded`, `error_code?`, `updated_at` |
 | `index_jobs` | `id`, `capture_id FK`, `revision_id FK`, `profile_id FK`, `build_id FK`, `index_generation`, `operation: upsert \| remove`, `status: pending \| running \| done \| failed \| superseded`, `attempt_count`, `available_at`, `lease_token?`, `lease_until?`, `last_error_code?` |
 | `mutation_receipts` | PK `(principal_scope, request_id)`, `operation`, `request_fingerprint`, `capture_id?`, `concept_id?`, `relation_id?`, `committed_revision_id?`, `committed_state_version?`, `committed_deleted_at: datetime?`, `outcome`, `created_at`. 명령에 해당하는 엔터티 ID·커밋 버전만 기록. principal_scope는 서버가 정한 brain·호출자 범위이며 재시도 중복 방지에 사용 |
 | `deletion_confirmations` | `token_hash PK`, `brain_id`, `principal_scope`, `capture_id FK`, `expected_revision_id`, `expected_state_version`, `expires_at`, `used_at?`. 삭제 전 사용자 재확인에 사용하며 본문을 복사하지 않음 |
+
+주제 보강 작업은 새 주제·실제 정의 변경에만 등록한다. lease와 호출 수를 영속화해 재시작·재시도에도 작업 예산을 유지하고, 미준비 지연·부분 처리를 유효한 후보가 없는 완료와 구분한다. 캐시 판단을 적용할 때에도 현재 정의·기록 버전과 삭제·출처를 검증하고 `mutation_receipts.operation=capture_set_concepts`인 기록은 제외한다. 일반 분류가 `ready`인 기록만 보강하며 `pending/running`은 대기, `failed/needs_review`는 제외해 기존 검토·재시도 상태를 유지한다. 기존 주제를 일괄 예약하거나 기존 연결을 제거하는 작업은 아니다.
 
 `index_generation`은 기록이 바뀔 때 증가하는 값이고 `index_builds.id`는 전체 검색 테이블을 다시 만들 때의 값이다. 두 값을 같은 개념으로 쓰지 않는다. 검색 준비 완료는 `(capture_id, revision_id, profile_id, build_id, index_generation)`가 모두 현재와 맞을 때만 유효하다.
 
