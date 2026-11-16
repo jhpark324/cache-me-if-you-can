@@ -117,7 +117,7 @@ def test_long_body_node_topics_are_not_copied_to_capture_topics(records):
         async def generate(self, prompt, instructions):
             value = json.loads(prompt)
             if 'capture' in value and '후반부전용주제' in value['capture']['body_markdown']:
-                return json.dumps({'concept_ids': [], 'node_concepts': {}, 'new_concepts': [{'name': '후반부전용주제', 'attach_to_capture': False, 'node_ids': [capture['nodes'][0]['id']]}]})
+                return json.dumps({'concept_ids': [], 'node_concepts': {}, 'new_concepts': [{'name': '후반부전용주제', 'description': '마지막 구간의 Node에만 해당하는 주제', 'attach_to_capture': False, 'node_ids': [capture['nodes'][0]['id']]}]})
             return await super().generate(prompt, instructions)
     asyncio.run(ConceptEnrichment(records, NodeTopicModel()).process_one())
     current = records.get(capture['id'])

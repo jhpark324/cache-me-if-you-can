@@ -35,6 +35,7 @@ from .questions import QuestionInput, QuestionService
 from .search import SearchService, SearchInput, ContextInput, GraphInput
 from .mcp_server import create_mcp
 from .enrichment import ConceptEnrichment
+from .topic_candidates import TopicCandidateSearch
 from .runtime import storage_fingerprint
 
 
@@ -68,7 +69,8 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
     auth = ModelAuth(settings.data_dir, settings.origin)
     search = SearchService(records, settings.data_dir / 'index', model_path=os.environ.get('CACHE_ME_MODEL_PATH'))
     questions = QuestionService(search, records, auth)
-    enrichment = ConceptEnrichment(records, auth)
+    topic_candidates = TopicCandidateSearch(search)
+    enrichment = ConceptEnrichment(records, auth, topic_search=topic_candidates)
     mcp_records = RecordService(db, principal_scope='mcp:local', session_scope='mcp:local', created_via='mcp')
     # Use one loaded model and index manager across transports.
     mcp = create_mcp(mcp_records, search, on_concept_retry=auth.resume_requests)
@@ -87,6 +89,8 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
         if settings.background_jobs:
             enrichment_task = asyncio.create_task(run_periodic(enrichment.process_one, interval=3, name="concepts"))
             tasks.add(enrichment_task)
+            tasks.add(asyncio.create_task(run_periodic(lambda: asyncio.to_thread(topic_candidates.refresh),
+                interval=3, name="topic-candidates")))
         try:
             async with mcp.session_manager.run():
                 yield

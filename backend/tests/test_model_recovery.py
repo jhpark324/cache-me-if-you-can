@@ -227,7 +227,7 @@ def retry_via(via, records, search, auth, payload, *, replay=False, rejected=Fal
 def test_usage_limit_stops_queue_and_explicit_retry_restores_topic_edges(services, monkeypatch, via):
     records, search, auth = services
     capture = create(records)
-    proposal = json.dumps({'new_concepts': [{'name': '합성 검색 학습'}]})
+    proposal = json.dumps({'new_concepts': [{'name': '합성 검색 학습', 'description': '합성 자료로 검색 방법을 학습하는 기록'}]})
     requests = install_sdk_sse(monkeypatch, proposal) if via == 'sdk-web' else install_streams(monkeypatch, [
         [provider_error('subscription_sharing_usage_limit_exceeded')],
         [{'type': 'response.output_text.delta', 'delta': proposal}, {'type': 'response.completed'}]])
