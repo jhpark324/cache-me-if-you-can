@@ -1729,7 +1729,11 @@ export default function App() {
           title="출처 상세"
           hasDivider={false}
         />
-        {sourceOpen && mobile && sourceContent}
+        {sourceOpen && mobile && (
+          <VStack className="source-scroll" isScrollable minHeight={0}>
+            {sourceContent}
+          </VStack>
+        )}
       </Dialog>
       {editor && (
         <RecordEditor
