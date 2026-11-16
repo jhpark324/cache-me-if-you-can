@@ -40,8 +40,8 @@ test("실제 API: 실패 주제 재시도, 대상만 병합, 구간 관계 생�
   page,
 }) => {
   test.skip(
-    !process.env.SECOND_BRAIN_INTEGRATION ||
-      !process.env.SECOND_BRAIN_QA_DATA_DIR,
+    !process.env.CACHE_ME_INTEGRATION ||
+      !process.env.CACHE_ME_QA_DATA_DIR,
     "격리된 실제 서버를 지정한 통합 검증에서 실행",
   );
   test.setTimeout(60000);
@@ -90,7 +90,7 @@ test("실제 API: 실패 주제 재시도, 대상만 병합, 구간 관계 생�
     [
       "-c",
       "import sqlite3,sys; db=sqlite3.connect(sys.argv[1]); result=db.execute(\"UPDATE concept_enrichment_jobs SET status='failed', error_code='QA_CLASSIFICATION_FAILURE', attempt_count=1 WHERE capture_id=? AND requested_revision_id=? AND status='pending'\", (sys.argv[2],sys.argv[3])); assert result.rowcount==1; db.commit(); db.close()",
-      resolve(process.env.SECOND_BRAIN_QA_DATA_DIR!, "brain.sqlite3"),
+      resolve(process.env.CACHE_ME_QA_DATA_DIR!, "cache-me.sqlite3"),
       seed.current.id,
       seed.current.revision_id,
     ],

@@ -68,23 +68,23 @@ flowchart TB
 
 | 경계 | 실제 코드 | 책임·변경 시 함께 확인할 항목 |
 | --- | --- | --- |
-| 조립·수명 | [main.py](../../backend/src/second_brain/main.py) | 서버 lock, 작업 취소, 세션/CSRF·Origin·Host, 정적 웹, 백업 |
-| 로컬 실행·연결 | [runtime.py](../../backend/src/second_brain/runtime.py), [codex_integration.py](../../backend/src/second_brain/codex_integration.py) | 명시적 백그라운드 시작·동일 서버 재사용, 읽기 전용 진단, Codex 설정·스킬·비밀 없는 실행 정보 설치 |
-| 계약 | [schemas.py](../../backend/src/second_brain/schemas.py), [outputs.py](../../backend/src/second_brain/outputs.py) | 웹/MCP 입력·출력. 프런트 [types.ts](../../frontend/src/types.ts)는 수동 동기화이므로 계약 변경 시험 필요 |
-| 정본 변경 | [records.py](../../backend/src/second_brain/records.py) | 요청 멱등성, expected revision/state, 저장·삭제·주제·관계와 출처 검증 |
-| 공통 선택 | [record_filters.py](../../backend/src/second_brain/record_filters.py) | 여러 유형은 OR, 여러 주제는 OR, 두 그룹은 AND. 현재 Node의 주제도 부모 기록 선택에 반영 |
-| 파생 색인 | [search.py](../../backend/src/second_brain/search.py), [embedding.py](../../backend/src/second_brain/embedding.py) | 색인 세대, 모델 프로필, 검색 후 SQLite 재검증. 현재 제품은 정확 벡터 검색이며 ANN 실험과 구분 |
-| 질문 실행 | [questions.py](../../backend/src/second_brain/questions.py), [question_agent.py](../../backend/src/second_brain/question_agent.py), [question_tools.py](../../backend/src/second_brain/question_tools.py) | ReAct 읽기 도구 총 8회, 에이전트 모델 9회와 별도 검토 1회, 요청 90초. 근거 ID·버전·필터는 서버 소유 |
-| 모델 연결·PII | [chat_model.py](../../backend/src/second_brain/chat_model.py), [auth.py](../../backend/src/second_brain/auth.py), [privacy.py](../../backend/src/second_brain/privacy.py) | OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
-| 자동 분류 | [enrichment.py](../../backend/src/second_brain/enrichment.py) | LangGraph 분류·커밋 흐름. 본문 저장·로그인·임베딩과 독립 실패 가능 |
-| 데이터 수명 | [db.py](../../backend/src/second_brain/db.py), [마이그레이션](../../backend/alembic/versions/0001_canonical_records.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
+| 조립·수명 | [main.py](../../backend/src/cache_me/main.py) | 서버 lock, 작업 취소, 세션/CSRF·Origin·Host, 정적 웹, 백업 |
+| 로컬 실행·연결 | [runtime.py](../../backend/src/cache_me/runtime.py), [codex_integration.py](../../backend/src/cache_me/codex_integration.py) | 명시적 백그라운드 시작·동일 서버 재사용, 읽기 전용 진단, Codex 설정·스킬·비밀 없는 실행 정보 설치 |
+| 계약 | [schemas.py](../../backend/src/cache_me/schemas.py), [outputs.py](../../backend/src/cache_me/outputs.py) | 웹/MCP 입력·출력. 프런트 [types.ts](../../frontend/src/types.ts)는 수동 동기화이므로 계약 변경 시험 필요 |
+| 정본 변경 | [records.py](../../backend/src/cache_me/records.py) | 요청 멱등성, expected revision/state, 저장·삭제·주제·관계와 출처 검증 |
+| 공통 선택 | [record_filters.py](../../backend/src/cache_me/record_filters.py) | 여러 유형은 OR, 여러 주제는 OR, 두 그룹은 AND. 현재 Node의 주제도 부모 기록 선택에 반영 |
+| 파생 색인 | [search.py](../../backend/src/cache_me/search.py), [embedding.py](../../backend/src/cache_me/embedding.py) | 색인 세대, 모델 프로필, 검색 후 SQLite 재검증. 현재 제품은 정확 벡터 검색이며 ANN 실험과 구분 |
+| 질문 실행 | [questions.py](../../backend/src/cache_me/questions.py), [question_agent.py](../../backend/src/cache_me/question_agent.py), [question_tools.py](../../backend/src/cache_me/question_tools.py) | ReAct 읽기 도구 총 8회, 에이전트 모델 9회와 별도 검토 1회, 요청 90초. 근거 ID·버전·필터는 서버 소유 |
+| 모델 연결·PII | [chat_model.py](../../backend/src/cache_me/chat_model.py), [auth.py](../../backend/src/cache_me/auth.py), [privacy.py](../../backend/src/cache_me/privacy.py) | OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
+| 자동 분류 | [enrichment.py](../../backend/src/cache_me/enrichment.py) | LangGraph 분류·커밋 흐름. 본문 저장·로그인·임베딩과 독립 실패 가능 |
+| 데이터 수명 | [db.py](../../backend/src/cache_me/db.py), [마이그레이션](../../backend/alembic/versions/0001_canonical_records.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
 | 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordBrowser.tsx](../../frontend/src/RecordBrowser.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 기록 라이브러리·타임라인, 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
 
 한 로컬 서버 프로세스에서 동작한다. 분산 큐·별도 벡터 서버·그래프 DB·LangSmith·영구 대화 체크포인터는 필수가 아니다. 두 DB의 작업을 하나의 원자적 트랜잭션으로 간주하지 않는다.
 
-기본 포트는 `52761`이며 `SECOND_BRAIN_PORT`로 변경한다. `manage.py run`은 포그라운드 실행, `start`는 준비 완료를 확인하는 명시적 백그라운드 시작이다. `doctor`는 런타임과 설치 상태를 읽기 전용으로 진단한다. 설치된 스킬의 `runtime.json`이 같은 Python·데이터 경로·포트의 진단·시작 명령을 제공하며 인증 토큰은 담지 않는다. MCP 헤더 helper는 인증 정보 제공만 담당하고 도구 탐색 중에 서버를 시작하지 않는다. 서버의 정상 응답과 현재 Codex 대화의 도구 목록은 별도로 확인한다.
+기본 포트는 `52761`이며 `CACHE_ME_PORT`로 변경한다. `manage.py run`은 포그라운드 실행, `start`는 준비 완료를 확인하는 명시적 백그라운드 시작이다. `doctor`는 런타임과 설치 상태를 읽기 전용으로 진단한다. 설치된 스킬의 `runtime.json`이 같은 Python·데이터 경로·포트의 진단·시작 명령을 제공하며 인증 토큰은 담지 않는다. MCP 헤더 helper는 인증 정보 제공만 담당하고 도구 탐색 중에 서버를 시작하지 않는다. 서버의 정상 응답과 현재 Codex 대화의 도구 목록은 별도로 확인한다.
 
-MCP 등록 키는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`, 스킬 이름은 `cache-me`다. 설치기는 명시적인 `install-codex --replace`에서 기존 `second_brain` 관리 연결을 이전하며 외부 작성 설정·두 키의 충돌·잘못된 관리 구간은 보존하고 거부한다. Python 패키지·환경 변수·데이터 경로와 개별 MCP 도구 이름은 유지한다. 설치·재연결 절차는 [로컬 실행 가이드](../guides/local-development.md#기존-mcp-이름에서-이전)를 따른다.
+MCP 등록 키와 Python 패키지는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`, 스킬 이름과 실행 명령은 `cache-me`다. 설치기는 현재 이름의 설정만 관리하며 `install-codex --replace`로 해당 관리 설정·스킬을 갱신한다. 외부 작성 설정·잘못된 관리 구간은 보존하고 거부하며 다른 MCP 연결·스킬은 그대로 둔다. 이전 이름의 감지·자동 이전·별칭은 제공하지 않는다. 기본 데이터 디렉터리는 `CacheMe`이고 기록 스키마와 개별 MCP 도구의 의미는 유지한다. 설치·재연결 절차는 [로컬 실행 가이드](../guides/local-development.md#codex-mcp)를 따른다.
 
 ## 정본 데이터 관계
 
@@ -109,7 +109,7 @@ erDiagram
     IndexBuild ||--o{ CaptureIndexState : projection_state
 ```
 
-ER 도식은 주요 연관을 압축했다. 정확한 FK·복합 키·제약은 [models.py](../../backend/src/second_brain/models.py)와 migration이 기준이다. 특히 `Relation`은 양 끝점과 근거, `ProvenanceLink`는 파생 revision과 원출처 revision/구간을 참조한다.
+ER 도식은 주요 연관을 압축했다. 정확한 FK·복합 키·제약은 [models.py](../../backend/src/cache_me/models.py)와 migration이 기준이다. 특히 `Relation`은 양 끝점과 근거, `ProvenanceLink`는 파생 revision과 원출처 revision/구간을 참조한다.
 
 `Capture`는 삭제·공개 범위·현재 revision 포인터를 가진다. 본문은 immutable `CaptureRevision`에만 보관한다. Node는 본문의 Unicode code point 반개구간을 가리키며 별도 원문이 아니다. Concept는 자유 주제와 별칭, RecordKind는 정리본의 재사용 목적, 청크는 모델 토큰 상한에 맞춘 파생 검색 단위다. 네 가지를 한 태그 필드로 합치지 않는다.
 
@@ -123,7 +123,7 @@ flowchart LR
     Venv --> Run[127.0.0.1 로컬 서버]
     Build --> Run
     Run --> Data[OS별 사용자 데이터 디렉터리]
-    Data --> Canonical[brain.sqlite3 + WAL]
+    Data --> Canonical[cache-me.sqlite3 + WAL]
     Data --> Secrets[credentials.json / local-access.json]
     Data --> Index[LanceDB index]
     Canonical --> Backup[수동 SQLite snapshot ZIP]

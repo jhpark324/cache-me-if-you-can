@@ -20,7 +20,7 @@ import tomllib
 from uuid import UUID, uuid4
 
 from check_codex import Codex
-from second_brain.brand import DEFAULT_PORT, MCP_SERVER_KEY
+from cache_me.brand import DEFAULT_PORT, MCP_SERVER_KEY
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILL = ROOT / "docs/skills/cache-me/SKILL.md"
@@ -263,7 +263,7 @@ async def run_boundary_scenarios(codex, control_id, summary, save, nonce):
 
 async def run(args):
     import httpx
-    from second_brain.codex_integration import server_config
+    from cache_me.codex_integration import server_config
 
     summary = {"started_at": datetime.now(timezone.utc).isoformat(), "status": "running",
         "client": "actual Codex app-server and existing account model", "isolated_storage": True,
@@ -294,10 +294,10 @@ async def run(args):
             if not args.global_only:
                 (workspace / ".agents/skills").mkdir(parents=True)
                 (workspace / ".agents/skills/cache-me").symlink_to(SKILL.parent, target_is_directory=True)
-            env = dict(os.environ, SECOND_BRAIN_DATA_DIR=str(data), SECOND_BRAIN_PORT=str(port))
-            env.pop("SECOND_BRAIN_MCP_TOKEN", None)
+            env = dict(os.environ, CACHE_ME_DATA_DIR=str(data), CACHE_ME_PORT=str(port))
+            env.pop("CACHE_ME_MCP_TOKEN", None)
             # No background enrichment/model auth is needed for exact-title records.
-            server_code = "from second_brain.config import Settings; from second_brain.main import create_app; import uvicorn; s=Settings.load(); s.background_jobs=False; uvicorn.run(create_app(s),host='127.0.0.1',port=s.port)"
+            server_code = "from cache_me.config import Settings; from cache_me.main import create_app; import uvicorn; s=Settings.load(); s.background_jobs=False; uvicorn.run(create_app(s),host='127.0.0.1',port=s.port)"
             with (temp / "server.log").open("w") as server_log, (temp / "codex.log").open("w") as codex_log:
                 server = await asyncio.create_subprocess_exec(sys.executable, "-c", server_code,
                     cwd=ROOT, env=env, stdout=server_log, stderr=server_log)

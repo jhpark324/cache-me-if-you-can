@@ -4,8 +4,8 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from second_brain.schemas import EventTime
-from second_brain.search import EventFilter
+from cache_me.schemas import EventTime
+from cache_me.search import EventFilter
 from test_search import create, edit, services
 
 

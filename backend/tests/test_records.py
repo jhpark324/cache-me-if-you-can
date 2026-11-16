@@ -8,12 +8,12 @@ from pydantic import ValidationError
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import IntegrityError
 
-from second_brain.api import install_error_handlers, router
-from second_brain.db import Database
-from second_brain.models import (Capture, CaptureRevision, Concept, ConceptEnrichmentJob,
+from cache_me.api import install_error_handlers, router
+from cache_me.db import Database
+from cache_me.models import (Capture, CaptureRevision, Concept, ConceptEnrichmentJob,
                                  IndexJob, KnowledgeNode, MutationReceipt, ProvenanceLink)
-from second_brain.records import DomainError, RecordService
-from second_brain.schemas import (CreateCaptureInput, CreateConceptInput, DeleteCaptureInput,
+from cache_me.records import DomainError, RecordService
+from cache_me.schemas import (CreateCaptureInput, CreateConceptInput, DeleteCaptureInput,
                                  MergeCapturesInput, PrepareDeletionInput, RelationInput, RetractRelationInput,
                                  ReviewSourcesInput, SetConceptsInput, SourceRef, UpdateCaptureInput)
 
@@ -436,7 +436,7 @@ def test_deleted_relation_endpoint_cannot_leak_through_replay(records):
 
 
 def test_deletion_token_expiry_is_enforced(records):
-    from second_brain.models import DeletionConfirmation
+    from cache_me.models import DeletionConfirmation
     capture = create(records)
     data, proof = deletion(records, capture)
     with records.db.write() as session:
@@ -467,7 +467,7 @@ def test_alembic_baseline_applies_idempotently(tmp_path):
 
 
 def test_migration_helper_adopts_only_matching_unversioned_schema(records, tmp_path):
-    from second_brain.db import migrate_database
+    from cache_me.db import migrate_database
     original = create(records, "마이그레이션 후 보존")
     migrate_database(records.db.path)
     assert records.get(original["id"])["body_markdown"] == "마이그레이션 후 보존"
@@ -489,7 +489,7 @@ def test_migration_helper_adopts_only_matching_unversioned_schema(records, tmp_p
 
 
 def test_output_models_validate_real_nested_domain_results(records):
-    from second_brain.outputs import (CaptureSummary, CaptureView, ConceptMutationView, ConceptView,
+    from cache_me.outputs import (CaptureSummary, CaptureView, ConceptMutationView, ConceptView,
         DeleteResult, DeletionPreview, MutationResult, NodeView, OutputEnvelope, Page,
         RelationMutationView, RelationView, SourceDetail)
     def validate(model, result):
@@ -519,7 +519,7 @@ def test_output_models_validate_real_nested_domain_results(records):
 
 
 def test_output_envelope_enforces_exclusive_success_and_failure_branches():
-    from second_brain.outputs import OutputEnvelope
+    from cache_me.outputs import OutputEnvelope
     success = OutputEnvelope[dict].model_validate({"ok": True, "data": {"example": "value"}})
     assert success.model_dump(mode="json") == {"schema_version": 1, "ok": True, "data": {"example": "value"}}
     failure = OutputEnvelope[dict].model_validate({"ok": False, "error": {"code": "NOT_FOUND", "message": "없음", "retryable": False}})

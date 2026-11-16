@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace as replace_settings
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -16,20 +15,13 @@ import tomllib
 from filelock import FileLock
 
 from .config import Settings
-from .brand import PRODUCT_NAME, DEFAULT_PORT, MCP_SERVER_KEY, LEGACY_MCP_SERVER_KEY
+from .brand import PRODUCT_NAME, DEFAULT_PORT, MCP_SERVER_KEY
 from .runtime import inspect_runtime
 
 START = '# BEGIN CACHE ME MANAGED MCP\n'
 END = '# END CACHE ME MANAGED MCP\n'
-LEGACY_START = '# BEGIN SECOND BRAIN MANAGED MCP\n'
-LEGACY_END = '# END SECOND BRAIN MANAGED MCP\n'
 SKILL_NAME = 'cache-me'
 SKILL_SLUG = 'cache-me'
-# Only this project's unmodified previous releases are eligible for automatic migration.
-LEGACY_SKILLS_SHA256 = {
-    'second-brain': frozenset({'7fedb37a9057bcc7fa0f9b5b36893d5ae52dc23cf6c48de5a07fe9257e416590'}),
-    'cacheme': frozenset({'e585fd63752ddf758a45d0cf5a77db338a0c22d7a40c40ee6a89b018baa3f96c'}),
-}
 
 
 def header_value(data_dir: Path) -> dict[str, str]:
@@ -44,7 +36,7 @@ def header_value(data_dir: Path) -> dict[str, str]:
 def server_config(python: Path, data_dir: Path, port: int) -> dict:
     if not 1 <= port <= 65535:
         raise ValueError('Invalid port')
-    command = [str(python.absolute()), '-m', 'second_brain.codex_integration',
+    command = [str(python.absolute()), '-m', 'cache_me.codex_integration',
                'headers', '--data-dir', str(data_dir.absolute())]
     helper = subprocess.list2cmdline(command) if os.name == 'nt' else shlex.join(command)
     return {'url': f'http://127.0.0.1:{port}/mcp/', 'http_headers_helper': helper,
@@ -60,9 +52,9 @@ def runtime_config(python: Path, data_dir: Path, port: int, codex_home: Path) ->
             'python': str(python), 'data_dir': str(data_dir),
             'port': port, 'web_url': f'http://127.0.0.1:{port}/', 'mcp_url': server['url'],
             'commands': {
-                'doctor': [str(python), '-m', 'second_brain.codex_integration', 'doctor',
+                'doctor': [str(python), '-m', 'cache_me.codex_integration', 'doctor',
                            *common, '--codex-home', str(codex_home)],
-                'start': [str(python), '-m', 'second_brain.runtime', 'start', *common]}}
+                'start': [str(python), '-m', 'cache_me.runtime', 'start', *common]}}
 
 
 def doctor(settings: Settings, codex_home: Path, *, python: Path | None = None) -> dict:
@@ -83,29 +75,21 @@ def doctor(settings: Settings, codex_home: Path, *, python: Path | None = None) 
         if not isinstance(servers, dict):
             raise ValueError('Invalid MCP configuration')
         configured = servers.get(MCP_SERVER_KEY)
-        if MCP_SERVER_KEY in servers and LEGACY_MCP_SERVER_KEY in servers:
-            config = {'status': 'duplicate', 'message': 'cache_me와 second_brain MCP 설정이 함께 있습니다.'}
+        managed_config_span(original, servers)
+        if MCP_SERVER_KEY not in servers:
+            config = {'status': 'missing', 'message': 'cache_me MCP 설정이 없습니다.'}
+        elif not isinstance(configured, dict):
+            config = {'status': 'invalid', 'message': 'cache_me MCP 설정 형식이 올바르지 않습니다.'}
         else:
-            managed = managed_config_span(original, servers) is not None
-            if LEGACY_MCP_SERVER_KEY in servers:
-                if not isinstance(servers[LEGACY_MCP_SERVER_KEY], dict):
-                    raise ValueError('Invalid legacy MCP configuration')
-                config = {'status': 'legacy', 'managed': managed,
-                          'message': '이전 second_brain MCP 이름을 사용 중입니다. cache_me로 이전하세요.'}
-            elif MCP_SERVER_KEY not in servers:
-                config = {'status': 'missing', 'message': 'cache_me MCP 설정이 없습니다.'}
-            elif not isinstance(configured, dict):
-                config = {'status': 'invalid', 'message': 'cache_me MCP 설정 형식이 올바르지 않습니다.'}
-            else:
-                differences = [key for key in ('url', 'http_headers_helper') if configured.get(key) != expected[key]]
-                if configured.get('enabled') is False:
-                    differences.append('enabled')
-                for key in ('bearer_token_env_var', 'http_headers', 'env_http_headers'):
-                    if configured.get(key):
-                        differences.append(key)
-                config = {'status': 'mismatch' if differences else 'ready',
-                          'message': '설치한 MCP 설정을 확인하세요.' if differences else 'MCP 주소와 인증 helper 설정이 일치합니다.',
-                          'different_fields': differences}
+            differences = [key for key in ('url', 'http_headers_helper') if configured.get(key) != expected[key]]
+            if configured.get('enabled') is False:
+                differences.append('enabled')
+            for key in ('bearer_token_env_var', 'http_headers', 'env_http_headers'):
+                if configured.get(key):
+                    differences.append(key)
+            config = {'status': 'mismatch' if differences else 'ready',
+                      'message': '설치한 MCP 설정을 확인하세요.' if differences else 'MCP 주소와 인증 helper 설정이 일치합니다.',
+                      'different_fields': differences}
     except FileNotFoundError:
         config = {'status': 'missing', 'message': 'Codex 설정 파일이 없습니다.'}
     except (OSError, ValueError):
@@ -118,18 +102,10 @@ def doctor(settings: Settings, codex_home: Path, *, python: Path | None = None) 
         next_steps.append(runtime['message'])
     if authentication['status'] != 'ready':
         next_steps.append('최초 실행 전이라면 start를 실행하세요. 기존 인증 문제는 파일 내용을 공유하지 말고 확인하세요.')
-    if config['status'] == 'legacy':
-        next_steps.append('같은 데이터 경로와 포트로 install-codex --replace를 실행해 cache_me로 이전하세요.'
-                          if config['managed'] else
-                          '외부에서 작성한 second_brain 연결은 자동 이전하지 않습니다. 설정을 확인해 cache_me로 직접 이전하세요.')
-    elif config['status'] == 'duplicate':
-        next_steps.append('중복된 cache_me·second_brain 연결을 확인해 직접 정리하세요. 설치기는 어느 연결도 자동 제거하지 않습니다.')
-    elif config['status'] == 'invalid':
+    if config['status'] == 'invalid':
         next_steps.append('Codex 설정 형식과 MCP 관리 구간을 확인해 직접 정리하세요. 인증 파일 내용은 공유하지 마세요.')
     elif config['status'] != 'ready':
         next_steps.append('같은 데이터 경로와 포트로 install-codex를 실행하세요. 관리 설정을 갱신하려면 --replace가 필요합니다.')
-    if config['status'] in {'legacy', 'duplicate'}:
-        next_steps.append('설정을 정리한 뒤 Codex 연결을 다시 읽거나 새 세션을 여세요.')
     success = all(item['status'] == 'ready' for item in (runtime, authentication, config))
     if success:
         next_steps.append('도구가 보이지 않으면 Codex 연결을 다시 읽거나 새 세션을 여세요. 서버 정상 상태만으로 현재 대화의 도구 목록은 갱신되지 않습니다.')
@@ -140,16 +116,13 @@ def doctor(settings: Settings, codex_home: Path, *, python: Path | None = None) 
 
 def managed_config_span(original: str, servers: dict) -> tuple[int, int] | None:
     """Validate ownership before replacing a block, including identical installs."""
-    markers = (START, END, LEGACY_START, LEGACY_END)
+    markers = (START, END)
     counts = [original.count(marker.rstrip('\n')) for marker in markers]
     if not any(counts):
         return None
-    if counts == [1, 1, 0, 0]:
-        start, end = START, END
-    elif counts == [0, 0, 1, 1]:
-        start, end = LEGACY_START, LEGACY_END
-    else:
+    if counts != [1, 1]:
         raise ValueError('불완전하거나 중복된 MCP 관리 구간입니다.')
+    start, end = START, END
     # Markers must occupy complete lines, including a final line without a newline.
     positions = {}
     offset = 0
@@ -166,7 +139,7 @@ def managed_config_span(original: str, servers: dict) -> tuple[int, int] | None:
     block_servers = block.get('mcp_servers')
     if (set(block) != {'mcp_servers'} or not isinstance(block_servers, dict)
             or len(block_servers) != 1
-            or not set(block_servers) <= {MCP_SERVER_KEY, LEGACY_MCP_SERVER_KEY}):
+            or set(block_servers) != {MCP_SERVER_KEY}):
         raise ValueError('관리 구간에 다른 설정이 있어 교체하지 않습니다.')
     key = next(iter(block_servers))
     if not isinstance(block_servers[key], dict) or servers.get(key) != block_servers[key]:
@@ -174,7 +147,7 @@ def managed_config_span(original: str, servers: dict) -> tuple[int, int] | None:
     remainder = tomllib.loads(original[:begin] + original[finish:])
     remaining_servers = remainder.get('mcp_servers', {})
     if (not isinstance(remaining_servers, dict)
-            or MCP_SERVER_KEY in remaining_servers or LEGACY_MCP_SERVER_KEY in remaining_servers):
+            or MCP_SERVER_KEY in remaining_servers):
         raise ValueError('MCP 관리 구간 밖에 연결 설정이 있어 교체하지 않습니다.')
     expected_remaining = {key: value for key, value in servers.items() if key not in block_servers}
     parsed = tomllib.loads(original)
@@ -190,27 +163,24 @@ def updated_config(original: str, server: dict, *, replace: bool = False) -> str
     servers = parsed.get('mcp_servers', {})
     if not isinstance(servers, dict):
         raise ValueError('MCP 설정 형식이 올바르지 않습니다.')
-    if MCP_SERVER_KEY in servers and LEGACY_MCP_SERVER_KEY in servers:
-        raise ValueError('cache_me와 second_brain MCP 설정이 함께 있습니다. 중복 연결을 직접 정리하세요.')
     span = managed_config_span(original, servers)
-    key = MCP_SERVER_KEY if MCP_SERVER_KEY in servers else LEGACY_MCP_SERVER_KEY
-    existing = servers.get(key)
-    if key in servers and not isinstance(existing, dict):
+    existing = servers.get(MCP_SERVER_KEY)
+    if MCP_SERVER_KEY in servers and not isinstance(existing, dict):
         raise ValueError('MCP 연결 설정 형식이 올바르지 않습니다.')
     if existing is not None:
-        if key == MCP_SERVER_KEY and existing == server:
+        if existing == server:
             return original
         if span is None:
             raise ValueError(f'외부에서 작성한 {PRODUCT_NAME} MCP 설정은 자동 교체하지 않습니다.')
         if not replace:
-            raise ValueError('MCP 관리 연결의 이전·갱신에는 --replace가 필요합니다.')
+            raise ValueError('MCP 관리 연결의 갱신에는 --replace가 필요합니다.')
         begin, finish = span
         original = original[:begin] + original[finish:]
     block = START + f'[mcp_servers.{MCP_SERVER_KEY}]\n'
     for key, value in server.items():
         block += f'{key} = {json.dumps(value, ensure_ascii=True)}\n'
     result = original.rstrip() + '\n\n' + block + END
-    expected = {key: value for key, value in servers.items() if key != LEGACY_MCP_SERVER_KEY}
+    expected = dict(servers)
     expected[MCP_SERVER_KEY] = server
     verified = tomllib.loads(result)
     if (verified.get('mcp_servers') != expected
@@ -243,7 +213,7 @@ def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool
     if runtime_metadata is not None:
         if runtime_metadata.get('mcp_url') != server['url']:
             raise ValueError('런타임 정보와 MCP 주소가 일치하지 않습니다.')
-        if runtime_metadata.get('mcp_server', MCP_SERVER_KEY) != MCP_SERVER_KEY:
+        if runtime_metadata.get('mcp_server') != MCP_SERVER_KEY:
             raise ValueError('런타임 정보와 MCP 등록 이름이 일치하지 않습니다.')
         artifacts[runtime_path] = json.dumps(runtime_metadata, ensure_ascii=False, indent=2) + '\n'
     metadata_source = skill_source.parent / 'agents' / 'openai.yaml'
@@ -251,7 +221,7 @@ def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool
     if metadata_source.exists():
         artifacts[metadata] = metadata_source.read_text(encoding='utf-8')
     codex_home.mkdir(parents=True, exist_ok=True)
-    with FileLock(str(codex_home / '.second-brain-install.lock')):
+    with FileLock(str(codex_home / '.cache-me-install.lock')):
         original = config.read_text(encoding='utf-8') if config.exists() else ''
         result = updated_config(original, server, replace=replace)
 
@@ -271,43 +241,15 @@ def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool
                     raise ValueError(f'설치된 {SKILL_NAME} 파일이 다릅니다: {path}. 확인 후 --replace를 사용하세요.')
                 writes[path] = canonical
 
-        legacy_statuses = {}
-        migrations = []
-        for slug, known_fingerprints in LEGACY_SKILLS_SHA256.items():
-            legacy = codex_home / 'skills' / slug
-            legacy_skill = legacy / 'SKILL.md'
-            legacy_status = {'status': 'absent', 'path': str(legacy)}
-            legacy_statuses[slug] = legacy_status
-            if legacy.exists() or legacy.is_symlink():
-                legacy_status['status'] = 'preserved'
-                if legacy.is_dir() and not legacy.is_symlink() and legacy_skill.is_file() and not legacy_skill.is_symlink():
-                    fingerprint = hashlib.sha256(legacy_skill.read_bytes()).hexdigest()
-                    if fingerprint in known_fingerprints:
-                        backups = codex_home / '.skill-backups'
-                        check_directory(backups)
-                        stem = f'{slug}-{fingerprint[:12]}'
-                        backup = backups / stem
-                        suffix = 1
-                        while backup.exists() or backup.is_symlink():
-                            backup = backups / f'{stem}-{suffix}'
-                            suffix += 1
-                        migrations.append((legacy, backup, legacy_status))
-
-        # Preflight the whole package, config, and migration before changing any of them.
+        # Preflight the whole package and config before changing any of them.
         for path, canonical in writes.items():
             atomic_write(path, canonical)
         if result != original:
             atomic_write(config, result)
-        for legacy, backup, legacy_status in migrations:
-            backup.parent.mkdir(parents=True, exist_ok=True)
-            legacy.rename(backup)
-            legacy_status.update(status='backed_up', backup=str(backup))
     return {'config': str(config), 'skill': str(skill), 'server': MCP_SERVER_KEY,
             'skill_name': SKILL_NAME, 'skill_slug': SKILL_SLUG,
             'metadata': str(metadata) if metadata in artifacts else None,
             'runtime_metadata': str(runtime_path) if runtime_path in artifacts else None,
-            'legacy_skill': legacy_statuses['second-brain'],
-            'legacy_skills': legacy_statuses,
             'restart_required': True}
 
 

@@ -114,9 +114,9 @@ SQLite 메모리 테이블을 현재 상태의 기준으로 삼고 LanceDB에 �
 이 스크립트는 Linux/WSL 실험용으로 `resource`와 `/proc/cpuinfo`를 사용한다. Windows/macOS 지원 시험용 제품 실행기가 아니다. 가중치·가상환경·DB는 저장소 밖에 두었다. `requirements.txt`는 이 환경의 패키지 스냅샷이며 다중 플랫폼 lockfile이 아니다.
 
 ```bash
-uv venv --python 3.12 "$HOME/.cache/second-brain/kure-v2-feasibility/venv"
-uv pip install --python "$HOME/.cache/second-brain/kure-v2-feasibility/venv/bin/python" --index-url https://download.pytorch.org/whl/cpu torch==2.15.0
-uv pip install --python "$HOME/.cache/second-brain/kure-v2-feasibility/venv/bin/python" -r docs/research/kure-v2-feasibility/requirements.txt
+uv venv --python 3.12 "$HOME/.cache/cache-me/kure-v2-feasibility/venv"
+uv pip install --python "$HOME/.cache/cache-me/kure-v2-feasibility/venv/bin/python" --index-url https://download.pytorch.org/whl/cpu torch==2.15.0
+uv pip install --python "$HOME/.cache/cache-me/kure-v2-feasibility/venv/bin/python" -r docs/research/kure-v2-feasibility/requirements.txt
 ```
 
 같은 환경의 Python에서 아래 snapshot을 받은 뒤 프로젝트 루트에서 본 실험, 보완 검사 순으로 실행한다. 본 실험은 저장소 밖에 새로운 시간별 DB 폴더를 만들며 `results.json`과 보완 결과는 실행 때 갱신된다. 비교 실험은 기존 원시 결과를 별도 보관한 뒤 실행한다.
@@ -127,14 +127,14 @@ from huggingface_hub import snapshot_download
 snapshot_download(
     "nlpai-lab/KURE-v2",
     revision="3431f86d399d666083890dbb882aced6708873bc",
-    cache_dir=str(Path.home() / ".cache/second-brain/kure-v2-feasibility/models"),
+    cache_dir=str(Path.home() / ".cache/cache-me/kure-v2-feasibility/models"),
     allow_patterns=["*.json", "*.safetensors"],
 )
 ```
 
 ```bash
-"$HOME/.cache/second-brain/kure-v2-feasibility/venv/bin/python" docs/research/kure-v2-feasibility/run_benchmark.py
-"$HOME/.cache/second-brain/kure-v2-feasibility/venv/bin/python" docs/research/kure-v2-feasibility/check_runtime.py
+"$HOME/.cache/cache-me/kure-v2-feasibility/venv/bin/python" docs/research/kure-v2-feasibility/run_benchmark.py
+"$HOME/.cache/cache-me/kure-v2-feasibility/venv/bin/python" docs/research/kure-v2-feasibility/check_runtime.py
 ```
 
 연구 스크립트는 고정한 패키지의 `create_fts_index`와 score column 자동 포함 API를 사용한다. 새 버전으로 재현할 때는 deprecation과 API 차이를 확인해야 한다. 현재 제품의 구현·성능을 이 연구 실행 결과로 대신하지 않는다.

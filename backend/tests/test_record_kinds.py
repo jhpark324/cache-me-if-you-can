@@ -9,15 +9,15 @@ from mcp.client import Client
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from second_brain.api import install_error_handlers, router
-from second_brain.db import utcnow
-from second_brain.mcp_server import create_mcp
-from second_brain.models import MutationReceipt, RevisionKind
-from second_brain.questions import QuestionInput
-from second_brain.record_kinds import RECORD_KINDS
-from second_brain.records import DomainError, digest
-from second_brain.schemas import CaptureChanges, CreateCaptureInput, MergeCapturesInput, UpdateCaptureInput
-from second_brain.search import ContextInput, GraphInput, SearchInput
+from cache_me.api import install_error_handlers, router
+from cache_me.db import utcnow
+from cache_me.mcp_server import create_mcp
+from cache_me.models import MutationReceipt, RevisionKind
+from cache_me.questions import QuestionInput
+from cache_me.record_kinds import RECORD_KINDS
+from cache_me.records import DomainError, digest
+from cache_me.schemas import CaptureChanges, CreateCaptureInput, MergeCapturesInput, UpdateCaptureInput
+from cache_me.search import ContextInput, GraphInput, SearchInput
 from test_search import create, services
 
 

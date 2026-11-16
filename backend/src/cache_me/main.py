@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict
 from starlette.background import BackgroundTask
 
 from .auth import ModelAuth, AuthError
-from .brand import PRODUCT_NAME, PRODUCT_ID
+from .brand import PRODUCT_NAME, PRODUCT_ID, product_version
 from .background import run_periodic
 from .config import Settings
 from .db import Database, migrate_database
@@ -61,12 +61,12 @@ class ModelInput(BaseModel):
 def create_app(settings: Settings | None = None, *, server_lock: FileLock | None = None):
     settings = settings or Settings.load()
     local = settings.initialize()
-    database_path = settings.data_dir / 'brain.sqlite3'
+    database_path = settings.data_dir / 'cache-me.sqlite3'
     migrate_database(database_path)
     db = Database(database_path, initialize=False)
     records = RecordService(db)
     auth = ModelAuth(settings.data_dir, settings.origin)
-    search = SearchService(records, settings.data_dir / 'index', model_path=os.environ.get('SECOND_BRAIN_MODEL_PATH'))
+    search = SearchService(records, settings.data_dir / 'index', model_path=os.environ.get('CACHE_ME_MODEL_PATH'))
     questions = QuestionService(search, records, auth)
     enrichment = ConceptEnrichment(records, auth)
     mcp_records = RecordService(db, principal_scope='mcp:local', session_scope='mcp:local', created_via='mcp')
@@ -99,7 +99,7 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
             db.close()
             lock.release()
 
-    app = FastAPI(title=PRODUCT_NAME, version='0.1.0', lifespan=lifespan)
+    app = FastAPI(title=PRODUCT_NAME, version=product_version(), lifespan=lifespan)
     app.state.records, app.state.db, app.state.search, app.state.auth = records, db, search, auth
 
     @app.exception_handler(DomainError)
@@ -124,8 +124,8 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
         origin = request.headers.get('origin')
         allowed_origins = {settings.origin, settings.origin.replace('127.0.0.1', 'localhost')}
         # Development frontend proxies API requests; it still needs the session token.
-        if os.environ.get('SECOND_BRAIN_DEV_ORIGIN'):
-            allowed_origins.add(os.environ['SECOND_BRAIN_DEV_ORIGIN'])
+        if os.environ.get('CACHE_ME_DEV_ORIGIN'):
+            allowed_origins.add(os.environ['CACHE_ME_DEV_ORIGIN'])
         if origin and origin not in allowed_origins:
             return error('INVALID_ORIGIN', '허용되지 않은 요청 출처입니다.', 403)
         if request.url.path.startswith('/mcp'):
@@ -133,7 +133,7 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
             if not secrets.compare_digest(provided, 'Bearer ' + local['mcp_token']):
                 return error('UNAUTHORIZED', 'MCP 연결 인증이 필요합니다.', 401)
             return await call_next(request)
-        sid = request.cookies.get('sb_session')
+        sid = request.cookies.get('cache_me_session')
         session = sessions.get(sid)
         if session and session['expires'] <= time.time():
             sessions.pop(sid, None)
@@ -177,12 +177,12 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
             sid = secrets.token_urlsafe(40)
             sessions[sid] = {'csrf': secrets.token_urlsafe(40), 'expires': now + 43200}
         response = JSONResponse(ok({'csrf_token': sessions[sid]['csrf']}))
-        response.set_cookie('sb_session', sid, httponly=True, samesite='lax', max_age=43200, path='/')
+        response.set_cookie('cache_me_session', sid, httponly=True, samesite='lax', max_age=43200, path='/')
         return response
 
     @app.get('/health')
     async def health():
-        return ok({'status': 'ready', 'version': '0.1.0', 'application': PRODUCT_ID,
+        return ok({'status': 'ready', 'version': app.version, 'application': PRODUCT_ID,
                    'storage_id': storage_fingerprint(settings.data_dir)})
 
     @app.get('/api/v1/settings')
@@ -319,24 +319,24 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
     @app.post('/api/v1/backups')
     async def backup():
         def create_backup():
-            directory = tempfile.TemporaryDirectory(prefix='second-brain-backup-')
+            directory = tempfile.TemporaryDirectory(prefix='cache-me-backup-')
             folder = Path(directory.name)
-            snapshot = folder / 'brain.sqlite3'
+            snapshot = folder / 'cache-me.sqlite3'
             with sqlite3.connect(db.path) as source, sqlite3.connect(snapshot) as target:
                 source.backup(target)
                 schema_revision = target.execute('SELECT version_num FROM alembic_version').fetchone()[0]
                 profiles = [{'id': row[0], 'model_id': row[1], 'model_revision': row[2], 'configuration': json.loads(row[3])}
                             for row in target.execute('SELECT id, model_id, model_revision, configuration FROM embedding_profiles')]
-            manifest = {'schema_version': 1, 'app_version': '0.1.0', 'created_at': time.time(),
+            manifest = {'schema_version': 1, 'app_version': app.version, 'created_at': time.time(),
                         'includes_soft_deleted_history': True, 'schema_revision': schema_revision, 'embedding_profiles': profiles, 'database_sha256': hashlib.sha256(snapshot.read_bytes()).hexdigest(),
                         'excluded': ['credentials', 'models', 'search_index']}
-            archive = folder / 'second-brain-backup.zip'
+            archive = folder / 'cache-me-backup.zip'
             with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as zipped:
-                zipped.write(snapshot, 'brain.sqlite3')
+                zipped.write(snapshot, 'cache-me.sqlite3')
                 zipped.writestr('manifest.json', json.dumps(manifest, ensure_ascii=False, indent=2))
             return directory, archive
         directory, archive = await asyncio.to_thread(create_backup)
-        return FileResponse(archive, filename='second-brain-backup.zip', media_type='application/zip', background=BackgroundTask(directory.cleanup))
+        return FileResponse(archive, filename='cache-me-backup.zip', media_type='application/zip', background=BackgroundTask(directory.cleanup))
 
     app.mount('/mcp', mcp_app)
     if settings.frontend_dir and settings.frontend_dir.is_dir():

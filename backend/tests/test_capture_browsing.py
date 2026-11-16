@@ -6,9 +6,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from second_brain.api import install_error_handlers, router
-from second_brain.models import Capture
-from second_brain.records import digest
+from cache_me.api import install_error_handlers, router
+from cache_me.models import Capture
+from cache_me.records import digest
 from test_records import assert_error, create, records, update
 
 

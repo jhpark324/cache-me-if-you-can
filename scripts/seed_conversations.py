@@ -332,9 +332,9 @@ async def connected_action(args, dataset):
     from filelock import FileLock
     from mcp.client import Client
     from mcp.client.streamable_http import streamable_http_client
-    from second_brain.codex_integration import header_value
-    from second_brain.config import Settings
-    from second_brain.schemas import CreateCaptureInput
+    from cache_me.codex_integration import header_value
+    from cache_me.config import Settings
+    from cache_me.schemas import CreateCaptureInput
 
     settings = Settings.load()
     data_dir = Path(args.data_dir) if args.data_dir else settings.data_dir

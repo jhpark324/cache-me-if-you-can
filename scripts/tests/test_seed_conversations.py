@@ -16,7 +16,7 @@ spec.loader.exec_module(seed)
 
 def fixture():
     def case(key, body, kinds, sources=()):
-        save = '이 내용을 세컨드브레인에 저장해 줘.'
+        save = '이 내용을 캐시미에 저장해 줘.'
         return {'key': key, 'group': '학습', 'title': '[테스트] ' + key,
                 'conversation': [{'role': 'assistant', 'text': body}, {'role': 'user', 'text': save}],
                 'explicit_save_request': save,

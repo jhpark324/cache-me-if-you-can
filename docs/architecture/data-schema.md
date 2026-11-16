@@ -6,7 +6,7 @@
 - 용어: [도메인 용어](../project/domain-language.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
-기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/second_brain/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
+기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py)과 [고정 baseline migration](../../backend/alembic/versions/0001_canonical_records.py)이 구현되어 있다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
 
 ## 공통 규약
 

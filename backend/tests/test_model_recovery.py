@@ -12,15 +12,15 @@ from fastapi.testclient import TestClient
 from mcp.client import Client
 from openai import APIError, APIConnectionError, APITimeoutError
 
-import second_brain.auth as auth_module
-from second_brain.api import install_error_handlers, router
-from second_brain.auth import AuthError, ModelAuth
-from second_brain.db import Database
-from second_brain.enrichment import ConceptEnrichment
-from second_brain.mcp_server import create_mcp
-from second_brain.models import ConceptEnrichmentJob
-from second_brain.records import RecordService
-from second_brain.search import SearchService
+import cache_me.auth as auth_module
+from cache_me.api import install_error_handlers, router
+from cache_me.auth import AuthError, ModelAuth
+from cache_me.db import Database
+from cache_me.enrichment import ConceptEnrichment
+from cache_me.mcp_server import create_mcp
+from cache_me.models import ConceptEnrichmentJob
+from cache_me.records import RecordService
+from cache_me.search import SearchService
 from test_auth_contract import FakeStream, prepare_expired_account
 
 

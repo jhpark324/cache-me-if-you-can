@@ -11,7 +11,7 @@ import tempfile
 import tomllib
 from uuid import uuid4
 
-from second_brain.brand import MCP_SERVER_KEY
+from cache_me.brand import MCP_SERVER_KEY
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -89,19 +89,19 @@ class Codex:
 
 async def run(args):
     import httpx
-    from second_brain.codex_integration import install, runtime_config, server_config
+    from cache_me.codex_integration import install, runtime_config, server_config
 
     if args.port == 0:
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             args.port = sock.getsockname()[1]
-    with tempfile.TemporaryDirectory(prefix='second-brain-codex-check-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='cache-me-codex-check-') as temporary:
         temp = Path(temporary)
         data, home = temp / 'data', temp / 'codex'
-        env = dict(os.environ, SECOND_BRAIN_DATA_DIR=str(data), SECOND_BRAIN_PORT=str(args.port))
-        env.pop('SECOND_BRAIN_MCP_TOKEN', None)
+        env = dict(os.environ, CACHE_ME_DATA_DIR=str(data), CACHE_ME_PORT=str(args.port))
+        env.pop('CACHE_ME_MCP_TOKEN', None)
         with (temp / 'server.log').open('w') as log, (temp / 'codex.log').open('w') as codex_log:
-            server = await asyncio.create_subprocess_exec(sys.executable, '-m', 'second_brain.main',
+            server = await asyncio.create_subprocess_exec(sys.executable, '-m', 'cache_me.main',
                 cwd=ROOT, env=env, stdout=log, stderr=log)
             codex_process = None
             try:
@@ -137,7 +137,7 @@ async def run(args):
                     cwd=temp, env=codex_env, stdin=asyncio.subprocess.PIPE,
                     stdout=asyncio.subprocess.PIPE, stderr=codex_log, limit=4 * 1024 * 1024)
                 codex = Codex(codex_process, args.human)
-                await codex.call('initialize', {'clientInfo': {'name': 'second-brain-check', 'version': '1'},
+                await codex.call('initialize', {'clientInfo': {'name': 'cache-me-check', 'version': '1'},
                                                 'capabilities': {'experimentalApi': True, 'mcpServerOpenaiFormElicitation': True}})
                 await codex.send({'method': 'initialized', 'params': {}})
                 thread = await codex.call('thread/start', {'cwd': str(temp), 'ephemeral': True,
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     parser.add_argument('--decline-only', action='store_true', help='삭제 거부와 원문 보존까지만 확인; 삭제를 승인하지 않음')
     parser.add_argument('--human', action='store_true', help='삭제 승인에 실제 stdin 응답 사용')
     parser.add_argument('--model-turn', action='store_true', help='실제 Codex 모델 turn에서 스킬과 삭제 재확인 검증')
-    parser.add_argument('--output', type=Path, default=Path(tempfile.gettempdir()) / 'second-brain-codex-check.json')
+    parser.add_argument('--output', type=Path, default=Path(tempfile.gettempdir()) / 'cache-me-codex-check.json')
     args = parser.parse_args()
     if args.decline_only and args.model_turn:
         parser.error('--decline-only는 --model-turn과 함께 사용할 수 없습니다.')

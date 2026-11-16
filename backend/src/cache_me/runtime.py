@@ -104,11 +104,11 @@ def _spawn_server(settings: Settings):
             os.fchmod(fd, 0o600)
         with os.fdopen(fd, 'ab') as log:
             fd = None
-            env = dict(os.environ, SECOND_BRAIN_DATA_DIR=str(settings.data_dir.resolve()),
-                       SECOND_BRAIN_PORT=str(settings.port))
+            env = dict(os.environ, CACHE_ME_DATA_DIR=str(settings.data_dir.resolve()),
+                       CACHE_ME_PORT=str(settings.port))
             options = {'creationflags': subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} \
                 if os.name == 'nt' else {'start_new_session': True}
-            return subprocess.Popen([sys.executable, '-m', 'second_brain.main'],
+            return subprocess.Popen([sys.executable, '-m', 'cache_me.main'],
                 cwd=Path(__file__).resolve().parents[1], env=env, stdin=subprocess.DEVNULL,
                 stdout=log, stderr=subprocess.STDOUT, close_fds=True, **options)
     finally:

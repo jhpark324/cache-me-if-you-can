@@ -8,11 +8,11 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 import pytest
 
-from second_brain.api import install_error_handlers, router
-from second_brain.db import Database
-from second_brain.models import Relation
-from second_brain.records import RecordService
-from second_brain.schemas import RelationInput, RelationType
+from cache_me.api import install_error_handlers, router
+from cache_me.db import Database
+from cache_me.models import Relation
+from cache_me.records import RecordService
+from cache_me.schemas import RelationInput, RelationType
 
 
 def frontend_relation_types(source):

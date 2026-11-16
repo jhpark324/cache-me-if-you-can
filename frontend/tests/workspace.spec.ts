@@ -213,7 +213,7 @@ async function fixture(page: Page, initial = false) {
             excluded: 0,
           },
         },
-        data_dir: "/tmp/second-brain-test",
+        data_dir: "/tmp/cache-me-test",
       });
     if (path === "/index/prepare") return send({ status: "preparing" });
     return fail("NOT_FOUND", "테스트에서 처리하지 않은 경로 " + path, 404);

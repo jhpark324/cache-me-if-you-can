@@ -194,7 +194,7 @@ export default function SettingsPanel({
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `second-brain-${new Date().toISOString().slice(0, 10)}.zip`;
+        link.download = `cache-me-${new Date().toISOString().slice(0, 10)}.zip`;
         link.click();
         setTimeout(() => URL.revokeObjectURL(url), 10000);
         onToast("백업 파일을 다운로드했습니다.");

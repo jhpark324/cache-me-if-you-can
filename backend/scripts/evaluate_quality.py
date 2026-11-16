@@ -21,16 +21,16 @@ from pathlib import Path
 from datetime import datetime, timezone
 from uuid import uuid4
 
-from second_brain.auth import ModelAuth
-from second_brain.db import Database
-from second_brain.embedding import MODEL_REVISION
-from second_brain.questions import QuestionInput, QuestionService, split_question
-from second_brain.question_agent import INSTRUCTIONS, TOOL_LIMIT
-from second_brain.question_tools import EvidenceLedger
-from second_brain.privacy import sanitize_text
-from second_brain.records import RecordService
-from second_brain.search import SearchService
-from second_brain.token_budget import ModelBudget
+from cache_me.auth import ModelAuth
+from cache_me.db import Database
+from cache_me.embedding import MODEL_REVISION
+from cache_me.questions import QuestionInput, QuestionService, split_question
+from cache_me.question_agent import INSTRUCTIONS, TOOL_LIMIT
+from cache_me.question_tools import EvidenceLedger
+from cache_me.privacy import sanitize_text
+from cache_me.records import RecordService
+from cache_me.search import SearchService
+from cache_me.token_budget import ModelBudget
 from langsmith import tracing_context
 
 FIXTURE = Path(__file__).resolve().parents[1] / 'tests' / 'fixtures' / 'korean_quality.json'
@@ -83,7 +83,7 @@ async def evaluate(args):
               'retrieval_tool_limit': TOOL_LIMIT,
               'live_evaluation_kind': 'create_agent_with_selected_oauth_model',
               'retrieval': [], 'live': []}
-    with tempfile.TemporaryDirectory(prefix='second-brain-quality-') as directory:
+    with tempfile.TemporaryDirectory(prefix='cache-me-quality-') as directory:
         db = Database(Path(directory) / 'canonical.sqlite3')
         records = RecordService(db)
         search = SearchService(records, Path(directory) / 'lance', model_path=args.model_path)

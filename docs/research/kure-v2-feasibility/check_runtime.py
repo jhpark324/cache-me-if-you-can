@@ -12,7 +12,7 @@ from run_benchmark import (HERE, REVISION, FROZEN_SHA, MultiVectorEncoder, torch
 def main():
     torch.set_num_threads(4)
     torch.set_num_interop_threads(1)
-    cache = Path.home() / ".cache/second-brain/kure-v2-feasibility"
+    cache = Path.home() / ".cache/cache-me/kure-v2-feasibility"
     baseline = json.loads((HERE / "results.json").read_text())
     assert baseline["status"] == "complete"
     raw = (HERE / "fixtures.json").read_bytes()

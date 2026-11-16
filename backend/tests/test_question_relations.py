@@ -8,11 +8,11 @@ from langchain_core.messages import AIMessage, ToolMessage
 
 from agent_fakes import request_value, search_call, tool_values
 
-from second_brain.auth import AuthError
-from second_brain.db import Database
-from second_brain.questions import QuestionInput, QuestionService
-from second_brain.records import DomainError, RecordService
-from second_brain.schemas import CreateCaptureInput, RelationInput, RetractRelationInput, SourceRef, UpdateCaptureInput
+from cache_me.auth import AuthError
+from cache_me.db import Database
+from cache_me.questions import QuestionInput, QuestionService
+from cache_me.records import DomainError, RecordService
+from cache_me.schemas import CreateCaptureInput, RelationInput, RetractRelationInput, SourceRef, UpdateCaptureInput
 
 
 @pytest.fixture

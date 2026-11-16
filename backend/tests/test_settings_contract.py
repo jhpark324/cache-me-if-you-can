@@ -4,9 +4,9 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from fastapi.testclient import TestClient
 
-from second_brain.auth import ModelAuth
-from second_brain.config import Settings
-from second_brain.main import create_app
+from cache_me.auth import ModelAuth
+from cache_me.config import Settings
+from cache_me.main import create_app
 
 
 @pytest.fixture
