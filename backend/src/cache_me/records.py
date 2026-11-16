@@ -601,7 +601,7 @@ class RecordService:
         for old in session.scalars(select(ConceptEnrichmentJob).where(ConceptEnrichmentJob.capture_id == capture.id, ConceptEnrichmentJob.status.in_(["pending", "running"]))):
             old.status, old.completed_at = "superseded", utcnow()
         now = utcnow()
-        session.add(ConceptEnrichmentJob(id=new_id(), brain_id=self.brain_id, capture_id=capture.id, requested_revision_id=capture.current_revision_id, expected_state_version=capture.state_version, policy_version="concept-v1", status="pending", unresolved_hints=[], attempt_count=0, available_at=now, created_at=now))
+        session.add(ConceptEnrichmentJob(id=new_id(), brain_id=self.brain_id, capture_id=capture.id, requested_revision_id=capture.current_revision_id, expected_state_version=capture.state_version, policy_version="concept-v2", status="pending", unresolved_hints=[], attempt_count=0, available_at=now, created_at=now))
 
     def _insert_revision(self, session, capture, *, title, body_markdown, kinds, completion_state, event_time, concept_hints, nodes, sources, node_status, change_kind, revision_no, review_reason=None, concept_ids=None, node_concepts=None, created_via=None):
         for node in nodes:
