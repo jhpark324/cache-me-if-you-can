@@ -4,8 +4,8 @@ import importlib.util
 from pathlib import Path
 from uuid import uuid4
 
-from second_brain.db import Database
-from second_brain.records import RecordService
+from cache_me.db import Database
+from cache_me.records import RecordService
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'scripts' / 'evaluate_quality.py'

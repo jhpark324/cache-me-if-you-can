@@ -12,8 +12,8 @@ import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-import second_brain.auth as auth_module
-from second_brain.auth import AuthError, ISSUER, ModelAuth, RESOURCE, TOKEN
+import cache_me.auth as auth_module
+from cache_me.auth import AuthError, ISSUER, ModelAuth, RESOURCE, TOKEN
 
 REAL_ASYNC_CLIENT = httpx.AsyncClient
 CLIENT_ID = "public-test-client"

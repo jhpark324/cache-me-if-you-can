@@ -8,12 +8,12 @@ import numpy as np
 import pytest
 from sqlalchemy import select
 
-from second_brain.chunking import MarkdownChunker
-from second_brain.db import Database
-from second_brain.embedding import EmbeddingError
-from second_brain.models import CaptureIndexState, IndexJob, KnowledgeNode
-from second_brain.records import DomainError, RecordService
-from second_brain.search import SearchService
+from cache_me.chunking import MarkdownChunker
+from cache_me.db import Database
+from cache_me.embedding import EmbeddingError
+from cache_me.models import CaptureIndexState, IndexJob, KnowledgeNode
+from cache_me.records import DomainError, RecordService
+from cache_me.search import SearchService
 
 
 class TestEmbedding:

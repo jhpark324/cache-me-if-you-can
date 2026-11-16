@@ -4,11 +4,11 @@ from uuid import uuid4
 
 import pytest
 
-from second_brain.auth import AuthError
-from second_brain.db import Database
-from second_brain.questions import QuestionInput, QuestionService, split_question
-from second_brain.records import RecordService
-from second_brain.token_budget import ModelBudget
+from cache_me.auth import AuthError
+from cache_me.db import Database
+from cache_me.questions import QuestionInput, QuestionService, split_question
+from cache_me.records import RecordService
+from cache_me.token_budget import ModelBudget
 from agent_fakes import OfflineModel, request_value, search_call, tool_values
 
 

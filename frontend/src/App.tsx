@@ -219,7 +219,7 @@ export default function App() {
     [deleteError, setDeleteError] = useState("");
   const [toast, setToast] = useState(""),
     [paused, setPaused] = useState(
-      () => localStorage.getItem("second-brain-motion") === "paused",
+      () => localStorage.getItem("cache-me-motion") === "paused",
     );
   const [reviewOpen, setReviewOpen] = useState(false),
     [conceptOpen, setConceptOpen] = useState(false);
@@ -877,7 +877,7 @@ export default function App() {
   }
   function toggleMotion() {
     setPaused((v) => {
-      localStorage.setItem("second-brain-motion", !v ? "paused" : "enabled");
+      localStorage.setItem("cache-me-motion", !v ? "paused" : "enabled");
       return !v;
     });
   }

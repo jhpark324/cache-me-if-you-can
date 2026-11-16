@@ -37,7 +37,7 @@ python -m unittest discover -s scripts/tests -p 'test_manage.py' -v
 
 기본 포트 `52761`과 사용자 지정 포트의 일치, 잘못된 포트 거부, 같은 서버 재사용, 동시 시작, 다른 서비스·저장소 충돌, 시작 실패 정리, `doctor`의 읽기 전용 동작과 토큰 비노출을 확인한다. 설치 검사는 비밀 없는 `runtime.json`의 명령·주소, 반복 설치와 사용자 수정본 보호도 포함한다. 헤더 helper 호출만으로 서버가 시작되지 않아야 한다.
 
-MCP 이름 검사는 새 `cache_me` 설치, 이전 `second_brain` 관리 연결의 명시적 이전, 반복 설치, 외부 설정·중복 키·손상된 관리 구간의 사전 거부를 확인한다. 거부 전후의 설정·스킬·데이터 파일을 비교하고, `doctor`가 이전 이름과 중복을 구분하는지 검사한다. 아래 실제 Codex 프로토콜 검사는 연결된 서버가 `cache_me` 하나이며 임시 저장소를 가리키는지 확인한다.
+MCP 이름 검사는 `cache_me` 설치·반복 설치, 현재 관리 설정의 명시적 갱신, 외부 설정·손상된 관리 구간의 사전 거부를 확인한다. 다른 이름의 MCP 연결과 스킬은 변경하지 않아야 한다. 거부 전후의 설정·스킬·데이터 파일을 비교하고, `doctor`가 현재 연결의 미설치·불일치·손상을 구분하는지 검사한다. 실행 명령·Python 모듈·환경 변수·기본 데이터 디렉터리·백업 파일명이 현재 [명명 규칙](../project/domain-language.md#제품-이름과-실행-식별자)을 따르는지도 확인한다. 아래 실제 Codex 프로토콜 검사는 격리한 연결이 `cache_me`이며 임시 저장소를 가리키는지 확인한다.
 
 실제 Codex에서는 `doctor`가 정상이어도 현재 대화의 MCP 도구가 없을 수 있다. 연결 재로드 또는 새 세션에서 도구 목록을 확인하고, 격리 저장소에 대한 실제 도구 응답으로 저장 성공을 판단한다. 자동 테스트의 성공을 클라이언트 재연결이나 Windows·macOS 네이티브 실행을 확인한 것으로 기록하지 않는다. 실제 런타임을 수동 검사할 때도 아래 통합 검사처럼 새 빈 데이터 경로와 별도 포트를 사용한다.
 
@@ -61,11 +61,11 @@ pytest backend/tests/test_search_real_model.py -q
 
 ```sh
 npm --prefix frontend run build
-SECOND_BRAIN_DATA_DIR="$PWD/.local/integration-data" SECOND_BRAIN_PORT=8016 \
+CACHE_ME_DATA_DIR="$PWD/.local/integration-data" CACHE_ME_PORT=8016 \
 uv run --locked --project backend --extra embedding python - <<'PY'
 import uvicorn
-from second_brain.config import Settings
-from second_brain.main import create_app
+from cache_me.config import Settings
+from cache_me.main import create_app
 
 settings = Settings.load()
 settings.background_jobs = False
@@ -76,13 +76,13 @@ PY
 두 번째 터미널에서도 프로젝트 루트에서 실행한다.
 
 ```sh
-SECOND_BRAIN_TEST_URL=http://127.0.0.1:8016 \
-SECOND_BRAIN_INTEGRATION=1 \
-SECOND_BRAIN_QA_DATA_DIR="$PWD/.local/integration-data" \
+CACHE_ME_TEST_URL=http://127.0.0.1:8016 \
+CACHE_ME_INTEGRATION=1 \
+CACHE_ME_QA_DATA_DIR="$PWD/.local/integration-data" \
 npm --prefix frontend test -- tests/integration.spec.ts tests/management-integration.spec.ts
 ```
 
-`SECOND_BRAIN_QA_DATA_DIR`는 위 서버의 데이터 경로와 같아야 한다. 이 경로의 SQLite에는 합성 자료만 있어야 한다. 이 검사는 실제 외부 AI 분류나 공급자 로그인 성공을 검증하지 않는다. 서버를 직접 지정하면 일부 Vite 전용 스트리밍 검사는 생략되므로 기본 브라우저 검사도 함께 실행한다.
+`CACHE_ME_QA_DATA_DIR`는 위 서버의 데이터 경로와 같아야 한다. 이 경로의 SQLite에는 합성 자료만 있어야 한다. 이 검사는 실제 외부 AI 분류나 공급자 로그인 성공을 검증하지 않는다. 서버를 직접 지정하면 일부 Vite 전용 스트리밍 검사는 생략되므로 기본 브라우저 검사도 함께 실행한다.
 
 ## Codex MCP와 스킬
 

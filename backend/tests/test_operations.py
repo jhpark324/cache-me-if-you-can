@@ -7,12 +7,12 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 
-from second_brain.api import install_error_handlers, router
-from second_brain.db import Database
-from second_brain.enrichment import ConceptEnrichment, body_segments
-from second_brain.models import CaptureRevision, Concept, ConceptEnrichmentJob, MutationReceipt
-from second_brain.records import DomainError, RecordService
-from second_brain.schemas import CreateCaptureInput, RetryConceptsInput, UpdateCaptureInput
+from cache_me.api import install_error_handlers, router
+from cache_me.db import Database
+from cache_me.enrichment import ConceptEnrichment, body_segments
+from cache_me.models import CaptureRevision, Concept, ConceptEnrichmentJob, MutationReceipt
+from cache_me.records import DomainError, RecordService
+from cache_me.schemas import CreateCaptureInput, RetryConceptsInput, UpdateCaptureInput
 
 
 @pytest.fixture
@@ -233,8 +233,8 @@ def test_retry_http_contract_and_version_conflict(records):
 
 
 def test_web_login_cancellation_uses_current_session_and_csrf(tmp_path):
-    from second_brain.config import Settings
-    from second_brain.main import create_app
+    from cache_me.config import Settings
+    from cache_me.main import create_app
     settings = Settings(tmp_path / 'web-state', background_jobs=False)
     app = create_app(settings)
     with TestClient(app, base_url=settings.origin) as client:

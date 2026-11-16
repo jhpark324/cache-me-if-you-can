@@ -9,10 +9,10 @@ from pathlib import Path
 
 from platformdirs import user_data_path
 
-from second_brain.brand import DEFAULT_PORT
+from cache_me.brand import DEFAULT_PORT
 
 
-PORT_ERROR = 'SECOND_BRAIN_PORT must be an integer between 1 and 65535.'
+PORT_ERROR = 'CACHE_ME_PORT must be an integer between 1 and 65535.'
 
 
 def atomic_private_json(path: Path, value: dict) -> None:
@@ -43,10 +43,10 @@ class Settings:
     @classmethod
     def load(cls, *, data_dir: Path | None = None, port: int | None = None):
         data = data_dir if data_dir is not None else Path(os.environ.get(
-            'SECOND_BRAIN_DATA_DIR', str(user_data_path('SecondBrain', appauthor=False))))
+            'CACHE_ME_DATA_DIR', str(user_data_path('CacheMe', appauthor=False))))
         frontend = Path(__file__).resolve().parents[3] / 'frontend' / 'dist'
         if port is None:
-            environment_port = os.environ.get('SECOND_BRAIN_PORT', str(DEFAULT_PORT)).strip()
+            environment_port = os.environ.get('CACHE_ME_PORT', str(DEFAULT_PORT)).strip()
             if not re.fullmatch(r'[0-9]+', environment_port):
                 raise ValueError(PORT_ERROR)
             try:

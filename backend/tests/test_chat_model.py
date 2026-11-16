@@ -8,8 +8,8 @@ import pytest
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import tool
 
-from second_brain.auth import AuthError, ModelAuth
-from second_brain.chat_model import OAuthChatModel, message_from_output, serialize_model_input
+from cache_me.auth import AuthError, ModelAuth
+from cache_me.chat_model import OAuthChatModel, message_from_output, serialize_model_input
 from test_auth_contract import install_model_stream, prepare_expired_account
 
 

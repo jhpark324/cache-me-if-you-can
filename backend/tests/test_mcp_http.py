@@ -20,9 +20,9 @@ def test_streamable_http_delete_confirmation_roundtrip(tmp_path):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
-    env = dict(os.environ, SECOND_BRAIN_DATA_DIR=str(tmp_path), SECOND_BRAIN_PORT=str(port))
+    env = dict(os.environ, CACHE_ME_DATA_DIR=str(tmp_path), CACHE_ME_PORT=str(port))
     with (tmp_path / 'server.log').open('w') as log:
-        process = subprocess.Popen([sys.executable, '-m', 'second_brain.main'],
+        process = subprocess.Popen([sys.executable, '-m', 'cache_me.main'],
                                    env=env, stdout=log, stderr=log)
         try:
             with httpx.Client() as http:

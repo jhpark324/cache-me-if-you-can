@@ -70,7 +70,7 @@ python3 scripts/manage.py setup
 python3 scripts/manage.py run
 ```
 
-서버 실행 후 [http://127.0.0.1:52761/](http://127.0.0.1:52761/)를 엽니다. 캐시미 전용 기본 포트는 `52761`이며 `SECOND_BRAIN_PORT`로 변경할 수 있습니다.
+서버 실행 후 [http://127.0.0.1:52761/](http://127.0.0.1:52761/)를 엽니다. 캐시미 전용 기본 포트는 `52761`이며 `CACHE_ME_PORT`로 변경할 수 있습니다.
 
 1. **새 기록**에서 첫 내용을 저장합니다. 기록 관리에는 모델 로그인이 필요하지 않습니다.
 2. 설정의 **검색 모델 준비**를 실행합니다. 처음에는 KURE-v2를 내려받습니다.
@@ -99,7 +99,7 @@ $cache-me 그 기록에 직접 예제로 확인한 내용을 추가해줘.
 
 스킬 이름은 `cache-me`, MCP 등록 키는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`입니다. 삭제는 사용자 재확인을 거칩니다.
 
-이전 `second_brain` 관리 연결은 `install-codex --replace`로 이전한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. 기록·인증 파일과 Python 패키지 `second_brain`은 유지합니다. 이전 `8000` 연결도 명시적으로 갱신해야 합니다. [연결 설정](guides/local-development.md#codex-mcp) · [MCP 이름 이전](guides/local-development.md#기존-mcp-이름에서-이전) · [포트 이전](guides/local-development.md#기존-포트에서-이전) · [스킬 원본](skills/cache-me/SKILL.md)
+설치된 현재 이름의 관리 설정·스킬을 갱신할 때는 `install-codex --replace`를 사용한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. Python 패키지는 `cache_me`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`입니다. 이전 제품 이름의 별칭이나 자동 이전은 제공하지 않습니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 변경](guides/local-development.md#포트-변경) · [백업과 데이터 배치](guides/local-development.md#백업과-새-환경의-데이터-배치) · [스킬 원본](skills/cache-me/SKILL.md)
 
 ## 동작 구조
 

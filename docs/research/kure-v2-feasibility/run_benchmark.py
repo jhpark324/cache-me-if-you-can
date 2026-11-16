@@ -355,7 +355,7 @@ def run(args, result):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cache", type=Path, default=Path.home() / ".cache/second-brain/kure-v2-feasibility")
+    parser.add_argument("--cache", type=Path, default=Path.home() / ".cache/cache-me/kure-v2-feasibility")
     parser.add_argument("--output", type=Path, default=HERE / "results.json")
     parser.add_argument("--scale-count", type=int, default=1000)
     args = parser.parse_args()

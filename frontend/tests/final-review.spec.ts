@@ -263,7 +263,7 @@ for (const newline of ["\r\n", "\n", "\r"]) {
     page,
   }) => {
     test.skip(
-      Boolean(process.env.SECOND_BRAIN_TEST_URL),
+      Boolean(process.env.CACHE_ME_TEST_URL),
       "Vite source module regression; external API integration has separate tests.",
     );
     await baseFixture(page);

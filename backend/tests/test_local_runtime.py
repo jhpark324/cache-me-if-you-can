@@ -13,9 +13,9 @@ import threading
 from filelock import FileLock
 import pytest
 
-from second_brain import runtime
-from second_brain.brand import PRODUCT_ID
-from second_brain.config import Settings
+from cache_me import runtime
+from cache_me.brand import PRODUCT_ID
+from cache_me.config import Settings
 
 
 def free_port():
@@ -236,9 +236,9 @@ def test_spawn_uses_exact_runtime_store_and_private_log(tmp_path, monkeypatch):
     monkeypatch.setattr(runtime.subprocess, 'Popen', popen)
     assert runtime._spawn_server(settings) is process
     command, options = calls[0]
-    assert command == [sys.executable, '-m', 'second_brain.main']
-    assert options['env']['SECOND_BRAIN_DATA_DIR'] == str(data.resolve())
-    assert options['env']['SECOND_BRAIN_PORT'] == str(settings.port)
+    assert command == [sys.executable, '-m', 'cache_me.main']
+    assert options['env']['CACHE_ME_DATA_DIR'] == str(data.resolve())
+    assert options['env']['CACHE_ME_PORT'] == str(settings.port)
     assert options['stdin'] == subprocess.DEVNULL
     assert options['stderr'] == subprocess.STDOUT
     assert options['close_fds'] is True
@@ -275,7 +275,7 @@ def test_invalid_timeouts_do_not_start(tmp_path, timeout):
 
 def test_cli_doctor_is_read_only_and_returns_structured_failure(tmp_path):
     data = tmp_path / 'missing-store'
-    result = subprocess.run([sys.executable, '-m', 'second_brain.runtime', 'doctor',
+    result = subprocess.run([sys.executable, '-m', 'cache_me.runtime', 'doctor',
         '--data-dir', str(data), '--port', str(free_port())], capture_output=True, text=True)
     assert result.returncode == 1
     payload = json.loads(result.stdout)
@@ -287,9 +287,9 @@ def test_cli_doctor_is_read_only_and_returns_structured_failure(tmp_path):
 def test_cli_explicit_port_overrides_invalid_ambient_port(tmp_path):
     data = tmp_path / 'missing-store'
     port = free_port()
-    result = subprocess.run([sys.executable, '-m', 'second_brain.runtime', 'doctor',
+    result = subprocess.run([sys.executable, '-m', 'cache_me.runtime', 'doctor',
         '--data-dir', str(data), '--port', str(port)], capture_output=True, text=True,
-        env=dict(os.environ, SECOND_BRAIN_PORT='invalid ambient port'))
+        env=dict(os.environ, CACHE_ME_PORT='invalid ambient port'))
     assert result.returncode == 1
     payload = json.loads(result.stdout)
     assert payload['data']['status'] == 'stopped'
@@ -327,9 +327,9 @@ def test_real_backend_cold_start_reuse_and_owned_cleanup(tmp_path, monkeypatch):
 
 def test_foreground_run_locks_store_before_auth_or_database_initialization(tmp_path):
     # A store already served on another port must remain completely untouched.
-    env = dict(os.environ, SECOND_BRAIN_DATA_DIR=str(tmp_path), SECOND_BRAIN_PORT=str(free_port()))
+    env = dict(os.environ, CACHE_ME_DATA_DIR=str(tmp_path), CACHE_ME_PORT=str(free_port()))
     with FileLock(str(tmp_path / 'server.lock')):
-        result = subprocess.run([sys.executable, '-m', 'second_brain.main'],
+        result = subprocess.run([sys.executable, '-m', 'cache_me.main'],
             env=env, capture_output=True, text=True, timeout=15)
     assert result.returncode != 0
     assert {path.name for path in tmp_path.iterdir()} == {'server.lock'}
@@ -338,13 +338,13 @@ def test_foreground_run_locks_store_before_auth_or_database_initialization(tmp_p
 @pytest.mark.skipif(not hasattr(os, 'mkfifo'), reason='FIFO files require POSIX')
 def test_existing_fifo_log_fails_without_blocking_or_starting(tmp_path):
     os.mkfifo(tmp_path / 'runtime.log')
-    result = subprocess.run([sys.executable, '-m', 'second_brain.runtime', 'start',
+    result = subprocess.run([sys.executable, '-m', 'cache_me.runtime', 'start',
         '--data-dir', str(tmp_path), '--port', str(free_port()), '--timeout', '.2'],
         capture_output=True, text=True, timeout=5)
     assert result.returncode == 1
     assert json.loads(result.stdout)['error']['code'] == 'start_failed'
     assert not (tmp_path / 'local-access.json').exists()
-    assert not (tmp_path / 'brain.sqlite3').exists()
+    assert not (tmp_path / 'cache-me.sqlite3').exists()
 
 
 @pytest.mark.skipif(not hasattr(os, 'mkfifo'), reason='FIFO files require POSIX')

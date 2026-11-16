@@ -21,6 +21,6 @@ SQLite는 기록·불변 기록 버전·주제·명시적 관계를 저장하고
 
 Windows·macOS·Linux 네이티브 실행을 목표로 하며 실제 검증된 WSL/Linux 환경과 구분한다. 설치·의존성 제약은 [플랫폼 지원](../architecture/platform-support.md), 현재 구현은 [아키텍처](../architecture/index.md), 기능 계약은 [명세](../specs/index.md), 재현 가능한 확인 절차는 [검증 안내](../guides/testing.md)에서 관리한다.
 
-제품·스킬 이름과 호환 식별자는 [도메인 용어](domain-language.md#제품-이름과-호환-식별자)를 따른다.
+제품·스킬 이름과 실행 식별자는 [도메인 용어](domain-language.md#제품-이름과-실행-식별자)를 따른다.
 
 공유·일정 관리·영구 대화 이력·휴지통과 복원은 현재 제공하지 않는다. `visibility=public/private`는 메타데이터이며 인터넷 공개나 모델 전송 제어를 실행하지 않는다.

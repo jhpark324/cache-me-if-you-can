@@ -7,8 +7,8 @@ from urllib.parse import parse_qs
 import httpx
 import pytest
 
-import second_brain.auth as auth_module
-from second_brain.auth import AuthError, ISSUER, ModelAuth, RESOURCE, TOKEN
+import cache_me.auth as auth_module
+from cache_me.auth import AuthError, ISSUER, ModelAuth, RESOURCE, TOKEN
 from test_auth_contract import (CLIENT_ID, REAL_ASYNC_CLIENT, claims, login_pending,
                                 prepare_expired_account, signed, signing_keys, token_payload, install_model_stream, FakeStream)
 

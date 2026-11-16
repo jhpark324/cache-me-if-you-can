@@ -2,7 +2,7 @@
 
 ## 공통 필터 의미
 
-목록·검색·홈 그래프는 [record_filters.py](../../backend/src/second_brain/record_filters.py)의 현재 기록 선택 규칙을 공유한다. 여러 유형은 OR, 여러 주제는 OR로 묶고 유형 그룹과 주제 그룹 사이는 AND로 결합한다. 주제는 현재 revision의 기록 또는 현재 Node에 연결된 주제를 포함한다. 과거 revision의 Node 연결을 현재 기록의 주제로 복제하지 않는다.
+목록·검색·홈 그래프는 [record_filters.py](../../backend/src/cache_me/record_filters.py)의 현재 기록 선택 규칙을 공유한다. 여러 유형은 OR, 여러 주제는 OR로 묶고 유형 그룹과 주제 그룹 사이는 AND로 결합한다. 주제는 현재 revision의 기록 또는 현재 Node에 연결된 주제를 포함한다. 과거 revision의 Node 연결을 현재 기록의 주제로 복제하지 않는다.
 
 ```mermaid
 flowchart LR

@@ -19,8 +19,8 @@ python3 scripts/seed_conversations.py validate
 설치가 완료된 환경에서 데모 전용 서버를 실행한다. 아래 경로는 Git에서 제외되는 `.local/` 아래의 별도 저장소이며, 사용 중인 개인 기록의 경로를 지정하지 않는다.
 
 ```sh
-SECOND_BRAIN_DATA_DIR="$PWD/.local/example-data" SECOND_BRAIN_PORT=8010 \
-  backend/.venv/bin/python -m second_brain.main
+CACHE_ME_DATA_DIR="$PWD/.local/example-data" CACHE_ME_PORT=8010 \
+  backend/.venv/bin/python -m cache_me.main
 ```
 
 데모 서버의 설정 화면에서 검색 모델을 준비한다. 자동 주제 연결이 필요하면 이 서버에서 모델에 로그인하고 답변 모델을 선택한다. 원문 저장은 로그인 없이 가능하며, 주제 연결·검색 준비의 성공은 별도로 확인한다.

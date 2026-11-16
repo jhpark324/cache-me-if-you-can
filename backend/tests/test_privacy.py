@@ -5,7 +5,7 @@ from langchain.agents.middleware import PIIMiddleware
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langgraph.runtime import Runtime
 
-from second_brain.privacy import (
+from cache_me.privacy import (
     pii_middleware,
     sanitize_ai_message,
     sanitize_messages,

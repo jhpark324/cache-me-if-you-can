@@ -3,6 +3,7 @@ import io
 import json
 import time
 import zipfile
+from importlib.metadata import version
 from pathlib import Path
 from uuid import uuid4
 
@@ -12,14 +13,14 @@ from mcp.client import Client
 from mcp.types import ElicitResult
 from mcp.shared.exceptions import MCPError
 
-from second_brain.auth import ModelAuth, AuthError
-from second_brain.config import Settings
-from second_brain.db import Database
-from second_brain.main import create_app
-from second_brain.mcp_server import create_mcp
-from second_brain.questions import QuestionInput, QuestionService
-from second_brain.records import RecordService
-from second_brain.schemas import CreateCaptureInput, PrepareDeletionInput, DeleteCaptureInput
+from cache_me.auth import ModelAuth, AuthError
+from cache_me.config import Settings
+from cache_me.db import Database
+from cache_me.main import create_app
+from cache_me.mcp_server import create_mcp
+from cache_me.questions import QuestionInput, QuestionService
+from cache_me.records import RecordService
+from cache_me.schemas import CreateCaptureInput, PrepareDeletionInput, DeleteCaptureInput
 from agent_fakes import OfflineModel
 
 
@@ -39,6 +40,14 @@ def create(client, body='지식을 저장합니다.'):
     return response.json()['data']['capture']
 
 
+def test_runtime_reports_installed_product_version(web):
+    client, app = web
+    expected = version('cache-me')
+    assert app.version == expected
+    assert client.get('/health').json()['data']['version'] == expected
+    assert client.get('/openapi.json').json()['info']['version'] == expected
+
+
 def test_web_security_and_delete_session_binding(web):
     client, app = web
     assert client.post('/api/v1/captures', headers={'x-csrf-token': 'wrong'}, json={}).status_code == 403
@@ -48,32 +57,46 @@ def test_web_security_and_delete_session_binding(web):
     expected = {'capture_id': capture['id'], 'expected_revision_id': capture['revision_id'], 'expected_state_version': capture['state_version']}
     preview = client.post(f"/api/v1/captures/{capture['id']}/deletion-preview", json=expected).json()['data']
     payload = {**expected, 'confirmation_token': preview['confirmation_token'], 'request_id': str(uuid4())}
-    original_cookie = client.cookies.get('sb_session')
+    original_cookie = client.cookies.get('cache_me_session')
     original_csrf = client.headers['x-csrf-token']
     client.cookies.clear()
     client.headers['x-csrf-token'] = client.get('/api/v1/session').json()['data']['csrf_token']
     assert not client.post(f"/api/v1/captures/{capture['id']}/deletion", json=payload).json()['ok']
     client.cookies.clear()
-    client.cookies.set('sb_session', original_cookie)
+    client.cookies.set('cache_me_session', original_cookie)
     client.headers['x-csrf-token'] = original_csrf
     assert client.post(f"/api/v1/captures/{capture['id']}/deletion", json=payload).json()['ok']
     assert client.get(f"/api/v1/captures/{capture['id']}").status_code == 404
     assert client.post('/api/v1/sources/resolve', json={'capture_id': capture['id'], 'revision_id': capture['revision_id']}).status_code == 404
 
 
-def test_backup_is_snapshot_and_excludes_credentials(web):
+def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
     client, app = web
-    create(client, '백업의 정본')
+    capture = create(client, '백업의 정본')
     response = client.post('/api/v1/backups', json={})
     assert response.status_code == 200
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
-        assert set(archive.namelist()) == {'brain.sqlite3', 'manifest.json'}
+        assert set(archive.namelist()) == {'cache-me.sqlite3', 'manifest.json'}
         manifest = json.loads(archive.read('manifest.json'))
+        assert manifest['app_version'] == version('cache-me')
         assert manifest['includes_soft_deleted_history'] is True
         assert manifest['schema_revision'] == '0001'
         assert manifest['embedding_profiles'][0]['model_id'] == 'nlpai-lab/KURE-v2'
         assert b'access_token' not in archive.read('manifest.json')
-        assert archive.read('brain.sqlite3').startswith(b'SQLite format 3')
+        assert archive.read('cache-me.sqlite3').startswith(b'SQLite format 3')
+        restored_data = tmp_path / 'restored-store'
+        restored_data.mkdir()
+        (restored_data / 'cache-me.sqlite3').write_bytes(archive.read('cache-me.sqlite3'))
+
+    settings = Settings(restored_data, background_jobs=False)
+    with TestClient(create_app(settings), base_url=settings.origin) as restored:
+        restored.get('/api/v1/session')
+        result = restored.get(f"/api/v1/captures/{capture['id']}")
+        assert result.status_code == 200
+        saved = result.json()['data']
+        assert saved['id'] == capture['id']
+        assert saved['revision_id'] == capture['revision_id']
+        assert saved['body_markdown'] == '백업의 정본'
 
 
 def test_no_model_login_is_explicit_stream_error(web):
@@ -109,6 +132,8 @@ def test_mcp_confirmation_is_hidden_and_required(tmp_path):
         records = RecordService(db, created_via='mcp')
         server = create_mcp(records, None)
         async with Client(server) as client:
+            assert client.server_info is not None
+            assert client.server_info.version == version('cache-me')
             schemas = await client.list_tools()
             deletion = next(t for t in schemas.tools if t.name == 'capture_delete')
             assert 'answer' not in deletion.input_schema['properties']

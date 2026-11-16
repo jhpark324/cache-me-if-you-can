@@ -3,7 +3,7 @@ test("실제 API: 홈 그래프는 저장한 기록·주제를 보여주고 확�
   page,
 }) => {
   test.skip(
-    !process.env.SECOND_BRAIN_INTEGRATION,
+    !process.env.CACHE_ME_INTEGRATION,
     "격리된 실제 서버에서만 실행",
   );
   test.setTimeout(60000);

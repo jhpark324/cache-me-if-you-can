@@ -46,10 +46,12 @@
 
 표시 문구를 바꾸어 새로운 관계 종류를 만들지 않는다. 관계 생성은 기록 병합·수정·삭제를 대신 실행하지 않는다.
 
-## 제품 이름과 호환 식별자
+## 제품 이름과 실행 식별자
 
 제품 이름과 MCP 서버 표시 이름은 **Cache Me If You Can**, 스킬 이름과 호출 이름은 **`cache-me`**, MCP 등록 키와 스킬 의존성 ID는 **`cache_me`**다. 일반적인 개인 지식 관리 방식은 세컨드 브레인이라고 설명할 수 있지만 현재 제품 이름으로 `Second Brain`을 섞어 쓰지 않는다.
 
-Python 패키지 `second_brain`, 환경 변수 `SECOND_BRAIN_*`, 기본 데이터 디렉터리 이름 `SecondBrain`, API 경로·필드·`capture_create` 같은 개별 도구 이름은 실행·저장 호환성을 가진 식별자이며 유지한다. MCP 등록 키와 Python 패키지 이름은 서로 다르다. 이전 `second_brain` MCP 관리 연결은 [설치 가이드의 명시적 이전 절차](../guides/local-development.md#기존-mcp-이름에서-이전)를 따른다.
+개발 버전의 Python 패키지와 MCP 등록 키는 `cache_me`, 배포 패키지와 실행 명령은 `cache-me`, 웹 패키지는 `cache-me-web`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`, SQLite 파일은 `cache-me.sqlite3`를 사용한다. 백업 ZIP도 `cache-me-YYYY-MM-DD.zip`으로 내려받는다. 이전 제품 이름의 별칭·환경 변수 fallback·설정 및 스킬 자동 이전은 제공하지 않는다.
+
+이 이름 변경은 기록 스키마나 `capture_create` 같은 개별 도구의 의미를 바꾸지 않는다. 기존 개발 데이터는 원본을 보존한 상태에서 새 경로로 명시적으로 복사할 수 있으며, 실행기가 이전 경로를 자동 탐색하거나 초기화하지 않는다. 설치와 데이터 배치는 [로컬 실행 가이드](../guides/local-development.md)를 따른다.
 
 새 문서·화면 문구는 이 기준을 참조하고 의미를 바꾸는 경우 관련 명세를 먼저 갱신한다. 인용·연구·외부 제품·기술 라이브러리의 용어는 해당 맥락을 보존한다.

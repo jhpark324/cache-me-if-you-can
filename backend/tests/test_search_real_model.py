@@ -7,11 +7,11 @@ from uuid import uuid4
 
 import pytest
 
-from second_brain.chunking import MarkdownChunker
-from second_brain.db import Database
-from second_brain.embedding import KureEmbedding
-from second_brain.records import DomainError, RecordService
-from second_brain.search import SearchService
+from cache_me.chunking import MarkdownChunker
+from cache_me.db import Database
+from cache_me.embedding import KureEmbedding
+from cache_me.records import DomainError, RecordService
+from cache_me.search import SearchService
 
 
 @pytest.mark.skipif(not os.environ.get("KURE_TEST_MODEL_PATH"), reason="explicit pinned KURE-v2 model path required")

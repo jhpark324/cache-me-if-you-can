@@ -16,7 +16,7 @@ test("실제 API: 기록 생성·정정·주변 그래프·출처·확인 삭제
   page,
 }) => {
   test.skip(
-    !process.env.SECOND_BRAIN_INTEGRATION,
+    !process.env.CACHE_ME_INTEGRATION,
     "임시 실제 서버를 지정한 통합 검증에서 실행",
   );
   const errors: string[] = [];
@@ -188,7 +188,7 @@ test("실제 API: 기록 생성·정정·주변 그래프·출처·확인 삭제
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "백업 다운로드" }).click();
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toMatch(/second-brain-.*\.zip$/);
+  expect(download.suggestedFilename()).toMatch(/cache-me-.*\.zip$/);
   expect(await download.failure()).toBeNull();
   await page.getByRole("button", { name: "설정 닫기" }).click();
   await settle(page);

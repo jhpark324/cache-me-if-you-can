@@ -75,7 +75,7 @@ SQLite 안에 기록 간 관계를 테이블로 보관하고 제한된 연결 �
 
 자체 로그인에서 받은 OAuth access token으로 공식 모델 endpoint를 호출한다. OpenAI Python SDK의 자격증명 인자에 이 토큰을 전달하는 공식 예시가 있으며 별도 API key를 발급받는 방식이 아니다. 로그인 계정에 제공되는 모델 목록을 조회해 선택한다. [공식 모델 호출](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference)
 
-현재 인증은 `httpx`와 `PyJWT[crypto]`로 OAuth HTTP·PKCE·OIDC 서명/claim 검사를 구현하며 Authlib은 사용하지 않는다. 공급자 토큰은 서버에서 관리한다. 실제 계정의 로그인·갱신·재로그인과 OS별 callback은 배포 환경에서 검증한다. [구현](../../backend/src/second_brain/auth.py), [OpenAI 로그인 계약](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)
+현재 인증은 `httpx`와 `PyJWT[crypto]`로 OAuth HTTP·PKCE·OIDC 서명/claim 검사를 구현하며 Authlib은 사용하지 않는다. 공급자 토큰은 서버에서 관리한다. 실제 계정의 로그인·갱신·재로그인과 OS별 callback은 배포 환경에서 검증한다. [구현](../../backend/src/cache_me/auth.py), [OpenAI 로그인 계약](https://developers.openai.com/siwc/token-sharing-open-source/sign-in)
 
 현재 OAuth HTTP 계약에 따라 `store:false`, `stream:true`와 현재 질문·이번 요청에서 조회한 지식 맥락을 전달한다. hosted MCP 대신 FastAPI가 function/custom tool을 실행한다. 지원 필드·도구 형식은 일반 API와 같다고 가정하지 않는다. 웹의 이전 검색 질문·답변 이력을 모델 입력에 자동 포함하지 않고 검색 응답도 장기 지식으로 자동 저장하지 않는다. [Preview 제약](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 

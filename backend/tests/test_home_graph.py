@@ -5,13 +5,13 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import event
 
-from second_brain.brand import PRODUCT_NAME
-from second_brain.config import Settings
-from second_brain.db import Database, new_id
-from second_brain.main import create_app
-from second_brain.models import ProvenanceLink
-from second_brain.records import DomainError, RecordService
-from second_brain.search import SearchService
+from cache_me.brand import PRODUCT_NAME
+from cache_me.config import Settings
+from cache_me.db import Database, new_id
+from cache_me.main import create_app
+from cache_me.models import ProvenanceLink
+from cache_me.records import DomainError, RecordService
+from cache_me.search import SearchService
 
 
 @pytest.fixture
@@ -359,8 +359,8 @@ def test_provenance_depth_and_work_budget_fail_closed_with_truncation(graph, mon
     assert search.neighbors(chain[-1]["id"]) == {"nodes": [], "edges": [], "truncated": True}
     # A tiny deterministic test budget proves partial source arrays are never
     # mistaken for completely validated provenance.
-    from second_brain.records import SourceValidationBudget
-    import second_brain.search as search_module
+    from cache_me.records import SourceValidationBudget
+    import cache_me.search as search_module
     monkeypatch.setattr(search_module, "SourceValidationBudget", lambda: SourceValidationBudget(remaining=1))
     limited = search.home_graph()
     assert limited == {"nodes": [], "edges": [], "truncated": True}

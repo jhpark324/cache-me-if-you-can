@@ -9,15 +9,15 @@ from fastapi.testclient import TestClient
 from langchain_core.messages import ToolMessage
 
 from agent_fakes import OfflineModel
-from second_brain.auth import AuthError
-from second_brain.config import Settings
-from second_brain.db import Database
-from second_brain.main import create_app
-from second_brain.models import Capture
-from second_brain.questions import QuestionInput, QuestionService
-from second_brain.records import DomainError, RecordService
-from second_brain.retrieval_view import retrieval_sources, source_key
-from second_brain.schemas import SourceRef
+from cache_me.auth import AuthError
+from cache_me.config import Settings
+from cache_me.db import Database
+from cache_me.main import create_app
+from cache_me.models import Capture
+from cache_me.questions import QuestionInput, QuestionService
+from cache_me.records import DomainError, RecordService
+from cache_me.retrieval_view import retrieval_sources, source_key
+from cache_me.schemas import SourceRef
 
 
 @pytest.fixture

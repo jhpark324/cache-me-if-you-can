@@ -63,6 +63,68 @@ wheels = [
 ]
 
 [[package]]
+name = "cache-me"
+version = "0.2.0"
+source = { editable = "." }
+dependencies = [
+    { name = "alembic" },
+    { name = "fastapi" },
+    { name = "filelock" },
+    { name = "httpx" },
+    { name = "lancedb" },
+    { name = "langchain" },
+    { name = "langgraph" },
+    { name = "markdown-it-py" },
+    { name = "mcp" },
+    { name = "openai" },
+    { name = "platformdirs" },
+    { name = "pydantic" },
+    { name = "pyjwt", extra = ["crypto"] },
+    { name = "sqlalchemy" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.optional-dependencies]
+embedding = [
+    { name = "huggingface-hub" },
+    { name = "sentence-transformers" },
+    { name = "torch", version = "2.15.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
+    { name = "torch", version = "2.15.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
+    { name = "transformers" },
+]
+test = [
+    { name = "httpx" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "alembic", specifier = ">=1.14,<2" },
+    { name = "fastapi", specifier = ">=0.115,<1" },
+    { name = "filelock", specifier = ">=3,<5" },
+    { name = "httpx", specifier = ">=0.28,<1" },
+    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.28,<1" },
+    { name = "huggingface-hub", marker = "extra == 'embedding'", specifier = ">=2,<3" },
+    { name = "lancedb", specifier = "==0.41.0" },
+    { name = "langchain", specifier = "==1.4.7" },
+    { name = "langgraph", specifier = ">=1,<2" },
+    { name = "markdown-it-py", specifier = ">=4,<5" },
+    { name = "mcp", specifier = "==2.3.0" },
+    { name = "openai", specifier = ">=2,<3" },
+    { name = "platformdirs", specifier = ">=4,<5" },
+    { name = "pydantic", specifier = ">=2.10,<3" },
+    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10,<3" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<10" },
+    { name = "sentence-transformers", marker = "extra == 'embedding'", specifier = "==6.2.0" },
+    { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
+    { name = "torch", marker = "sys_platform == 'darwin' and extra == 'embedding'", specifier = "==2.15.0" },
+    { name = "torch", marker = "sys_platform != 'darwin' and extra == 'embedding'", specifier = "==2.15.0", index = "https://download.pytorch.org/whl/cpu" },
+    { name = "transformers", marker = "extra == 'embedding'", specifier = "==5.22.1" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
+]
+provides-extras = ["embedding", "test"]
+
+[[package]]
 name = "certifi"
 version = "2026.10.23"
 source = { registry = "https://pypi.org/simple" }
@@ -2167,68 +2229,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5c/a2/5b7d5270621ab7cfa3f7766067bf95dc360b5efb6394694e8143b4156e2b/scipy-1.18.1-cp315-cp315t-win_amd64.whl", hash = "sha256:5632e3ae3d09197c446310cd5187de63e28448ce22f0f67b2b93d97503c0c230", size = 37408295, upload-time = "2026-08-21T23:28:40.724Z" },
     { url = "https://files.pythonhosted.org/packages/63/ad/741c19fcb66755ff953daf9243af8480e4bf3d7fbe57583c178c7d2b6b51/scipy-1.18.1-cp315-cp315t-win_arm64.whl", hash = "sha256:eda632a7981f69730d6281f451db9c1c370993a2c0d7ddb43e2a809a2862b83a", size = 25319710, upload-time = "2026-08-21T23:28:45.713Z" },
 ]
-
-[[package]]
-name = "second-brain"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "alembic" },
-    { name = "fastapi" },
-    { name = "filelock" },
-    { name = "httpx" },
-    { name = "lancedb" },
-    { name = "langchain" },
-    { name = "langgraph" },
-    { name = "markdown-it-py" },
-    { name = "mcp" },
-    { name = "openai" },
-    { name = "platformdirs" },
-    { name = "pydantic" },
-    { name = "pyjwt", extra = ["crypto"] },
-    { name = "sqlalchemy" },
-    { name = "uvicorn", extra = ["standard"] },
-]
-
-[package.optional-dependencies]
-embedding = [
-    { name = "huggingface-hub" },
-    { name = "sentence-transformers" },
-    { name = "torch", version = "2.15.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform == 'darwin'" },
-    { name = "torch", version = "2.15.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
-    { name = "transformers" },
-]
-test = [
-    { name = "httpx" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "alembic", specifier = ">=1.14,<2" },
-    { name = "fastapi", specifier = ">=0.115,<1" },
-    { name = "filelock", specifier = ">=3,<5" },
-    { name = "httpx", specifier = ">=0.28,<1" },
-    { name = "httpx", marker = "extra == 'test'", specifier = ">=0.28,<1" },
-    { name = "huggingface-hub", marker = "extra == 'embedding'", specifier = ">=2,<3" },
-    { name = "lancedb", specifier = "==0.41.0" },
-    { name = "langchain", specifier = "==1.4.7" },
-    { name = "langgraph", specifier = ">=1,<2" },
-    { name = "markdown-it-py", specifier = ">=4,<5" },
-    { name = "mcp", specifier = "==2.3.0" },
-    { name = "openai", specifier = ">=2,<3" },
-    { name = "platformdirs", specifier = ">=4,<5" },
-    { name = "pydantic", specifier = ">=2.10,<3" },
-    { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10,<3" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8,<10" },
-    { name = "sentence-transformers", marker = "extra == 'embedding'", specifier = "==6.2.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.36,<3" },
-    { name = "torch", marker = "sys_platform == 'darwin' and extra == 'embedding'", specifier = "==2.15.0" },
-    { name = "torch", marker = "sys_platform != 'darwin' and extra == 'embedding'", specifier = "==2.15.0", index = "https://download.pytorch.org/whl/cpu" },
-    { name = "transformers", marker = "extra == 'embedding'", specifier = "==5.22.1" },
-    { name = "uvicorn", extras = ["standard"], specifier = ">=0.34,<1" },
-]
-provides-extras = ["embedding", "test"]
 
 [[package]]
 name = "sentence-transformers"

@@ -3,8 +3,8 @@ import logging
 
 import pytest
 
-from second_brain.background import run_periodic
-from second_brain.records import DomainError
+from cache_me.background import run_periodic
+from cache_me.records import DomainError
 
 
 def test_periodic_worker_survives_transient_failures_without_leaking_payload(caplog):
