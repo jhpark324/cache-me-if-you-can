@@ -461,23 +461,41 @@ def test_alembic_baseline_applies_idempotently(tmp_path):
         assert service.get(capture["id"])["body_markdown"] == "원본 지식"
         with database.engine.connect() as connection:
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
-            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0001"
+            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
     finally:
         database.close()
 
 
-def test_migration_helper_adopts_only_matching_unversioned_schema(records, tmp_path):
+def test_migration_helper_adopts_only_matching_unversioned_schema(tmp_path):
+    import runpy
+    import sqlite3
+    from pathlib import Path
     from cache_me.db import migrate_database
+    # Adoption recognizes the frozen historical baseline, never the current ORM.
+    original_path = tmp_path / "original.sqlite3"
+    baseline = runpy.run_path(str(Path(__file__).parents[1] / "alembic/versions/0001_canonical_records.py"))
+    with sqlite3.connect(original_path) as connection:
+        for statement in baseline["STATEMENTS"]:
+            connection.execute(statement)
+    database = Database(original_path, initialize=False)
+    records = RecordService(database)
     original = create(records, "마이그레이션 후 보존")
+    from cache_me.db import new_id, utcnow
+    with database.write() as session:
+        session.add(Concept(id=new_id(), brain_id=records.brain_id, name="기존 주제", description=None,
+                            state_version=1, created_at=utcnow(), updated_at=utcnow()))
     migrate_database(records.db.path)
     assert records.get(original["id"])["body_markdown"] == "마이그레이션 후 보존"
     with records.db.engine.connect() as connection:
-        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0001"
+        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
+        assert connection.exec_driver_sql("SELECT count(*) FROM concepts").scalar() == 1
+        assert connection.exec_driver_sql("SELECT count(*) FROM topic_backfill_jobs").scalar() == 0
+        assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
+    database.close()
     fresh_path = tmp_path / "fresh.sqlite3"
     migrate_database(fresh_path)
     migrated = Database(fresh_path, initialize=False)
     migrated.close()
-    import sqlite3
     mismatched_path = tmp_path / "unrecognized.sqlite3"
     with sqlite3.connect(mismatched_path) as connection:
         connection.execute("CREATE TABLE captures (id TEXT, old_body TEXT)")

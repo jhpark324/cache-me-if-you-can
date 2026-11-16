@@ -36,6 +36,7 @@ from .search import SearchService, SearchInput, ContextInput, GraphInput
 from .mcp_server import create_mcp
 from .enrichment import ConceptEnrichment
 from .topic_candidates import TopicCandidateSearch
+from .topic_backfill import TopicBackfill
 from .runtime import storage_fingerprint
 
 
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
     questions = QuestionService(search, records, auth)
     topic_candidates = TopicCandidateSearch(search)
     enrichment = ConceptEnrichment(records, auth, topic_search=topic_candidates)
+    topic_backfill = TopicBackfill(records, auth, search)
     mcp_records = RecordService(db, principal_scope='mcp:local', session_scope='mcp:local', created_via='mcp')
     # Use one loaded model and index manager across transports.
     mcp = create_mcp(mcp_records, search, on_concept_retry=auth.resume_requests)
@@ -81,13 +83,19 @@ def create_app(settings: Settings | None = None, *, server_lock: FileLock | None
     question_tasks: set[asyncio.Task] = set()
     lock = server_lock or FileLock(str(settings.data_dir / 'server.lock'))
 
+    async def enrich_topics():
+        # Serialize model jobs and give ordinary save-time classification the
+        # first turn. Backfill also excludes records still being classified.
+        await enrichment.process_one()
+        await topic_backfill.process_one()
+
     @asynccontextmanager
     async def lifespan(app):
         lock.acquire(timeout=0)
         task = asyncio.create_task(run_periodic(lambda: asyncio.to_thread(search.process_jobs),
             interval=1, name="index", ignored_codes=frozenset({"INDEX_NOT_READY"}))) if settings.background_jobs else None
         if settings.background_jobs:
-            enrichment_task = asyncio.create_task(run_periodic(enrichment.process_one, interval=3, name="concepts"))
+            enrichment_task = asyncio.create_task(run_periodic(enrich_topics, interval=3, name="concepts"))
             tasks.add(enrichment_task)
             tasks.add(asyncio.create_task(run_periodic(lambda: asyncio.to_thread(topic_candidates.refresh),
                 interval=3, name="topic-candidates")))

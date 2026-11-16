@@ -276,6 +276,48 @@ class ConceptEnrichmentJob(Base):
     )
 
 
+class TopicBackfillJob(Base):
+    __tablename__ = "topic_backfill_jobs"
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    brain_id: Mapped[str]
+    concept_id: Mapped[str]
+    definition_hash: Mapped[str]
+    policy_version: Mapped[str]
+    status: Mapped[str] = mapped_column(default="pending", index=True)
+    candidate_ids: Mapped[list] = mapped_column(JSON, default=list)
+    attempt_count: Mapped[int] = mapped_column(default=0)
+    call_count: Mapped[int] = mapped_column(default=0)
+    available_at: Mapped[str]
+    lease_token: Mapped[str | None]
+    lease_until: Mapped[str | None]
+    error_code: Mapped[str | None]
+    created_at: Mapped[str]
+    completed_at: Mapped[str | None]
+    __table_args__ = (
+        ForeignKeyConstraint(["concept_id", "brain_id"], ["concepts.id", "concepts.brain_id"]),
+        UniqueConstraint("concept_id", "definition_hash", "policy_version"),
+        CheckConstraint("status IN ('pending','running','completed','partial','failed','superseded')"),
+        CheckConstraint("attempt_count >= 0 AND attempt_count <= 3 AND call_count >= 0 AND call_count <= 4"),
+    )
+
+
+class TopicBackfillDecision(Base):
+    __tablename__ = "topic_backfill_decisions"
+    concept_id: Mapped[str] = mapped_column(primary_key=True)
+    definition_hash: Mapped[str] = mapped_column(primary_key=True)
+    capture_id: Mapped[str] = mapped_column(primary_key=True)
+    content_hash: Mapped[str] = mapped_column(primary_key=True)
+    policy_version: Mapped[str] = mapped_column(primary_key=True)
+    brain_id: Mapped[str]
+    outcome: Mapped[str]
+    created_at: Mapped[str]
+    __table_args__ = (
+        ForeignKeyConstraint(["concept_id", "brain_id"], ["concepts.id", "concepts.brain_id"]),
+        ForeignKeyConstraint(["capture_id", "brain_id"], ["captures.id", "captures.brain_id"]),
+        CheckConstraint("outcome IN ('attach','reject')"),
+    )
+
+
 class MutationReceipt(Base):
     __tablename__ = "mutation_receipts"
     principal_scope: Mapped[str] = mapped_column(primary_key=True)
