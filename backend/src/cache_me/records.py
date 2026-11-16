@@ -476,6 +476,7 @@ class RecordService:
                 session.flush()
                 for alias in validated.aliases:
                     session.add(ConceptAlias(concept_id=concept.id, alias=alias))
+                self._queue_topic_backfill(session, concept)
                 if proposal.get("attach_to_capture", True):
                     ids.append(concept.id)
                 for node_id in proposal.get("node_ids", []):
@@ -602,6 +603,10 @@ class RecordService:
             old.status, old.completed_at = "superseded", utcnow()
         now = utcnow()
         session.add(ConceptEnrichmentJob(id=new_id(), brain_id=self.brain_id, capture_id=capture.id, requested_revision_id=capture.current_revision_id, expected_state_version=capture.state_version, policy_version="concept-v2", status="pending", unresolved_hints=[], attempt_count=0, available_at=now, created_at=now))
+
+    def _queue_topic_backfill(self, session, concept):
+        from .topic_backfill_jobs import enqueue_topic
+        enqueue_topic(self, session, concept)
 
     def _insert_revision(self, session, capture, *, title, body_markdown, kinds, completion_state, event_time, concept_hints, nodes, sources, node_status, change_kind, revision_no, review_reason=None, concept_ids=None, node_concepts=None, created_via=None):
         for node in nodes:
@@ -828,6 +833,7 @@ class RecordService:
             session.flush()
             for alias in data.aliases:
                 session.add(ConceptAlias(concept_id=concept.id, alias=alias))
+            self._queue_topic_backfill(session, concept)
             self._remember(session, "concept_create", data, fingerprint, concept=concept)
             return self._concept_view(session, concept) | {"request_id": str(data.request_id), "replayed": False}
 
@@ -846,6 +852,7 @@ class RecordService:
             return self._page(views, limit, cursor, {"query": query}, snapshot, lambda view: view)
 
     def concept_update(self, data: UpdateConceptInput):
+        from .topic_backfill_jobs import definition_hash
         data = UpdateConceptInput.model_validate(data)
         with self.db.write() as session:
             receipt, fingerprint = self._receipt(session, "concept_update", data)
@@ -854,6 +861,7 @@ class RecordService:
             concept = self._concept(session, data.concept_id)
             if concept.state_version != data.expected_state_version:
                 fail("VERSION_CONFLICT", "주제가 변경되었습니다.")
+            previous_definition = definition_hash(self._concept_view(session, concept))
             for key, value in data.changes.model_dump(exclude_unset=True).items():
                 if key == "aliases":
                     for alias in session.scalars(select(ConceptAlias).where(ConceptAlias.concept_id == concept.id)):
@@ -865,6 +873,9 @@ class RecordService:
                     setattr(concept, key, value)
             concept.state_version += 1
             concept.updated_at = utcnow()
+            session.flush()
+            if definition_hash(self._concept_view(session, concept)) != previous_definition:
+                self._queue_topic_backfill(session, concept)
             self._remember(session, "concept_update", data, fingerprint, concept=concept)
             return self._concept_view(session, concept) | {"request_id": str(data.request_id), "replayed": False}
 

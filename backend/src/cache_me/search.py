@@ -16,9 +16,9 @@ from sqlalchemy import func, or_, select
 
 from .chunking import MarkdownChunker
 from .db import new_id, utcnow
-from .embedding import KureEmbedding, EmbeddingError, MODEL_ID, MODEL_REVISION
+from .embedding import KureEmbedding, EmbeddingError, MODEL_ID, MODEL_REVISION, QUERY_TOKENS
 from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, ConceptAlias, ConceptEnrichmentJob, EmbeddingProfile,
-                     IndexBuild, IndexJob, KnowledgeNode, LocalBrain, NodeConcept, Relation,
+                     IndexBuild, IndexJob, KnowledgeNode, LocalBrain, MutationReceipt, NodeConcept, Relation,
                      RevisionConcept, RevisionKind)
 from .records import DomainError, SourceValidationBudget, SourceValidationLimit, digest
 from .record_filters import matches_record_filters, record_filter_predicates
@@ -352,11 +352,13 @@ class SearchService:
             return False
         return self.records._source_status(session, _ref(capture))["review_state"] == "valid"
 
-    def _body_candidates(self, data: SearchInput, query) -> list[dict]:
+    def _body_candidates(self, data: SearchInput, query, *, excluded_capture_ids=frozenset()) -> list[dict]:
         with self.db.read() as session:
             captures = list(session.scalars(select(Capture).where(Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None))))
             allowed = []
             for capture in captures:
+                if capture.id in excluded_capture_ids:
+                    continue
                 revision = session.get(CaptureRevision, capture.current_revision_id)
                 if self._eligible(session, capture) and self._matches(session, capture, revision, data):
                     allowed.append((capture.id, capture.current_revision_id, capture.index_generation))
@@ -382,6 +384,74 @@ class SearchService:
                 item = scored.setdefault(row["id"], {"row": row, "score": 0.0})
                 item["score"] += 1.0 / (60 + rank)
         return sorted(scored.values(), key=lambda x: (-x["score"], x["row"]["id"]))
+
+    def backfill_candidates(self, concept: dict, *, limit: int = 20) -> dict:
+        """Bounded body-only retrieval; existing topic links never supply evidence.
+
+        `complete` refers to index availability, not exhaustive semantic coverage.
+        The current vector implementation still scans eligible indexed vectors.
+        """
+        self._require()
+        excluded, complete = set(), True
+        with self.db.read() as session:
+            manual = set(session.scalars(select(MutationReceipt.capture_id).where(
+                MutationReceipt.operation == "capture_set_concepts")))
+            active = set(session.scalars(select(ConceptEnrichmentJob.capture_id).where(
+                ConceptEnrichmentJob.status.in_(("pending", "running")))))
+            for capture in session.scalars(select(Capture).where(
+                    Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None))):
+                if capture.id in manual or concept["id"] in self.records._concept_ids(session, capture.current_revision_id):
+                    excluded.add(capture.id)
+                    continue
+                if self.records._source_status(session, _ref(capture))["review_state"] != "valid":
+                    excluded.add(capture.id)
+                    continue
+                revision = session.get(CaptureRevision, capture.current_revision_id)
+                classification = self.records._concept_state(session, capture, revision)["status"]
+                if classification != "ready":
+                    if classification in ("pending", "running"):
+                        complete = False
+                    excluded.add(capture.id)
+                    continue
+                if capture.id in active or not self._eligible(session, capture):
+                    complete = False
+                    excluded.add(capture.id)
+
+        # Each topic field gets a query window so a long description cannot hide
+        # its name/aliases. Verify the real prompted budget before encoding.
+        queries = []
+        for text in (concept["name"], concept.get("description") or "", " ".join(concept.get("aliases", []))):
+            text = text.strip()
+            low, high = 0, len(text)
+            while low < high:
+                middle = (low + high + 1) // 2
+                if self.embedding.count_tokens(text[:middle], "query") <= QUERY_TOKENS:
+                    low = middle
+                else:
+                    high = middle - 1
+            text = text[:low].strip()
+            while text and self.embedding.count_tokens(text, "query") > QUERY_TOKENS:
+                text = text[:-1]
+            if text and text not in queries:
+                queries.append(text)
+        if not queries:
+            raise DomainError("QUERY_TOO_LONG", "주제 검색 질의를 만들 수 없습니다.")
+        combined = {}
+        for text in queries:
+            data = SearchInput(query=text)
+            try:
+                query = self.embedding.encode_query(text)
+            except EmbeddingError as exc:
+                raise self._embedding_error(exc) from exc
+            ranked = self._body_candidates(data, query, excluded_capture_ids=excluded)
+            with self.db.read() as session:
+                hits = self._record_hits(session, ranked, data)
+            for rank, hit in enumerate(hits, 1):
+                key = hit["source"]["capture_id"]
+                item = combined.setdefault(key, {**hit, "score": 0.0})
+                item["score"] += 1.0 / (60 + rank)
+        hits = sorted(combined.values(), key=lambda hit: (-hit["score"], hit["source"]["capture_id"]))
+        return {"hits": hits[:max(0, min(limit, 20))], "complete": complete}
 
     def _topic_candidates(self, data: SearchInput, query) -> list[dict]:
         candidates = {}

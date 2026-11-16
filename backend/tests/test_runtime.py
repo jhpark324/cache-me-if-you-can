@@ -21,6 +21,8 @@ from cache_me.mcp_server import create_mcp
 from cache_me.questions import QuestionInput, QuestionService
 from cache_me.records import RecordService
 from cache_me.schemas import CreateCaptureInput, PrepareDeletionInput, DeleteCaptureInput
+from cache_me.models import TopicBackfillJob
+from cache_me.topic_backfill_jobs import TopicBackfillJobs
 from agent_fakes import OfflineModel
 
 
@@ -73,6 +75,10 @@ def test_web_security_and_delete_session_binding(web):
 def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
     client, app = web
     capture = create(client, '백업의 정본')
+    app.state.records.concept_create({'request_id': str(uuid4()), 'name': '백업 주제'})
+    jobs = TopicBackfillJobs(app.state.records)
+    job = jobs.claim()
+    assert jobs.reserve_call(job)
     response = client.post('/api/v1/backups', json={})
     assert response.status_code == 200
     with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
@@ -80,7 +86,7 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         manifest = json.loads(archive.read('manifest.json'))
         assert manifest['app_version'] == version('cache-me')
         assert manifest['includes_soft_deleted_history'] is True
-        assert manifest['schema_revision'] == '0001'
+        assert manifest['schema_revision'] == '0002'
         assert manifest['embedding_profiles'][0]['model_id'] == 'nlpai-lab/KURE-v2'
         assert b'access_token' not in archive.read('manifest.json')
         assert archive.read('cache-me.sqlite3').startswith(b'SQLite format 3')
@@ -89,7 +95,8 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         (restored_data / 'cache-me.sqlite3').write_bytes(archive.read('cache-me.sqlite3'))
 
     settings = Settings(restored_data, background_jobs=False)
-    with TestClient(create_app(settings), base_url=settings.origin) as restored:
+    restored_app = create_app(settings)
+    with TestClient(restored_app, base_url=settings.origin) as restored:
         restored.get('/api/v1/session')
         result = restored.get(f"/api/v1/captures/{capture['id']}")
         assert result.status_code == 200
@@ -97,6 +104,9 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         assert saved['id'] == capture['id']
         assert saved['revision_id'] == capture['revision_id']
         assert saved['body_markdown'] == '백업의 정본'
+        with restored_app.state.db.read() as session:
+            restored_job = session.get(TopicBackfillJob, job['job_id'])
+            assert (restored_job.call_count, restored_job.attempt_count) == (1, 1)
 
 
 def test_no_model_login_is_explicit_stream_error(web):
