@@ -40,11 +40,11 @@
 
 작업의 고유성은 `(capture_id, requested_revision_id, expected_state_version, policy_version)`이며 요청 재시도는 기존 작업을 재사용한다. 새 작업의 정책 버전은 `concept-v2`이며 기존 작업을 일괄 교체하거나 저장된 기록을 일괄 재분류하지 않는다. `applied_revision_id`와 완료 상태를 커밋과 함께 남겨 응답 유실 뒤에도 주제·revision을 중복 생성하지 않는다. 실패한 실행은 같은 job의 lease·attempt를 갱신해 재시도한다. 유한한 실행 시간·재시도 횟수는 구현 설정으로 제한하고 모델 미연결 상태에서 무한 반복하지 않는다.
 
-`concept_state`는 본문 저장·색인 준비와 별개인 `pending | running | ready | needs_review | failed` 상태다. `ready`에는 주제가 없는 정상 완료도 포함한다. 모호한 연결은 확정하지 않고 `needs_review`와 미해결 힌트를 반환하며, 확인한 연결만 반영할 수 있다. 늦은 실패·완료가 최신 revision의 상태를 덮어쓰지 않도록 작업의 요청/반영 revision과 연결한다. 과거 저장본을 조회할 때 현재 작업 상태를 과거 결과인 것처럼 표시하지 않는다.
+`concept_state`는 본문 저장·색인 준비와 별개인 `pending | running | ready | failed` 상태다. `ready`에는 주제가 없거나 일부 후보를 연결하지 않은 정상 완료도 포함한다. 모호한 후보는 내부 작업의 미해결 힌트에 보존하고 확인한 연결만 반영한 뒤 `completed`로 마친다. 공개 응답의 `unresolved_hints` 필드는 호환성을 위해 빈 배열로 유지하며 사용자 검토를 요구하지 않는다. 이전 `needs_review` 작업은 데이터 변경 없이 `ready`로 조회하고, `superseded` 작업은 최신 작업의 상태를 가리지 않도록 조회 대상에서 제외한다. 늦은 실패·완료가 최신 revision의 상태를 덮어쓰지 않도록 작업의 요청/반영 revision과 연결한다. 과거 저장본을 조회할 때 현재 작업 상태를 과거 결과인 것처럼 표시하지 않는다.
 
 `concept_hints` 생략은 수정 시 기존 힌트를 유지하고, `[]`는 힌트를 비운다. 빈 힌트만으로 기존 연결을 모두 없앴다고 해석하지 않는다. 새 본문/힌트로 분류를 다시 할 때는 현재 연결도 후보로 평가한다. 순수 공개 범위·완료·유형 변경 때문에 새 의미 판단을 반복하지 않으며 미완료 작업이 버전 충돌한 경우에만 최신 대상으로 이어간다.
 
-명시적 정정은 `capture_set_concepts(request_id, capture_id, ExpectedVersion, concept_ids, node_concepts?)`로 처리한다. `concept_ids`는 기록 주제의 전체 목록이며 `[]`는 비우기다. `node_concepts`는 생략하면 기존 Node 연결 유지, 제출하면 현재 Node별 `{node_id, concept_ids[]}` 전체 목록으로 교체하며 빠진 Node는 빈 연결로 처리한다. Node 소속·ID·조회 자격을 검증한다. 이 경로는 관리 화면의 선택·명시적 정정용이며 기본 저장의 선행 호출이 아니다. 결과는 새 `edit` revision으로 남기고 옛 자동 작업을 무효화하며 이 정정 자체로 재분류를 시작하지 않는다. 이후 사용자가 본문·힌트·Node를 바꾸면 그 새 저장 요청의 범위에서 다시 분류한다.
+명시적 정정은 `capture_set_concepts(request_id, capture_id, ExpectedVersion, concept_ids, node_concepts?)`로 처리한다. `concept_ids`는 기록 주제의 전체 목록이며 `[]`는 비우기다. `node_concepts`는 생략하면 기존 Node 연결 유지, 제출하면 현재 Node별 `{node_id, concept_ids[]}` 전체 목록으로 교체하며 빠진 Node는 빈 연결로 처리한다. Node 소속·ID·조회 자격을 검증한다. 이 API·MCP 경로는 명시적 정정의 호환성 계약으로 유지하며 기본 저장의 선행 호출이 아니다. 웹은 자동 분류 결과만 표시하고 수동 정정 진입점을 제공하지 않는다. 결과는 새 `edit` revision으로 남기고 옛 자동 작업을 무효화하며 이 정정 자체로 재분류를 시작하지 않는다. 이후 사용자가 본문·힌트·Node를 바꾸면 그 새 저장 요청의 범위에서 다시 분류한다.
 
 `concept_ids`는 읽기 결과·검색 필터·위 명시적 정정 계약에 유지한다. 생성·일반 수정·병합의 기본 입력에는 넣지 않는다. 내부 주제 판단 실패를 외부 LLM의 ID 탐색 의무로 되돌리지 않는다.
 
@@ -56,7 +56,7 @@
 
 일반 저장 후 분류 한 건, 보강 한 건을 순서대로 처리한다. 검색·색인이 준비되지 않으면 claim 전에 대기하고, 일부 색인이 미완료이거나 일반 분류가 `pending/running`이면 가능한 기록을 처리한 뒤 지연한다. 정책은 `topic-backfill-v1`, claim은 최대 3회, 재시도 간격은 30초, 모델 호출 제한은 90초, lease는 120초다. 불확실한 판단·일부 처리·예산 소진은 내부 `partial`로 구분하며 정상적인 0건 완료로 기록하지 않는다. 저장 후 분류의 `concept_state`와 별개인 내부 작업 상태로 관리하며 새 진행·제안 화면은 제공하지 않는다.
 
-판단은 주제 정의 해시·기록 내용 해시·정책 버전으로 재사용하되, 적용 직전 현재 주제 정의·기록 버전, 삭제·출처 유효성, 수동 정정 receipt를 다시 검사한다. 후보 준비와 적용 양쪽에서 현재 revision의 `concept_state`가 `ready`인지 확인하고 `capture_set_concepts` 이력이 있는 기록은 제외한다. `pending/running`은 완료를 기다리며 `failed/needs_review`는 제외해 기존 검토 표시·재시도 경로를 보존한다. 확정한 기록 수준의 연결만 새 `concept_enrichment` revision에 추가하고 기존 기록·Node 연결과 의미 필드를 보존한다. 같은 연결이 이미 있으면 revision과 색인 작업을 추가하지 않는다. `attach/reject` 판단만 캐시에 남기며 불확실한 보류는 확정 판단으로 재사용하지 않는다. 검색과 모델 호출 동안 쓰기 트랜잭션을 열어 두지 않으며, 판단 캐시가 현재 자격과 버전 검증을 대신하지 않는다.
+판단은 주제 정의 해시·기록 내용 해시·정책 버전으로 재사용하되, 적용 직전 현재 주제 정의·기록 버전, 삭제·출처 유효성, 수동 정정 receipt를 다시 검사한다. 후보 준비와 적용 양쪽에서 현재 revision의 `concept_state`가 `ready`인지 확인하고 `capture_set_concepts` 이력이 있는 기록은 제외한다. `pending/running`은 완료를 기다리며 `failed`는 제외해 실제 실패의 재시도 경로를 보존한다. 일부 후보 보류 및 이전 `needs_review`는 정상 완료로 조회되므로 다른 자격 조건을 충족하면 자동 보강할 수 있다. 확정한 기록 수준의 연결만 새 `concept_enrichment` revision에 추가하고 기존 기록·Node 연결과 의미 필드를 보존한다. 같은 연결이 이미 있으면 revision과 색인 작업을 추가하지 않는다. `attach/reject` 판단만 캐시에 남기며 불확실한 보류는 확정 판단으로 재사용하지 않는다. 검색과 모델 호출 동안 쓰기 트랜잭션을 열어 두지 않으며, 판단 캐시가 현재 자격과 버전 검증을 대신하지 않는다.
 
 ## 청크의 기준과 예산
 

@@ -135,8 +135,8 @@ class TopicBackfillJobs:
         if session.scalar(select(ConceptEnrichmentJob.id).where(
             ConceptEnrichmentJob.capture_id == capture.id, ConceptEnrichmentJob.status.in_(["pending", "running"])).limit(1)):
             return False
-        # A new metadata revision must not hide unresolved hints or make an
-        # existing failed classification impossible to retry.
+        # A new metadata revision must not make a failed classification
+        # impossible to retry. Deferred candidates are normal completion.
         revision = self.records._revision(session, capture)
         if self.records._concept_state(session, capture, revision)["status"] != "ready":
             return False

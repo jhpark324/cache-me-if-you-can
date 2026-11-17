@@ -15,7 +15,7 @@ from cache_me.models import (Capture, CaptureRevision, Concept, ConceptEnrichmen
 from cache_me.records import DomainError, RecordService
 from cache_me.schemas import (CreateCaptureInput, CreateConceptInput, DeleteCaptureInput,
                                  MergeCapturesInput, PrepareDeletionInput, RelationInput, RetractRelationInput,
-                                 ReviewSourcesInput, SetConceptsInput, SourceRef, UpdateCaptureInput)
+                                 ReviewSourcesInput, RetryConceptsInput, SetConceptsInput, SourceRef, UpdateCaptureInput)
 
 
 @pytest.fixture
@@ -242,11 +242,18 @@ def test_concepts_same_names_remain_distinct_and_manual_assignment(records):
 def test_concept_worker_applies_atomically_no_recursion(records):
     capture = create(records, concept_hints=["트랜잭션"])
     job = records.claim_concept_job()
-    result = records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[], new_concepts=[{"name": "트랜잭션"}])
+    result = records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[],
+        new_concepts=[{"name": "트랜잭션"}], unresolved_hints=["불확실한 후보"])
     current = records.get(capture["id"])
     assert result["changed"] and current["revision_no"] == 2
     assert current["body_markdown"] == capture["body_markdown"]
     assert current["concept_state"]["status"] == "ready"
+    assert current["concept_state"]["unresolved_hints"] == []
+    assert result["status"] == "completed"
+    with records.db.read() as session:
+        saved_job = session.get(ConceptEnrichmentJob, job["job_id"])
+        assert saved_job.status == "completed"
+        assert saved_job.unresolved_hints == ["불확실한 후보"]
     assert current["concepts"][0]["name"] == "트랜잭션"
     assert records.claim_concept_job() is None
     again = records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[])
@@ -265,6 +272,40 @@ def test_concept_worker_noop_and_model_failure_preserve_body(records):
     current = records.get(capture["id"])
     assert current["body_markdown"] == "변경 본문" and current["concept_state"]["status"] == "failed"
     assert records.claim_concept_job() is None
+
+
+@pytest.mark.parametrize("error_code", ["MODEL_TIMEOUT", "AUTH_REQUIRED"])
+def test_visibility_change_keeps_failed_classification_retryable(records, error_code):
+    capture = create(records)
+    job = records.claim_concept_job()
+    records.fail_concept_job(job["job_id"], job["lease_token"], error_code=error_code)
+
+    changed = update(records, capture, visibility="private")
+    assert changed["revision_id"] == capture["revision_id"]
+    assert changed["concept_state"]["status"] == "failed"
+    assert changed["concept_state"]["error_code"] == error_code
+    assert changed["concept_state"]["job_id"] == job["job_id"]
+    with records.db.write() as session:
+        failed = session.get(ConceptEnrichmentJob, job["job_id"])
+        assert failed.expected_state_version == changed["state_version"]
+        assert failed.attempt_count == 1 and failed.status == "failed"
+        failed.available_at = "2000-01-01T00:00:00.000Z"
+
+    if error_code == "AUTH_REQUIRED":
+        assert records.claim_concept_job() is None
+        assert records.get(capture["id"])["concept_state"]["status"] == "failed"
+        retried = records.retry_concepts(RetryConceptsInput(request_id=uuid4(),
+            **expected(changed), job_id=job["job_id"]))["capture"]
+        assert retried["concept_state"]["status"] == "pending"
+    attempt = records.claim_concept_job()
+    assert attempt["job_id"] == job["job_id"]
+    assert attempt["attempt_count"] == (1 if error_code == "AUTH_REQUIRED" else 2)
+    applied = records.apply_concept_job(attempt["job_id"], attempt["lease_token"], concept_ids=[])
+    assert applied["applied"] is True
+    current = records.get(capture["id"])
+    assert current["concept_state"]["status"] == "ready"
+    assert current["revision_id"] == capture["revision_id"]
+    assert current["body_markdown"] == capture["body_markdown"]
 
 
 def test_late_concept_worker_does_not_overwrite_manual_assignment_or_delete(records):
@@ -288,8 +329,44 @@ def test_ambiguous_concept_is_not_automatically_merged(records):
     job = records.claim_concept_job()
     assert_error("VERSION_CONFLICT", lambda: records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[], new_concepts=[{"name": "동일"}]))
     records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[], unresolved_hints=["동일"])
-    assert records.get(capture["id"])["concept_state"]["status"] == "needs_review"
+    current = records.get(capture["id"])
+    assert current["concept_state"]["status"] == "ready"
+    assert current["concept_state"]["unresolved_hints"] == []
+    assert current["revision_id"] == capture["revision_id"]
+    assert records.claim_concept_job() is None
+    with records.db.read() as session:
+        assert session.get(ConceptEnrichmentJob, job["job_id"]).unresolved_hints == ["동일"]
     assert len(records.concept_list()["items"]) == 1
+
+
+def test_legacy_deferred_classification_is_ready_without_rewriting_history(records):
+    capture = create(records)
+    job = records.claim_concept_job()
+    records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[],
+        new_concepts=[{"name": "확정한 주제"}], unresolved_hints=["이전 보류 후보"])
+    current = records.get(capture["id"])
+    with records.db.write() as session:
+        session.get(ConceptEnrichmentJob, job["job_id"]).status = "needs_review"
+    with records.db.read() as session:
+        revision_count = session.scalar(select(func.count()).select_from(CaptureRevision))
+        index_count = session.scalar(select(func.count()).select_from(IndexJob))
+
+    view = records.get(capture["id"])
+    listed = records.list()["items"][0]
+    assert view["concept_state"]["status"] == listed["concept_state"]["status"] == "ready"
+    assert view["concept_state"]["unresolved_hints"] == listed["concept_state"]["unresolved_hints"] == []
+    assert view["revision_id"] == current["revision_id"]
+    assert view["state_version"] == current["state_version"]
+    assert view["body_markdown"] == capture["body_markdown"]
+    assert view["concepts"] == current["concepts"]
+    replayed = records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[])
+    assert replayed["status"] == "completed"
+    with records.db.read() as session:
+        saved_job = session.get(ConceptEnrichmentJob, job["job_id"])
+        assert saved_job.status == "needs_review"
+        assert saved_job.unresolved_hints == ["이전 보류 후보"]
+        assert session.scalar(select(func.count()).select_from(CaptureRevision)) == revision_count
+        assert session.scalar(select(func.count()).select_from(IndexJob)) == index_count
 
 
 @pytest.mark.parametrize("stored, proposed", [

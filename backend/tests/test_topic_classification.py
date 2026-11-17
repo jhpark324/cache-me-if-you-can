@@ -6,7 +6,7 @@ from uuid import UUID
 import pytest
 
 from cache_me.enrichment import ConceptEnrichment
-from cache_me.models import Concept
+from cache_me.models import Concept, ConceptEnrichmentJob
 from cache_me.topic_candidates import TopicCandidateSearch
 from test_operations import create, records
 from test_search import services
@@ -151,8 +151,12 @@ def test_unseen_topic_gets_one_review_without_forcing_membership(records, action
         assert topics[0]['id'] != old_topic['id']
     else:
         assert topics == []
-        assert proposal['name'] in current['concept_state']['unresolved_hints']
-    assert current['concept_state']['status'] == ('needs_review' if action == 'defer' else 'ready')
+        with records.db.read() as session:
+            job = session.get(ConceptEnrichmentJob, current['concept_state']['job_id'])
+            assert proposal['name'] in job.unresolved_hints
+            assert job.status == 'completed'
+    assert current['concept_state']['unresolved_hints'] == []
+    assert current['concept_state']['status'] == 'ready'
 
 
 def test_already_seen_candidate_does_not_trigger_new_topic_review(records):

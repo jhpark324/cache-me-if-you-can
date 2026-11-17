@@ -134,7 +134,7 @@ def test_incomplete_reduce_cannot_skip_last_segment(records):
     assert current['concept_state']['status'] == 'failed'
 
 
-def test_reducer_omitted_topics_are_visible_as_needing_review(records):
+def test_reducer_omitted_topics_complete_with_internal_diagnostics(records):
     capture = create(records, '가' * 30000 + '후반부전용주제')
     class OmittingReducer(PartitionModel):
         async def generate(self, prompt, instructions):
@@ -145,8 +145,12 @@ def test_reducer_omitted_topics_are_visible_as_needing_review(records):
     asyncio.run(ConceptEnrichment(records, OmittingReducer()).process_one())
     current = records.get(capture['id'])
     assert current['revision_id'] == capture['revision_id']
-    assert current['concept_state']['status'] == 'needs_review'
-    assert '후반부전용주제' in current['concept_state']['unresolved_hints']
+    assert current['concept_state']['status'] == 'ready'
+    assert current['concept_state']['unresolved_hints'] == []
+    with records.db.read() as session:
+        job = session.get(ConceptEnrichmentJob, current['concept_state']['job_id'])
+        assert job.status == 'completed'
+        assert '후반부전용주제' in job.unresolved_hints
 
 
 def test_edit_during_long_classification_supersedes_old_lease(records):

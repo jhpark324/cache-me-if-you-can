@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@astryxdesign/core/Button";
-import { CheckboxInput } from "@astryxdesign/core/CheckboxInput";
 import { DialogHeader } from "@astryxdesign/core/Dialog";
 import { Field } from "@astryxdesign/core/Field";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -11,11 +10,9 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { Check, FileText, Plus, Search, X } from "lucide-react";
 import { api, post, uid, errorText } from "./api";
 import { Markdown } from "./Markdown";
-import { loadConcepts } from "./useConceptCatalog";
 import type {
   Capture,
   CaptureSummary,
-  Concept,
   MutationResult,
   Page,
   SourceDetail,
@@ -311,156 +308,6 @@ export function SourceReview({
             type="submit"
             isLoading={busy}
             isDisabled={busy || !reason.trim() || !body.trim()}
-          />
-        </HStack>
-      </VStack>
-    </form>
-  );
-}
-export function ConceptEditor({
-  record,
-  onSaved,
-  onClose,
-}: {
-  record: Capture;
-  onSaved: (result: MutationResult) => void;
-  onClose: () => void;
-}) {
-  const [concepts, setConcepts] = useState<Concept[]>([]),
-    [selected, setSelected] = useState(record.concepts.map((c) => c.id)),
-    [query, setQuery] = useState(""),
-    [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState("");
-  const idFor = useRequestId();
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-    (async () => {
-      try {
-        const all = await loadConcepts(controller.signal);
-        if (active) setConcepts(all);
-      } catch (e) {
-        if (active) setError(errorText(e));
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, []);
-  async function save(e: FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError("");
-    const payload = {
-      capture_id: record.id,
-      expected_revision_id: record.revision_id,
-      expected_state_version: record.state_version,
-      concept_ids: selected,
-    };
-    try {
-      const result = await api<MutationResult>(
-        `/captures/${record.id}/concepts`,
-        {
-          method: "PUT",
-          body: JSON.stringify({ ...payload, request_id: idFor(payload) }),
-        },
-      );
-      onSaved(result);
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-  const filtered = concepts.filter((c) =>
-    [c.name, ...(c.aliases || [])].some((n) =>
-      n.toLocaleLowerCase().includes(query.toLocaleLowerCase()),
-    ),
-  );
-  return (
-    <form onSubmit={save}>
-      <VStack gap={4}>
-        <DialogHeader
-          className="dialog-heading"
-          title="기록의 주제 정정"
-          hasDivider={false}
-          endContent={
-            <IconButton
-              className="app-icon-button"
-              type="button"
-              label="주제 정정 닫기"
-              tooltip="주제 정정 닫기"
-              icon={<X />}
-              variant="ghost"
-              onClick={onClose}
-            />
-          }
-        />
-        <Text as="p" type="supporting">
-          선택한 주제만 이 기록에 연결합니다.
-        </Text>
-        {error && (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        )}
-        <TextInput
-          label="주제 찾기"
-          value={query}
-          onChange={setQuery}
-          placeholder="주제 이름이나 별칭"
-        />
-        {loading ? (
-          <p role="status" className="muted">
-            주제를 불러오는 중
-          </p>
-        ) : (
-          <VStack className="concept-choices" gap={3}>
-            {filtered.map((concept) => (
-              <CheckboxInput
-                key={concept.id}
-                label={concept.name}
-                description={concept.description || undefined}
-                value={selected.includes(concept.id)}
-                onChange={(checked) =>
-                  setSelected((previous) =>
-                    checked
-                      ? [...previous, concept.id]
-                      : previous.filter((id) => id !== concept.id),
-                  )
-                }
-              />
-            ))}
-          </VStack>
-        )}
-        {!loading && !filtered.length && (
-          <Text as="p" type="supporting">
-            선택할 주제가 없습니다.
-          </Text>
-        )}
-        <Text as="p" type="supporting">
-          {selected.length}개 선택 · 모두 해제하면 기록의 주제 연결을
-          제거합니다.
-        </Text>
-        <HStack className="dialog-actions" gap={2} hAlign="end" wrap="wrap">
-          <Button
-            label="취소"
-            type="button"
-            variant="secondary"
-            isDisabled={busy}
-            onClick={onClose}
-          />
-          <Button
-            label={busy ? "저장 중…" : "주제 저장"}
-            type="submit"
-            variant="primary"
-            icon={<Check />}
-            isLoading={busy}
-            isDisabled={busy || loading}
           />
         </HStack>
       </VStack>

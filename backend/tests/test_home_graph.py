@@ -9,7 +9,7 @@ from cache_me.brand import PRODUCT_NAME
 from cache_me.config import Settings
 from cache_me.db import Database, new_id
 from cache_me.main import create_app
-from cache_me.models import ProvenanceLink
+from cache_me.models import ConceptEnrichmentJob, ProvenanceLink
 from cache_me.records import DomainError, RecordService
 from cache_me.search import SearchService
 
@@ -297,6 +297,43 @@ def test_home_graph_reports_current_classification_state_without_job_secrets(gra
     result = search.home_graph()
     assert any(edge["kind"] == "has_topic" for edge in result["edges"])
     assert all("lease_token" not in node and "job_id" not in node for node in result["nodes"])
+
+
+@pytest.mark.parametrize("stored_status", ["completed", "needs_review", "superseded"])
+def test_home_graph_normalizes_finished_classification_without_hiding_new_work(graph, stored_status):
+    records, search = graph
+    capture = create(records, "자동 분류 상태")
+    job = records.claim_concept_job()
+    records.apply_concept_job(job["job_id"], job["lease_token"], concept_ids=[], unresolved_hints=["보류 후보"])
+    with records.db.write() as session:
+        session.get(ConceptEnrichmentJob, job["job_id"]).status = stored_status
+
+    def node_state():
+        return next(node["concept_state"] for node in search.home_graph()["nodes"] if node["id"] == capture["id"])
+
+    assert node_state() == {"status": "ready", "error_code": None}
+    assert records.get(capture["id"])["concept_state"]["status"] == "ready"
+    assert records.get(capture["id"])["revision_id"] == capture["revision_id"]
+    with records.db.read() as session:
+        saved = session.get(ConceptEnrichmentJob, job["job_id"])
+        assert saved.status == stored_status and saved.unresolved_hints == ["보류 후보"]
+
+    changed = update(records, capture, body_markdown="새롭게 분류할 본문")
+    assert node_state() == {"status": "pending", "error_code": None}
+    assert records.get(changed["id"])["concept_state"]["status"] == "pending"
+    current_job = records.claim_concept_job()
+    assert current_job["job_id"] != job["job_id"]
+    assert node_state() == {"status": "running", "error_code": None}
+    # Visibility updates keep the revision ID but replace its running job.
+    changed = update(records, changed, visibility="private")
+    assert changed["revision_id"] == current_job["capture"]["revision_id"]
+    assert node_state() == {"status": "pending", "error_code": None}
+    assert records.get(changed["id"])["concept_state"]["status"] == "pending"
+    late = records.apply_concept_job(current_job["job_id"], current_job["lease_token"],
+        concept_ids=[], new_concepts=[{"name": "뒤늦은 잘못된 주제"}])
+    assert late["applied"] is False
+    assert records.concept_list()["items"] == []
+    assert node_state() == {"status": "pending", "error_code": None}
 
 
 def test_http_contract_session_filters_validation_and_brand(tmp_path):
