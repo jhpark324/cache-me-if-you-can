@@ -118,7 +118,8 @@ def test_apply_is_additive_preserves_history_nodes_and_source_equivalence(record
         assert revision.created_via == "system" and revision.change_kind == "concept_enrichment"
 
 
-def test_prepare_excludes_manual_edits_unfinished_classification_and_invalid_sources(records):
+@pytest.mark.parametrize("legacy_review", [False, True])
+def test_prepare_allows_deferred_topics_but_excludes_manual_edits_unfinished_classification_and_invalid_sources(records, legacy_review):
     manual = record(records)
     records.set_concepts(SetConceptsInput(request_id=uuid4(), **expected(manual), concept_ids=[]))
     manual = records.get(manual["id"])
@@ -130,6 +131,9 @@ def test_prepare_excludes_manual_edits_unfinished_classification_and_invalid_sou
     review = records.create(CreateCaptureInput(request_id=uuid4(), body_markdown="판단이 모호함"))["capture"]
     normal = records.claim_concept_job()
     records.apply_concept_job(normal["job_id"], normal["lease_token"], concept_ids=[], unresolved_hints=["모호한 주제"])
+    if legacy_review:
+        with records.db.write() as session:
+            session.get(ConceptEnrichmentJob, normal["job_id"]).status = "needs_review"
     failed = records.create(CreateCaptureInput(request_id=uuid4(), body_markdown="실패 후 재시도 필요"))["capture"]
     normal = records.claim_concept_job()
     records.fail_concept_job(normal["job_id"], normal["lease_token"], error_code="MODEL_TIMEOUT")
@@ -138,8 +142,9 @@ def test_prepare_excludes_manual_edits_unfinished_classification_and_invalid_sou
     jobs = TopicBackfillJobs(records)
     job = claim(jobs, concept)
     selected = jobs.prepare_candidates(job, hits(manual, pending, review, failed, derived, valid))
-    assert [item["capture_id"] for item in selected] == [valid["id"]]
-    assert records.get(review["id"])["concept_state"]["unresolved_hints"] == ["모호한 주제"]
+    assert [item["capture_id"] for item in selected] == [review["id"], valid["id"]]
+    assert records.get(review["id"])["concept_state"]["unresolved_hints"] == []
+    assert records.get(review["id"])["concept_state"]["status"] == "ready"
     assert records.get(failed["id"])["concept_state"]["status"] == "failed"
 
 

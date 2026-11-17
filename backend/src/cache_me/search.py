@@ -814,10 +814,11 @@ class SearchService:
                     ConceptEnrichmentJob.id.desc())).label("position"),
             ).where(ConceptEnrichmentJob.brain_id == self.brain_id,
                     ConceptEnrichmentJob.capture_id.in_(captures),
+                    ConceptEnrichmentJob.status != "superseded",
                     or_(ConceptEnrichmentJob.requested_revision_id.in_(revisions),
                         ConceptEnrichmentJob.applied_revision_id.in_(revisions))).subquery()
             concept_states = {
-                capture_id: {"status": {"completed": "ready", "superseded": "needs_review"}.get(status, status),
+                capture_id: {"status": self.records._concept_job_status(status),
                              "error_code": error_code}
                 for capture_id, status, error_code in session.execute(select(
                     current_jobs.c.capture_id, current_jobs.c.status, current_jobs.c.error_code,

@@ -21,6 +21,7 @@ async function fixture(
     | "failed"
     | "ready"
     | "empty" = "pending",
+  deferred = false,
 ) {
   let status = initial;
   let graphReads = 0;
@@ -48,10 +49,11 @@ async function fixture(
       status,
       job_id: jobId,
       error_code: status === "failed" ? "MODEL_USAGE_LIMIT" : null,
-      unresolved_hints: status === "needs_review" ? ["복습 도구 선택"] : [],
+      unresolved_hints:
+        deferred || status === "needs_review" ? ["복습 도구 선택"] : [],
     },
     concepts:
-      status === "needs_review"
+      status === "ready" || status === "needs_review"
         ? [{ id: conceptId, name: "학습과 기억" }]
         : [],
     concept_hints: [],
@@ -72,7 +74,7 @@ async function fixture(
               kinds: ["knowledge"],
               concept_state: capture().concept_state,
             },
-            ...(status === "ready"
+            ...(status === "ready" || status === "needs_review"
               ? [
                   {
                     id: nodeId,
@@ -85,7 +87,7 @@ async function fixture(
               : []),
           ],
     edges:
-      status === "ready"
+      status === "ready" || status === "needs_review"
         ? [
             { source: captureId, target: nodeId, kind: "contains" },
             { source: nodeId, target: conceptId, kind: "concept" },
@@ -244,34 +246,45 @@ test("주제 연결 완료를 자동 반영하고 세부 항목의 주제 간선
   expect(f.errors).toEqual([]);
 });
 
-test("확인이 필요한 주제는 연결 실패와 구분하고 기존 연결을 상세에서 보여준다", async ({
-  page,
-}) => {
-  const f = await fixture(page, "needs_review");
-  await page.goto("/");
-  await ready(page);
-  const status = page.getByRole("status", { name: "주제 연결 상태" });
-  await expect(status).toContainText(
-    "표시 중인 기록 1개에 확인이 필요한 주제가 있어요.",
-  );
-  await expect(status).not.toContainText("실패");
-  await page
-    .getByRole("button", { name: "주제 검토가 필요한 기록 확인", exact: true })
-    .click();
-  const detail = page.locator(".record-detail");
-  await expect(detail).toContainText("복습 방법을 정리한 기록");
-  await expect(detail).toContainText(
-    "확정하기 어려운 주제는 연결을 보류했어요. 주제 정정에서 확인하고 직접 선택할 수 있어요.",
-  );
-  await expect(detail).toContainText("학습과 기억");
-  await expect(
-    detail.getByRole("button", { name: "주제 정정", exact: true }),
-  ).toBeVisible();
-  expect(
-    f.writes.filter((write) => write.path.endsWith("/concept-retry")),
-  ).toHaveLength(0);
-  expect(f.errors).toEqual([]);
-});
+for (const state of ["ready", "needs_review"] as const) {
+  test(`보류 후보가 있는 ${state} 기록도 기존 연결을 표시하고 사용자 검토를 요구하지 않는다`, async ({
+    page,
+  }) => {
+    const f = await fixture(page, state, true);
+    await page.goto("/");
+    await ready(page);
+    await expect(
+      page.getByRole("status", { name: "주제 연결 상태" }),
+    ).toHaveCount(0);
+    await expect(page.locator(".graph-world .graph-label")).toHaveCount(3);
+    await expect(
+      page.getByRole("button", {
+        name: "주제 검토가 필요한 기록 확인",
+        exact: true,
+      }),
+    ).toHaveCount(0);
+
+    await openLibrary(page);
+    await page
+      .getByRole("button", { name: /^복습 방법을 정리한 기록/ })
+      .click();
+    const detail = page.locator(".record-detail");
+    await expect(detail).toContainText(
+      "배운 내용을 짧게 정리한 뒤 질문으로 복습한다.",
+    );
+    await expect(detail.locator(".chips")).toContainText("학습과 기억");
+    await expect(detail).not.toContainText("연결을 보류");
+    await expect(detail).not.toContainText("복습 도구 선택");
+    await expect(
+      detail.getByRole("button", { name: "주제 정정", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      detail.getByRole("button", { name: "주제 연결 다시 시도", exact: true }),
+    ).toHaveCount(0);
+    expect(f.writes).toEqual([]);
+    expect(f.errors).toEqual([]);
+  });
+}
 
 test("조용한 갱신 실패와 같은 데이터 응답은 기존 그래프·화면 위치를 유지한다", async ({
   page,

@@ -264,11 +264,20 @@ class RecordService:
                 "source": {"capture_id": capture.id, "revision_id": revision.id, "node_id": node.id, "body_start": node.body_start, "body_end": node.body_end}, "review_state": review_state}
 
     def _concept_state(self, session, capture, revision):
-        job = session.scalar(select(ConceptEnrichmentJob).where(ConceptEnrichmentJob.capture_id == capture.id, or_(ConceptEnrichmentJob.requested_revision_id == revision.id, ConceptEnrichmentJob.applied_revision_id == revision.id)).order_by(ConceptEnrichmentJob.created_at.desc(), ConceptEnrichmentJob.expected_state_version.desc()).limit(1))
+        job = session.scalar(select(ConceptEnrichmentJob).where(ConceptEnrichmentJob.capture_id == capture.id,
+            ConceptEnrichmentJob.status != "superseded",
+            or_(ConceptEnrichmentJob.requested_revision_id == revision.id, ConceptEnrichmentJob.applied_revision_id == revision.id))
+            .order_by(ConceptEnrichmentJob.created_at.desc(), ConceptEnrichmentJob.expected_state_version.desc(), ConceptEnrichmentJob.id.desc()).limit(1))
         if not job:
             return {"status": "ready", "job_id": None, "requested_revision_id": None, "applied_revision_id": None, "unresolved_hints": [], "error_code": None}
-        status = {"completed": "ready", "superseded": "needs_review"}.get(job.status, job.status)
-        return {"status": status, "job_id": job.id, "requested_revision_id": job.requested_revision_id, "applied_revision_id": job.applied_revision_id, "unresolved_hints": job.unresolved_hints, "error_code": job.error_code}
+        status = self._concept_job_status(job.status)
+        # Deferred candidates remain diagnostic job history, not user review work.
+        return {"status": status, "job_id": job.id, "requested_revision_id": job.requested_revision_id, "applied_revision_id": job.applied_revision_id, "unresolved_hints": [], "error_code": job.error_code}
+
+    @staticmethod
+    def _concept_job_status(status):
+        # Older databases keep their original job rows without a data migration.
+        return "ready" if status in ("completed", "needs_review") else status
 
     def _index_state(self, session, capture):
         brain = session.get(LocalBrain, self.brain_id)
@@ -437,7 +446,7 @@ class RecordService:
             if not job or job.brain_id != self.brain_id:
                 fail("NOT_FOUND", "주제 작업을 찾을 수 없습니다.")
             if job.status in ("completed", "needs_review"):
-                return {"status": job.status, "applied": True, "applied_revision_id": job.applied_revision_id}
+                return {"status": "completed", "applied": True, "applied_revision_id": job.applied_revision_id}
             capture = session.get(Capture, job.capture_id)
             if job.status != "running" or job.lease_token != lease_token or not job.lease_until or job.lease_until <= utcnow():
                 return {"status": job.status, "applied": False}
@@ -488,7 +497,7 @@ class RecordService:
             changed = set(ids) != set(self._concept_ids(session, old.id)) or desired_assignments != existing_assignments
             if changed:
                 self._apply_update(session, capture, {}, change_kind="concept_enrichment", concept_ids=ids, node_concepts=assignments, reclassify=False, created_via="system")
-            job.status = "needs_review" if unresolved_hints else "completed"
+            job.status = "completed"
             job.applied_revision_id = capture.current_revision_id
             job.unresolved_hints, job.error_code, job.completed_at = list(unresolved_hints), None, utcnow()
             return {"status": job.status, "applied": True, "applied_revision_id": job.applied_revision_id, "changed": changed}
@@ -680,6 +689,7 @@ class RecordService:
         values = {field: changes.get(field, getattr(old, field)) for field in ("title", "completion_state", "event_time", "concept_hints")}
         kinds = changes.get("kinds", self._kinds(session, old.id))
         capture.visibility = changes.get("visibility", capture.visibility)
+        previous_state_version = capture.state_version
         capture.state_version += 1
         capture.index_generation += 1
         capture.updated_at = utcnow()
@@ -698,6 +708,16 @@ class RecordService:
         else:
             for job in old_pending:
                 job.status, job.completed_at = "superseded", utcnow()
+            if capture.current_revision_id == old.id:
+                # A visibility-only edit leaves the classified content intact.
+                # Keep failures retryable without resetting their error/backoff.
+                for job in session.scalars(select(ConceptEnrichmentJob).where(
+                    ConceptEnrichmentJob.capture_id == capture.id,
+                    ConceptEnrichmentJob.requested_revision_id == old.id,
+                    ConceptEnrichmentJob.expected_state_version == previous_state_version,
+                    ConceptEnrichmentJob.status == "failed",
+                )):
+                    job.expected_state_version = capture.state_version
         session.flush()
         return capture
 
