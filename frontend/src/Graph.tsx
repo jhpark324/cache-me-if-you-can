@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Tooltip } from "@astryxdesign/core/Tooltip";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -11,27 +11,63 @@ import type {
   NodeObject,
 } from "3d-force-graph";
 import { KIND_LABELS, type GraphData, type SourceRef } from "./types";
+import TopicExplorer from "./TopicExplorer";
+import {
+  graphEdgeKey,
+  graphNodeId,
+  topicGroups,
+  type GraphTopicGroup,
+} from "./graphTopics";
 type GraphNode = NodeObject & GraphData["nodes"][number];
 type GraphLink = LinkObject<GraphNode> &
   Omit<GraphData["edges"][number], "source" | "target">;
+type GraphPalette = ReturnType<typeof readGraphPalette>;
+function readGraphPalette(element: HTMLElement) {
+  const probe = document.createElement("span");
+  element.append(probe);
+  const color = (token: string) => {
+    probe.style.color = `var(${token})`;
+    return getComputedStyle(probe).color;
+  };
+  const palette = {
+    primary: color("--color-text-primary"),
+    secondary: color("--color-text-secondary"),
+    muted: color("--color-icon-secondary"),
+    dimmed: color("--color-text-disabled"),
+    accent: color("--color-accent"),
+    background: color("--color-background-body"),
+  };
+  probe.remove();
+  return palette;
+}
+const translucent = (color: string, alpha: number) =>
+  color.startsWith("rgb(")
+    ? color.replace("rgb(", "rgba(").replace(")", `, ${alpha})`)
+    : color;
 const nodeColor = (
   node: GraphData["nodes"][number],
   selected: string | null,
   hasRetrieval: boolean,
+  palette: GraphPalette,
+  topic: GraphTopicGroup | null,
 ) =>
   node.id === selected
-    ? "#ffffff"
-    : node.kind === "retrieved_chunk"
-      ? node.cited
-        ? "#ededed"
-        : "#b3b3b3"
-      : hasRetrieval
-        ? "#686868"
-        : node.kind === "concept"
-          ? "#ededed"
-          : node.kind === "node"
-            ? "#858585"
-            : "#b3b3b3";
+    ? topic
+      ? palette.accent
+      : palette.primary
+    : topic && !topic.nodeIds.has(node.id)
+      ? palette.dimmed
+      : node.kind === "retrieved_chunk"
+        ? node.cited
+          ? palette.primary
+          : palette.secondary
+        : hasRetrieval
+          ? palette.dimmed
+          : node.kind === "concept"
+            ? palette.primary
+            : node.kind === "node"
+              ? palette.muted
+              : palette.secondary;
 const typeName = (n: GraphData["nodes"][number]) =>
   n.kind === "retrieved_chunk"
     ? n.cited
@@ -49,6 +85,8 @@ export default function Graph({
   onSource,
   onConcept,
   onPreview,
+  onTopicSelectionChange,
+  allowTopicExploration = true,
   selectedId,
   reduced,
   active: isActive = true,
@@ -60,6 +98,8 @@ export default function Graph({
   onSource: (source: SourceRef) => void;
   onConcept?: (id: string) => void;
   onPreview?: (node: GraphData["nodes"][number]) => void;
+  onTopicSelectionChange?: () => void;
+  allowTopicExploration?: boolean;
   selectedId?: string | null;
   reduced: boolean;
   active?: boolean;
@@ -76,16 +116,32 @@ export default function Graph({
   const hasRetrieval = data.nodes.some(
     (node) => node.kind === "retrieved_chunk",
   );
+  const canExploreTopics = Boolean(
+    allowTopicExploration && fullStage && onConcept && !onPreview,
+  );
+  const groups = useMemo(() => topicGroups(data), [data]);
   const listId = useId();
   const listTrigger = useRef<HTMLButtonElement>(null),
     listSearch = useRef<HTMLInputElement>(null);
   const [localSelected, setLocalSelected] = useState<string | null>(null),
     [listQuery, setListQuery] = useState("");
-  const activeId = selectedId === undefined ? localSelected : selectedId;
+  const [focusedTopicId, setFocusedTopicId] = useState<string | null>(null);
+  const focusedTopic =
+    canExploreTopics && !hasRetrieval
+      ? (groups.find((group) => group.node.id === focusedTopicId) ?? null)
+      : null;
+  const activeId =
+    selectedId ??
+    focusedTopic?.node.id ??
+    (selectedId === undefined ? localSelected : null);
   const selection = useRef<string | null>(null);
   selection.current = data.nodes.some((node) => node.id === activeId)
     ? (activeId ?? null)
     : null;
+  const topicSelection = useRef<GraphTopicGroup | null>(null);
+  topicSelection.current =
+    focusedTopic?.node.id === selection.current ? focusedTopic : null;
+  const palette = useRef<GraphPalette | null>(null);
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
   const hovered = useRef<string | null>(null);
   const actions = useRef({ onSource, onConcept, onPreview });
@@ -99,6 +155,10 @@ export default function Graph({
     [listOpen, setListOpen] = useState(false),
     [ready, setReady] = useState(false);
   const activate = (node: GraphData["nodes"][number]) => {
+    if (node.kind === "concept" && canExploreTopics && !hasRetrieval) {
+      selectTopic(node.id);
+      return;
+    }
     setLocalSelected(node.id);
     if (actions.current.onPreview) actions.current.onPreview(node);
     else if (node.source) actions.current.onSource(node.source);
@@ -107,16 +167,31 @@ export default function Graph({
         node.concept_id || node.id.replace(/^concept:/, ""),
       );
   };
-  const activeLinks = (link: { source?: unknown; target?: unknown }) => {
-    const id = (value: unknown) =>
-      typeof value === "object" && value !== null
-        ? (value as { id?: string }).id
-        : value;
+  const activeLinks = (link: GraphLink) => {
+    if (topicSelection.current)
+      return topicSelection.current.edgeIds.has(graphEdgeKey(link));
     return (
       selection.current !== null &&
-      [id(link.source), id(link.target)].includes(selection.current)
+      [graphNodeId(link.source), graphNodeId(link.target)].includes(
+        selection.current,
+      )
     );
   };
+  function selectTopic(id: string | null) {
+    if (id !== null || focusedTopicId !== null) onTopicSelectionChange?.();
+    setFocusedTopicId(id);
+    setLocalSelected(null);
+    if (id) setListOpen(false);
+  }
+  useEffect(() => {
+    if (
+      !canExploreTopics ||
+      hasRetrieval ||
+      (focusedTopicId &&
+        !groups.some((group) => group.node.id === focusedTopicId))
+    )
+      setFocusedTopicId(null);
+  }, [canExploreTopics, hasRetrieval, groups, focusedTopicId]);
   function closeList() {
     setListOpen(false);
     requestAnimationFrame(() => listTrigger.current?.focus());
@@ -158,6 +233,7 @@ export default function Graph({
         const { default: ForceGraph } = await import("3d-force-graph");
         if (!active || !host.current) return;
         const el = host.current;
+        palette.current = readGraphPalette(el);
         let previousView = "",
           layoutVersion = 0;
         const degree = new Map<string, number>();
@@ -171,7 +247,7 @@ export default function Graph({
         }) as unknown as ForceGraph3DInstance<GraphNode, GraphLink>;
         instance.current = graph;
         graph
-          .backgroundColor("#000000")
+          .backgroundColor(palette.current.background)
           .width(el.clientWidth)
           .height(el.clientHeight || 340)
           .nodeLabel(() => "")
@@ -180,6 +256,8 @@ export default function Graph({
               node,
               selection.current,
               dataRef.current.nodes.some((n) => n.kind === "retrieved_chunk"),
+              palette.current!,
+              topicSelection.current,
             ),
           )
           .nodeVal((n) =>
@@ -193,7 +271,7 @@ export default function Graph({
           )
           .nodeRelSize(2.3)
           .nodeOpacity(0.95)
-          .linkColor(() => "rgba(179,179,179,.5)")
+          .linkColor(() => translucent(palette.current!.secondary, 0.5))
           .linkWidth(0.65)
           .linkOpacity(0.55)
           .enableNodeDrag(!reducedRef.current)
@@ -382,9 +460,11 @@ export default function Graph({
                     ? node.cited
                       ? 2
                       : 3
-                    : node.kind === "concept"
-                      ? 4
-                      : 5;
+                    : topicSelection.current?.nodeIds.has(node.id)
+                      ? 2
+                      : node.kind === "concept"
+                        ? 4
+                        : 5;
             const nodes = [...graph.graphData().nodes].sort(
               (a, b) =>
                 priority(a) - priority(b) ||
@@ -434,6 +514,8 @@ export default function Graph({
                 inverse[14];
               const eligible =
                 (important || ordinaryCount < ordinaryLimit) &&
+                (!topicSelection.current ||
+                  topicSelection.current.nodeIds.has(node.id)) &&
                 cameraDepth < 0 &&
                 point.x >= 0 &&
                 point.x <= el.clientWidth &&
@@ -458,10 +540,15 @@ export default function Graph({
                   )
                 : undefined;
               const { x, y } = placement || positions[0];
-              label.style.opacity = placement ? "1" : "0";
+              const related =
+                topicSelection.current?.nodeIds.has(node.id) ?? false;
+              const dimmed = Boolean(topicSelection.current && !related);
+              label.style.opacity = placement ? (dimmed ? "0.22" : "1") : "0";
               label.style.transform = `translate3d(${x}px,${y}px,0)`;
               label.dataset.highlighted = String(node.id === hovered.current);
               label.dataset.selected = String(node.id === selection.current);
+              label.dataset.topicRelated = String(related);
+              label.dataset.topicDimmed = String(dimmed);
               if (placement) {
                 boxes.push({ x, y, w: width, h: height });
                 if (!important) ordinaryCount++;
@@ -538,17 +625,29 @@ export default function Graph({
   }, [reduced]);
   useEffect(() => {
     const graph = instance.current;
-    if (!graph) return;
+    if (!graph || !palette.current) return;
+    const colors = palette.current;
     graph
-      .nodeColor((node) => nodeColor(node, selection.current, hasRetrieval))
+      .nodeColor((node) =>
+        nodeColor(
+          node,
+          selection.current,
+          hasRetrieval,
+          colors,
+          topicSelection.current,
+        ),
+      )
       .linkColor((link) =>
         activeLinks(link)
-          ? "rgba(237,237,237,.9)"
+          ? translucent(
+              topicSelection.current ? colors.accent : colors.primary,
+              0.9,
+            )
           : link.kind === "retrieval"
-            ? "rgba(179,179,179,.7)"
+            ? translucent(colors.secondary, 0.7)
             : selection.current || hasRetrieval
-              ? "rgba(133,133,133,.2)"
-              : "rgba(179,179,179,.5)",
+              ? translucent(colors.muted, 0.2)
+              : translucent(colors.secondary, 0.5),
       )
       .linkWidth((link) =>
         activeLinks(link) ? 1.5 : link.kind === "retrieval" ? 1 : 0.65,
@@ -582,6 +681,7 @@ export default function Graph({
     <section
       className={`graph-section ${fullStage ? "graph-world" : "graph-neighborhood"} ${hasRetrieval ? "has-retrieval" : ""}`}
       data-render-state={failed ? "fallback" : ready ? "ready" : "loading"}
+      data-topic-focus={focusedTopic?.node.id}
       aria-label={fullStage ? "지식 연결 지도" : "선택 기록의 연결"}
     >
       <VStack ref={host} className="graph-canvas" aria-hidden="true" />
@@ -651,6 +751,15 @@ export default function Graph({
           3D 보기를 열 수 없어 연결 목록으로 표시합니다.
         </p>
       )}
+      {canExploreTopics && !hasRetrieval && !listOpen && onConcept && (
+        <TopicExplorer
+          data={data}
+          selectedId={focusedTopic?.node.id ?? null}
+          onSelect={selectTopic}
+          onSource={onSource}
+          onBrowse={onConcept}
+        />
+      )}
       {fullStage && (
         <>
           <HStack className="graph-legend" aria-label="그래프 범례">
@@ -719,7 +828,10 @@ export default function Graph({
               <IconButton
                 className="app-icon-button"
                 isDisabled={!ready || failed}
-                onClick={() => fitGraph.current?.(reduced ? 0 : 300)}
+                onClick={() => {
+                  selectTopic(null);
+                  fitGraph.current?.(reduced ? 0 : 300);
+                }}
                 variant="ghost"
                 label="그래프 화면 맞추기"
                 icon={<Crosshair />}
