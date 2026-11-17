@@ -226,7 +226,6 @@ test("관리 대화상자는 작업 이름을 제공하고 Escape로 닫힌다",
   await openCurrent(page);
   for (const [action, title] of [
     ["출처 재검토", "출처 재검토"],
-    ["주제 정정", "기록의 주제 정정"],
     ["기록 병합", "기록 병합"],
     ["관계 관리", "기록의 관계"],
   ]) {
@@ -241,93 +240,26 @@ test("관리 대화상자는 작업 이름을 제공하고 Escape로 닫힌다",
   }
 });
 
-test("주제 정정을 취소하고 다시 열면 저장된 선택과 빈 검색어를 복원한다", async ({
+test("자동 연결된 주제를 읽고 다른 기록으로 이동해도 수동 정정을 요구하지 않는다", async ({
   page,
 }) => {
   const f = await fixture(page, { withConcepts: true });
   await openCurrent(page);
-  const opener = page.getByRole("button", { name: "주제 정정", exact: true });
-  const dialog = page.getByRole("dialog", {
-    name: "기록의 주제 정정",
-    exact: true,
-  });
-  await opener.click();
+  const detail = page.locator(".record-detail");
+  await expect(detail.locator(".chips")).toContainText(concepts[0].name);
   await expect(
-    dialog.getByRole("heading", { name: "기록의 주제 정정" }),
-  ).toBeVisible();
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[0].name }),
-  ).toBeChecked();
-  await dialog.getByRole("checkbox", { name: concepts[0].name }).uncheck();
-  await dialog.getByRole("checkbox", { name: concepts[1].name }).check();
-  await dialog
-    .getByRole("textbox", { name: "주제 찾기", exact: true })
-    .fill(concepts[1].name);
-  await dialog.getByRole("button", { name: "취소", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-
-  await opener.click();
-  await expect(
-    dialog.getByRole("textbox", { name: "주제 찾기", exact: true }),
-  ).toHaveValue("");
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[0].name }),
-  ).toBeChecked();
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[1].name }),
-  ).not.toBeChecked();
-  await expect(dialog.getByText("1개 선택", { exact: false })).toBeVisible();
-  expect(f.writes).toEqual([]);
-  expect(f.records.get(currentId)?.concepts).toEqual([concepts[0]]);
-});
-
-test("다른 기록의 주제 정정에는 취소한 초안이 섞이지 않는다", async ({
-  page,
-}) => {
-  const f = await fixture(page, { withConcepts: true });
-  await openCurrent(page);
-  const dialog = page.getByRole("dialog", {
-    name: "기록의 주제 정정",
-    exact: true,
-  });
-  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
-  await expect(
-    dialog.getByRole("heading", { name: "기록의 주제 정정" }),
-  ).toBeVisible();
-  // Leave an empty selection unlike either record's saved topics, so reusing
-  // the first editor's state cannot accidentally match the second record.
-  await dialog.getByRole("checkbox", { name: concepts[0].name }).uncheck();
-  await dialog.getByRole("button", { name: "취소", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
+    detail.getByRole("button", { name: "주제 정정", exact: true }),
+  ).toHaveCount(0);
 
   await openLibrary(page);
   await page
     .getByRole("button", { name: new RegExp("^" + other.title) })
     .click();
-  await expect(page.locator(".record-detail h1")).toHaveText(other.title);
-  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
+  await expect(detail.locator("h1")).toHaveText(other.title);
+  await expect(detail.locator(".chips")).toContainText(concepts[1].name);
   await expect(
-    dialog.getByRole("checkbox", { name: concepts[0].name }),
-  ).not.toBeChecked();
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[1].name }),
-  ).toBeChecked();
-  await dialog.getByRole("checkbox", { name: concepts[0].name }).check();
-  await dialog.getByRole("button", { name: "취소", exact: true }).click();
-  await expect(dialog).toHaveCount(0);
-
-  await openLibrary(page);
-  await page
-    .getByRole("button", { name: new RegExp("^" + current.title) })
-    .click();
-  await expect(page.locator(".record-detail h1")).toHaveText(current.title);
-  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[0].name }),
-  ).toBeChecked();
-  await expect(
-    dialog.getByRole("checkbox", { name: concepts[1].name }),
-  ).not.toBeChecked();
+    detail.getByRole("button", { name: "주제 정정", exact: true }),
+  ).toHaveCount(0);
   expect(f.writes).toEqual([]);
   expect(f.records.get(currentId)?.concepts).toEqual([concepts[0]]);
   expect(f.records.get(otherId)?.concepts).toEqual([concepts[1]]);

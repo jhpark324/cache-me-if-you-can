@@ -73,16 +73,11 @@ test("실제 API: 기록 생성·정정·주변 그래프·출처·확인 삭제
       title: "재검토 근거 " + Date.now(),
       body_markdown: "원자성 근거: 전부 반영하거나 전부 취소한다.",
     });
-    const concept = await make("/concepts", {
-      request_id: crypto.randomUUID(),
-      name: "데이터베이스 " + Date.now(),
-    });
-    return { source: source.capture, concept };
+    return { source: source.capture };
   });
-  await page.getByRole("button", { name: "주제 정정", exact: true }).click();
-  await page.getByLabel(seed.concept.name, { exact: true }).check();
-  await page.getByRole("button", { name: "주제 저장", exact: true }).click();
-  await expect(page.locator(".record-detail")).toContainText(seed.concept.name);
+  await expect(
+    page.getByRole("button", { name: "주제 정정", exact: true }),
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "출처 재검토", exact: true }).click();
   await page.getByText("다른 기록을 출처로 추가", { exact: true }).click();
   await page.getByLabel("기록 찾기", { exact: true }).fill(seed.source.title);

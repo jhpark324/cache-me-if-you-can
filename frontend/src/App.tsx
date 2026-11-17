@@ -51,7 +51,7 @@ import SettingsPanel from "./SettingsPanel";
 import { Tool, ErrorMessage, Loading } from "./ui";
 import { useConceptCatalog } from "./useConceptCatalog";
 import { useHomeGraph } from "./useHomeGraph";
-import { SourceReview, ConceptEditor } from "./ManagementDialogs";
+import { SourceReview } from "./ManagementDialogs";
 import { MergeDialog, RelationsDialog } from "./RecordConnections";
 import {
   KIND_LABELS,
@@ -127,7 +127,7 @@ const CONCEPT_FAILURE_HELP: Record<string, string> = {
   MODEL_REQUEST_INVALID:
     "선택한 모델이 요청을 지원하지 않습니다. 설정에서 다른 모델을 선택한 뒤 다시 시도해 주세요.",
   MODEL_FORMAT_ERROR:
-    "모델의 응답을 주제로 정리하지 못했습니다. 다시 시도하거나 주제 정정에서 직접 선택해 주세요.",
+    "모델의 응답을 주제로 정리하지 못했습니다. 잠시 후 다시 시도해 주세요.",
   MODEL_TIMEOUT:
     "모델의 응답 시간이 초과되었습니다. 잠시 후 다시 시도해 주세요.",
   MODEL_RATE_LIMIT:
@@ -227,8 +227,7 @@ export default function App() {
     [paused, setPaused] = useState(
       () => localStorage.getItem("cache-me-motion") === "paused",
     );
-  const [reviewOpen, setReviewOpen] = useState(false),
-    [conceptOpen, setConceptOpen] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const [mergeOpen, setMergeOpen] = useState(false),
     [relationsOpen, setRelationsOpen] = useState(false),
     [conceptRetryBusy, setConceptRetryBusy] = useState(false);
@@ -289,12 +288,6 @@ export default function App() {
     homeGraph?.nodes.filter(
       (node) =>
         node.kind === "capture" && node.concept_state?.status === "failed",
-    ) || [];
-  const reviewConnections =
-    homeGraph?.nodes.filter(
-      (node) =>
-        node.kind === "capture" &&
-        node.concept_state?.status === "needs_review",
     ) || [];
   useEffect(() => {
     const area = searchArea.current;
@@ -709,7 +702,6 @@ export default function App() {
     refreshConcepts();
     setEditor(null);
     setReviewOpen(false);
-    setConceptOpen(false);
     setMergeOpen(false);
     detailVersion.current++;
     setDetailLoading(false);
@@ -747,7 +739,6 @@ export default function App() {
       !["pending", "running"].includes(selected.concept_state?.status || "") ||
       editor ||
       reviewOpen ||
-      conceptOpen ||
       mergeOpen ||
       relationsOpen ||
       deletePreview
@@ -796,7 +787,6 @@ export default function App() {
     selected?.concept_state?.status,
     editor,
     reviewOpen,
-    conceptOpen,
     mergeOpen,
     relationsOpen,
     deletePreview,
@@ -1357,8 +1347,7 @@ export default function App() {
                     <p>
                       {CONCEPT_FAILURE_HELP[
                         selected.concept_state.error_code || ""
-                      ] ||
-                        "설정에서 AI 연결을 확인한 뒤 다시 시도하거나, 주제 정정에서 직접 선택해 주세요."}
+                      ] || "설정에서 AI 연결을 확인한 뒤 다시 시도해 주세요."}
                     </p>
                     {selected.concept_state.error_code ===
                       "MODEL_USAGE_LIMIT" && (
@@ -1391,12 +1380,6 @@ export default function App() {
                   저장한 기록의 주제를 연결하고 있어요.
                 </p>
               )}
-              {selected.concept_state?.status === "needs_review" && (
-                <p className="notice">
-                  확정하기 어려운 주제는 연결을 보류했어요. 주제 정정에서
-                  확인하고 직접 선택할 수 있어요.
-                </p>
-              )}
               <Markdown>{selected.body_markdown}</Markdown>
               <HStack className="management-actions">
                 <Button
@@ -1408,11 +1391,6 @@ export default function App() {
                   onClick={() => setRelationsOpen(true)}
                   variant="ghost"
                   label="관계 관리"
-                />
-                <Button
-                  onClick={() => setConceptOpen(true)}
-                  variant="ghost"
-                  label="주제 정정"
                 />
                 <Button
                   onClick={() => setReviewOpen(true)}
@@ -1647,7 +1625,6 @@ export default function App() {
             (pendingConnections.length > 0 ||
               runningConnections.length > 0 ||
               failedConnections.length > 0 ||
-              reviewConnections.length > 0 ||
               !homeGraph.edges.length ||
               Boolean(homeGraphError)) && (
               <HStack
@@ -1683,33 +1660,13 @@ export default function App() {
                     </button>
                   </>
                 )}
-                {reviewConnections.length > 0 && (
-                  <>
-                    <p>
-                      표시 중인 기록 {reviewConnections.length}개에 확인이
-                      필요한 주제가 있어요.
-                    </p>
-                    <button
-                      className="text-button"
-                      onClick={() =>
-                        void openCapture(
-                          reviewConnections[0].source?.capture_id ||
-                            reviewConnections[0].id,
-                        )
-                      }
-                    >
-                      주제 검토가 필요한 기록 확인 <ChevronRight />
-                    </button>
-                  </>
-                )}
                 {!pendingConnections.length &&
                   !runningConnections.length &&
                   !failedConnections.length &&
-                  !reviewConnections.length &&
                   !homeGraph.edges.length && (
                     <p>
-                      아직 표시할 연결이 없습니다. 기록에 주제를 지정하거나
-                      관계를 추가하면 연결선이 나타납니다.
+                      아직 표시할 연결이 없습니다. 저장된 내용에서 관련 주제가
+                      확인되면 자동으로 연결됩니다.
                     </p>
                   )}
                 {homeGraphError && (
@@ -1827,24 +1784,6 @@ export default function App() {
             record={selected}
             onSaved={saved}
             onClose={() => setReviewOpen(false)}
-          />
-        )}
-      </Dialog>
-      <Dialog
-        isOpen={conceptOpen && Boolean(selected)}
-        aria-label="기록의 주제 정정"
-        onOpenChange={setConceptOpen}
-        className="settings-dialog"
-        aria-describedby={undefined}
-        width="min(48rem, 94vw)"
-        maxHeight="90dvh"
-        purpose="info"
-      >
-        {conceptOpen && selected && (
-          <ConceptEditor
-            record={selected}
-            onSaved={saved}
-            onClose={() => setConceptOpen(false)}
           />
         )}
       </Dialog>

@@ -203,7 +203,7 @@ erDiagram
 | `mutation_receipts` | PK `(principal_scope, request_id)`, `operation`, `request_fingerprint`, `capture_id?`, `concept_id?`, `relation_id?`, `committed_revision_id?`, `committed_state_version?`, `committed_deleted_at: datetime?`, `outcome`, `created_at`. 명령에 해당하는 엔터티 ID·커밋 버전만 기록. principal_scope는 서버가 정한 brain·호출자 범위이며 재시도 중복 방지에 사용 |
 | `deletion_confirmations` | `token_hash PK`, `brain_id`, `principal_scope`, `capture_id FK`, `expected_revision_id`, `expected_state_version`, `expires_at`, `used_at?`. 삭제 전 사용자 재확인에 사용하며 본문을 복사하지 않음 |
 
-주제 보강 작업은 새 주제·실제 정의 변경에만 등록한다. lease와 호출 수를 영속화해 재시작·재시도에도 작업 예산을 유지하고, 미준비 지연·부분 처리를 유효한 후보가 없는 완료와 구분한다. 캐시 판단을 적용할 때에도 현재 정의·기록 버전과 삭제·출처를 검증하고 `mutation_receipts.operation=capture_set_concepts`인 기록은 제외한다. 일반 분류가 `ready`인 기록만 보강하며 `pending/running`은 대기, `failed/needs_review`는 제외해 기존 검토·재시도 상태를 유지한다. 기존 주제를 일괄 예약하거나 기존 연결을 제거하는 작업은 아니다.
+주제 보강 작업은 새 주제·실제 정의 변경에만 등록한다. lease와 호출 수를 영속화해 재시작·재시도에도 작업 예산을 유지하고, 미준비 지연·부분 처리를 유효한 후보가 없는 완료와 구분한다. 캐시 판단을 적용할 때에도 현재 정의·기록 버전과 삭제·출처를 검증하고 `mutation_receipts.operation=capture_set_concepts`인 기록은 제외한다. 일반 분류가 `ready`인 기록만 보강하며 `pending/running`은 대기, `failed`는 제외해 실제 실패의 재시도 경로를 유지한다. 일부 후보를 보류한 완료 및 이전 `needs_review`는 공개 상태 `ready`로 취급하므로 다른 자격 조건을 충족하면 보강할 수 있다. 기존 주제를 일괄 예약하거나 기존 연결을 제거하는 작업은 아니다.
 
 `index_generation`은 기록이 바뀔 때 증가하는 값이고 `index_builds.id`는 전체 검색 테이블을 다시 만들 때의 값이다. 두 값을 같은 개념으로 쓰지 않는다. 검색 준비 완료는 `(capture_id, revision_id, profile_id, build_id, index_generation)`가 모두 현재와 맞을 때만 유효하다.
 

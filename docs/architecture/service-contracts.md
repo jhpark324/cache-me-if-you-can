@@ -35,7 +35,7 @@ MCP와 웹 API는 같은 도메인 서비스·Pydantic 요청/응답 모델을 �
 | `DomainError` | `code`, `message`, `retryable`, `details?`. 원문·비밀정보·스택 추적을 넣지 않음 |
 | `DeleteResult` | `request_id`, `capture_id`, `revision_id`, `state_version`, `deleted_at`, `index_state.status=excluded`, `replayed`. 최초 삭제 커밋 영수증이며 본문은 포함하지 않음 |
 | `ConceptView` | `id`, `name`, `description?`, `aliases[]`, `state_version`, `created_at`, `updated_at` |
-| `ConceptState` | `status: pending \| running \| ready \| needs_review \| failed`, `job_id?`, `requested_revision_id?`, `applied_revision_id?`, `unresolved_hints[]`, `error_code?`. 본문 저장·색인 상태와 별개; 의미는 [주제 연결 계약](ingestion-and-chunking.md)에 정의 |
+| `ConceptState` | `status: pending \| running \| ready \| failed`, `job_id?`, `requested_revision_id?`, `applied_revision_id?`, `unresolved_hints[]`, `error_code?`. 본문 저장·색인 상태와 별개. `unresolved_hints`는 호환성을 위해 빈 배열로 반환하며, 이전 작업의 `needs_review`는 `ready`로 조회. 의미는 [주제 연결 계약](ingestion-and-chunking.md)에 정의 |
 | `NodeInput` | `kind`, `body_start/end`, `label?`, `origin`, `verification_state`, `verification_note?`, `concept_hints[]`(기본 `[]`). Node의 주제 ID·ordinal·Node ID는 서버가 결정 |
 | `NodeView` | `id`, `revision_id`, `ordinal`, NodeInput의 의미 필드, `text`, `concepts: ConceptView[]`, 부모 `source: SourceRef`, 부모 `review_state`. text는 저장본 span에서 읽음 |
 | `SourceView` | `source: SourceRef`(저장 당시 참조), `resolved_source: SourceRef?`(조회 가능한 현재 또는 안전하게 동등한 참조), `availability: available \| unavailable`, `review_state: valid \| needs_review`, `reason?` |
@@ -209,7 +209,7 @@ Codex의 실제 확인 지원과 Skill 재질문 응답의 연결은 연동 시�
 
 홈의 `GET /api/v1/graph`는 반복 쿼리 매개변수 `kinds`, `concept_ids`를 받는다. 최근 현재 기록을 시작점으로 SQLite의 실제 주제 연결·Node·명시적 관계를 반환하며 임베딩 준비 상태와 독립적으로 동작한다. 후보·출처 검증에도 예산을 적용하고 생략이 있으면 `truncated=true`로 알린다. 필터를 벗어난 기록을 관계 확장으로 되살리지 않는다. 페이지 커서나 전체 개수는 반환하지 않으며 필터·검색·선택 기록 주변 탐색으로 범위를 좁힌다. 상세 동작과 화면 수용 기준은 [홈 그래프 개선](../specs/workspace.md)을 따른다.
 
-홈 그래프의 `capture` 노드에는 현재 기록 버전의 `concept_state: {status, error_code}`를 포함한다. `status`는 상세 조회와 같은 `pending | running | ready | needs_review | failed`이며 공급자 원문이나 작업 비밀은 포함하지 않는다. 표시된 기록의 상태를 한 번의 배치 조회로 읽고 과거 버전의 실패를 현재 상태로 표시하지 않는다. 이 메타데이터는 화면 갱신·복구 안내용이며 간선을 대신하지 않는다. 선택 기록의 주변 그래프도 현재 세부 항목의 `NodeConcept` 주제 연결을 `has_topic` 간선으로 반환하며 해당 세부 항목의 SourceRef를 근거로 사용한다.
+홈 그래프의 `capture` 노드에는 현재 기록 버전의 `concept_state: {status, error_code}`를 포함한다. `status`는 상세 조회와 같은 `pending | running | ready | failed`이며 공급자 원문이나 작업 비밀은 포함하지 않는다. 표시된 기록의 상태를 한 번의 배치 조회로 읽고 과거 버전의 실패를 현재 상태로 표시하지 않는다. 이 메타데이터는 화면 갱신·복구 안내용이며 간선을 대신하지 않는다. 선택 기록의 주변 그래프도 현재 세부 항목의 `NodeConcept` 주제 연결을 `has_topic` 간선으로 반환하며 해당 세부 항목의 SourceRef를 근거로 사용한다.
 
 `ContextInput`은 검색용 query·동일 필터, 선택적 subject_hint/situation_hint/as_of, limit(기본 10, 최대 10개 기록)을 받는다. 힌트는 검증된 사실이나 권한이 아니다. knowledge_context도 64토큰을 넘는 query를 거부한다.
 

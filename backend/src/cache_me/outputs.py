@@ -64,11 +64,11 @@ class IndexState(OutputModel):
 
 
 class ConceptState(OutputModel):
-    status: Literal["pending", "running", "ready", "needs_review", "failed"]
+    status: Literal["pending", "running", "ready", "failed"]
     job_id: UUID | None = None
     requested_revision_id: UUID | None = None
     applied_revision_id: UUID | None = None
-    unresolved_hints: list[str] = Field(default_factory=list)
+    unresolved_hints: list[str] = Field(default_factory=list, description="Compatibility field; deferred candidates remain in internal job history.")
     error_code: str | None = None
 
 
