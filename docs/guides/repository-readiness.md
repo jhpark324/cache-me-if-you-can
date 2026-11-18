@@ -18,7 +18,7 @@ python scripts/preflight.py
 
 `python scripts/manage.py setup`은 uv의 `--locked` 설치와 `npm ci`를 사용한다. 의존성을 바꿨다면 관련 잠금 파일도 갱신하고 [자동 검사](testing.md#기본-검사)를 실행한다.
 
-[GitHub Actions 워크플로](../../.github/workflows/check.yml)는 소스·문서 링크, 스크립트 회귀, 백엔드 계약, 프런트 타입·빌드와 브라우저 모의 API 검사를 수행한다. 외부 계정 자격증명을 요구하지 않는다. 원격 실행 결과는 [해당 커밋의 Actions](https://github.com/jhpark324/cache-me-if-you-can/actions)에서 확인한다.
+[CI 워크플로](testing.md#ci와-수동-확인)는 외부 계정 자격증명 없이 저장소, 백엔드, 프런트엔드를 각각 검사한다. 원격 실행 결과는 [해당 커밋의 Actions](https://github.com/jhpark324/cache-me-if-you-can/actions)에서 확인한다.
 
 CI 통과만으로 실제 모델의 답변 품질, 공급자 로그인, 사용자 확인창 또는 모든 운영체제의 네이티브 실행을 보증하지 않는다. 배포할 버전에서 지원한다고 명시할 환경은 별도로 확인한다.
 

@@ -57,8 +57,14 @@ def main():
     elif args.action == 'check':
         execute([sys.executable, str(ROOT / 'scripts' / 'preflight.py')])
         execute([sys.executable, '-m', 'unittest', 'discover', '-s', str(ROOT / 'scripts' / 'tests'), '-q'])
-        execute(base + ['--extra', 'test', 'pytest', str(ROOT / 'backend' / 'tests'), '-q'])
-        execute([executable('npm'), '--prefix', str(ROOT / 'frontend'), 'run', 'build'])
+        quality = [uv, 'run', '--locked', '--directory', str(ROOT / 'backend'), '--python', '3.12', '--group', 'quality']
+        execute(quality + ['ruff', 'check', '--config', 'pyproject.toml', 'src', 'tests', 'scripts', 'alembic', '../scripts'])
+        execute(quality + ['mypy'])
+        execute(quality + ['--extra', 'embedding', '--extra', 'test', 'pytest', '-q', '--cov', '--cov-report=term'])
+        frontend = [executable('npm'), '--prefix', str(ROOT / 'frontend'), 'run']
+        execute(frontend + ['lint'])
+        execute(frontend + ['typecheck:tooling'])
+        execute(frontend + ['build'])
     else:
         # The child gets the MCP bearer in its environment; never print it.
         code = ('import json; from cache_me.config import Settings; settings = Settings.load(); '

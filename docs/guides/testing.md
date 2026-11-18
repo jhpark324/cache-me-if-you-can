@@ -8,12 +8,16 @@
 python scripts/manage.py check
 ```
 
-이 명령은 등록 후보·문서 링크, 스크립트 회귀, 백엔드 테스트, 웹 타입 검사와 빌드를 수행한다. 개별 범위만 확인할 때는 다음 명령을 사용한다.
+이 명령은 등록 후보·문서 링크, 스크립트 회귀, Python 린트·타입 검사·테스트와 분기 커버리지, React 린트, Playwright 테스트와 Vite 설정의 타입 검사, 웹 타입 검사와 빌드를 수행한다. 개별 범위만 확인할 때는 다음 명령을 사용한다.
 
 ```sh
 python scripts/preflight.py
 python -m unittest discover -s scripts/tests -v
-uv run --locked --project backend --extra test pytest backend/tests -q
+uv run --locked --directory backend --group quality ruff check --config pyproject.toml src tests scripts alembic ../scripts
+uv run --locked --directory backend --group quality mypy
+uv run --locked --directory backend --group quality --extra test pytest -q --cov --cov-report=term
+npm --prefix frontend run lint
+npm --prefix frontend run typecheck:tooling
 npm --prefix frontend run build
 ```
 
@@ -114,6 +118,8 @@ uv run --locked --project backend --extra embedding python scripts/check_cacheme
 
 ## CI와 수동 확인
 
-[CI 구성](../../.github/workflows/check.yml)은 외부 계정 로그인 없이 소스 점검·계약 테스트·웹 빌드·모의 API 브라우저 검사를 실행한다. 실제 임베딩 모델, 외부 AI 품질, 사람의 확인창과 운영체제별 설치·권한 동작은 별도로 확인한다. 현재 확인한 환경과 남은 제약은 [플랫폼 지원](../architecture/platform-support.md)에 있다.
+[Repository CI](../../.github/workflows/repository-ci.yml)는 소스·문서 링크와 운영 스크립트를 검사한다. [Backend CI](../../.github/workflows/backend-ci.yml)는 Ruff, 설정과 API·MCP 스키마의 타입, 백엔드 계약을 검사하고 분기 커버리지를 보고한다. [Frontend CI](../../.github/workflows/frontend-ci.yml)는 React Hooks, Playwright 테스트와 Vite 설정의 타입, 웹 빌드와 모의 API 브라우저 동작을 검사한다. Hook 의존성 진단과 커버리지 수치는 검토용이다.
+
+세 워크플로는 모든 PR과 `main` 푸시에서 실행된다. 실제 임베딩 모델, 외부 AI 품질, 사람의 확인창과 운영체제별 설치·권한 동작은 별도로 확인한다. 현재 확인한 환경과 남은 제약은 [플랫폼 지원](../architecture/platform-support.md)에 있다.
 
 PR에는 실행한 명령과 결과, 생략한 범위를 적는다. 원문·인증 정보·개인 실행 로그를 공개 저장소에 추가하지 않는다. 보고서와 스크린샷은 민감한 내용을 제거한 CI 산출물 또는 로컬 작업 기록으로 보관한다.
