@@ -128,7 +128,7 @@ erDiagram
 
 ER 도식은 주요 연관을 압축했다. 정확한 FK·복합 키·제약은 [models.py](../../backend/src/cache_me/models.py)와 migration이 기준이다. 특히 `Relation`은 양 끝점과 근거, `ProvenanceLink`는 파생 revision과 원출처 revision/구간을 참조한다.
 
-`Article`의 제목·요약·본문·인용은 불변 `ArticleRevision`에 속한다. 기록을 인용하면 해당 기록 버전과 읽은 구간을 가리킨다. `Capture`는 삭제·공개 범위·현재 revision 포인터를 가진다. 기록 본문은 불변 `CaptureRevision`에 보관한다. Node는 본문의 Unicode code point 반개구간을 가리키며 별도 원문이 아니다. Concept는 자유 주제와 별칭, RecordKind는 정리본의 재사용 목적, 청크는 모델 토큰 상한에 맞춘 파생 검색 단위다. 네 가지를 한 태그 필드로 합치지 않는다.
+`Article`의 제목·요약·본문·인용은 불변 `ArticleRevision`에 속한다. 기록을 인용하면 해당 기록 버전과 읽은 구간을 가리킨다. 0003에서 일반 기록을 아티클로 발행했던 경우에는 기존 기록 주소와 인용은 원자료를, 아티클 주소는 발행본을 이어서 사용한다. `Capture`는 삭제·공개 범위·현재 revision 포인터를 가진다. 기록 본문은 불변 `CaptureRevision`에 보관한다. Node는 본문의 Unicode code point 반개구간을 가리키며 별도 원문이 아니다. Concept는 자유 주제와 별칭, RecordKind는 정리본의 재사용 목적, 청크는 모델 토큰 상한에 맞춘 파생 검색 단위다. 네 가지를 한 태그 필드로 합치지 않는다.
 
 ## 배포 파일과 실행 데이터
 

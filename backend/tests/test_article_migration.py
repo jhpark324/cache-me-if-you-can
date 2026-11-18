@@ -44,7 +44,7 @@ def add_legacy_article(connection, brain_id, editions, deleted_at=None):
              node_status, change_kind, created_via, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, '[]', 'absent', ?, 'mcp', ?)""",
             (revision_id, brain_id, article_id, number, f"제목 {number}", f"본문 {number} [1](#cite-1)",
-             json.dumps(metadata, ensure_ascii=False), "create" if number == 1 else "edit",
+             json.dumps(metadata, ensure_ascii=False) if metadata is not None else None, "create" if number == 1 else "edit",
              CREATED if number == 1 else EDITED))
     return article_id, revision_ids
 
@@ -142,6 +142,47 @@ def test_legacy_index_hits_are_hidden_before_the_removal_worker_runs(tmp_path):
         assert_error("NOT_FOUND", lambda: search.neighbors(article_id))
         assert search.process_jobs()["processed"] == 1
         assert search._table.count_rows() == 0
+    finally:
+        db.close()
+
+
+def test_split_preserves_relation_endpoints_and_keeps_deleted_mixed_records_hidden(tmp_path):
+    path = legacy_database(tmp_path)
+    db = Database(path, initialize=False)
+    metadata = {"summary": "발행본", "citations": [EXTERNAL]}
+    try:
+        with sqlite3.connect(path) as connection:
+            connection.execute("PRAGMA foreign_keys=ON")
+            owner, (raw, published) = add_legacy_article(connection, db.brain_id, [None, metadata])
+            deleted_owner, (deleted_raw, _) = add_legacy_article(connection, db.brain_id, [None, metadata], deleted_at=UPDATED)
+            mixed = str(uuid4())
+            ordinary = str(uuid4())
+            for relation, source, target, evidence in ((mixed, raw, published, published), (ordinary, raw, raw, raw)):
+                connection.execute("""INSERT INTO relations (id, brain_id, relation_type, source_capture_id,
+                    source_revision_id, target_capture_id, target_revision_id, evidence_capture_id,
+                    evidence_revision_id, created_at) VALUES (?, ?, 'related_to', ?, ?, ?, ?, ?, ?, ?)""",
+                    (relation, db.brain_id, owner, source, owner, target, owner, evidence, UPDATED))
+
+        migrate_database(path)
+        records = RecordService(db)
+        articles = ArticleService(records)
+        assert records.get(owner)["revision_id"] == raw
+        assert articles.get(owner)["revision_id"] == published
+        assert_error("NOT_FOUND", lambda: records.get(deleted_owner, deleted_raw))
+        assert_error("NOT_FOUND", lambda: articles.get(deleted_owner))
+        assert [relation["id"] for relation in records.relation_list(capture_id=owner)["items"]] == [ordinary]
+        with sqlite3.connect(path) as connection:
+            archive, = connection.execute("SELECT capture_id FROM capture_revisions WHERE id=?", (published,)).fetchone()
+            assert archive != owner
+            assert connection.execute("SELECT deleted_at FROM captures WHERE id=?", (archive,)).fetchone()[0]
+            assert connection.execute("""SELECT source_capture_id, target_capture_id, evidence_capture_id
+                                         FROM relations WHERE id=?""", (mixed,)).fetchone() == (owner, archive, archive)
+            assert connection.execute("SELECT deleted_at FROM captures WHERE id=?", (deleted_owner,)).fetchone() == (UPDATED,)
+            assert connection.execute("PRAGMA foreign_key_check").fetchall() == []
+            with pytest.raises(sqlite3.IntegrityError, match="immutable"):
+                connection.execute("UPDATE capture_revisions SET title='변경' WHERE id=?", (raw,))
+            assert connection.execute("""SELECT count(*) FROM sqlite_master WHERE type='trigger'
+                AND name='immutable_provenance_links_update'""").fetchone() == (1,)
     finally:
         db.close()
 
