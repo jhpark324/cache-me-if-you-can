@@ -263,7 +263,7 @@ async def run_boundary_scenarios(codex, control_id, summary, save, nonce):
 
 async def run(args):
     import httpx
-    from cache_me.codex_integration import server_config
+    from cache_me.codex_integration import resolve_codex_home, server_config
 
     summary = {"started_at": datetime.now(timezone.utc).isoformat(), "status": "running",
         "client": "actual Codex app-server and existing account model", "isolated_storage": True,
@@ -315,7 +315,7 @@ async def run(args):
                             raise RuntimeError("Isolated application did not become ready")
                     codex_binary = shutil.which("codex")
                     assert codex_binary, "Codex executable is required"
-                    actual_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+                    actual_home = resolve_codex_home()
                     config_path = actual_home / "config.toml"
                     config_bytes = config_path.read_bytes() if config_path.exists() else b""
                     existing = tomllib.loads(config_bytes.decode())

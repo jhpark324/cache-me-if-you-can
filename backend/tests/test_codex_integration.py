@@ -182,6 +182,38 @@ def test_explicit_cli_port_takes_precedence_and_headers_are_port_independent(tmp
     assert payload['data']['codex']['status'] == 'missing'
 
 
+def test_empty_codex_home_installs_and_diagnoses_user_config_from_any_directory(
+        tmp_path, source_package, monkeypatch, capsys):
+    user_home = tmp_path / 'user'
+    checkout = tmp_path / 'checkout'
+    conversation = tmp_path / 'conversation'
+    data = tmp_path / 'data'
+    for folder in (checkout, conversation, data):
+        folder.mkdir()
+    (data / 'local-access.json').write_text('{"mcp_token":"synthetic-test-token"}')
+    monkeypatch.setattr(Path, 'home', lambda: user_home)
+    monkeypatch.setenv('CODEX_HOME', '')
+    monkeypatch.setattr(codex_integration, 'inspect_runtime', lambda _: {'status': 'ready'})
+
+    options = ['--data-dir', str(data), '--port', str(DEFAULT_PORT)]
+    monkeypatch.chdir(checkout)
+    monkeypatch.setattr(sys, 'argv', ['codex_integration', 'install', *options,
+                                      '--skill-source', str(source_package)])
+    codex_integration.main()
+    result = json.loads(capsys.readouterr().out)
+    assert Path(result['config']) == user_home / '.codex/config.toml'
+    assert Path(result['skill']).read_bytes() == source_package.read_bytes()
+    assert not list(checkout.iterdir())
+
+    monkeypatch.chdir(conversation)
+    monkeypatch.setattr(sys, 'argv', ['codex_integration', 'doctor', *options])
+    with pytest.raises(SystemExit) as exit_info:
+        codex_integration.main()
+    assert exit_info.value.code == 0
+    assert json.loads(capsys.readouterr().out)['data']['codex']['status'] == 'ready'
+    assert not list(conversation.iterdir())
+
+
 @pytest.fixture
 def source_package(tmp_path):
     source = tmp_path / 'source' / 'SKILL.md'
