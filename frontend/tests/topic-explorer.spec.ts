@@ -176,6 +176,7 @@ test("모바일 WebGL 대체 목록에서도 주제를 선택하고 Escape로 �
   await page.addInitScript(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
       type: string,
       ...args: any[]
     ) {
