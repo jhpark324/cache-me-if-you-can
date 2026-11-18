@@ -110,7 +110,7 @@ class SourceRef(InputModel):
     def validate_span(self):
         if (self.body_start is None) != (self.body_end is None):
             raise ValueError("both span boundaries are required")
-        if self.body_start is not None and self.body_start >= self.body_end:
+        if self.body_start is not None and self.body_end is not None and self.body_start >= self.body_end:
             raise ValueError("span must be nonempty")
         return self
 
