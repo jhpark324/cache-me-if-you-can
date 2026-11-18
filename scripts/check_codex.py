@@ -89,7 +89,7 @@ class Codex:
 
 async def run(args):
     import httpx
-    from cache_me.codex_integration import install, runtime_config, server_config
+    from cache_me.codex_integration import install, resolve_codex_home, runtime_config, server_config
 
     if args.port == 0:
         with socket.socket() as sock:
@@ -122,7 +122,7 @@ async def run(args):
                 command = [shutil.which('codex'), 'app-server']
                 codex_env = dict(env, CODEX_HOME=str(home))
                 if args.model_turn:
-                    actual_home = Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
+                    actual_home = resolve_codex_home()
                     existing = tomllib.loads((actual_home / 'config.toml').read_text())
                     for name in existing.get('mcp_servers', {}):
                         if name != MCP_SERVER_KEY:

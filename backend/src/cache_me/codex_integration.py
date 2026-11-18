@@ -24,6 +24,12 @@ SKILL_NAME = 'cache-me'
 SKILL_SLUG = 'cache-me'
 
 
+def resolve_codex_home(override: Path | None = None) -> Path:
+    """Match Codex's user home selection when CODEX_HOME is empty or unset."""
+    configured = os.environ.get('CODEX_HOME')
+    return override or (Path(configured) if configured else Path.home() / '.codex')
+
+
 def header_value(data_dir: Path) -> dict[str, str]:
     # Never fall back to Codex credentials or the application's OAuth store.
     value = json.loads((data_dir / 'local-access.json').read_text(encoding='utf-8'))
@@ -272,7 +278,7 @@ def main() -> None:
         settings = Settings.load(data_dir=args.data_dir, port=args.port)
         settings = replace_settings(settings, data_dir=settings.data_dir.resolve())
         data_dir = settings.data_dir
-        home = args.codex_home or Path(os.environ.get('CODEX_HOME', Path.home() / '.codex'))
+        home = resolve_codex_home(args.codex_home)
         if args.action == 'doctor':
             result = doctor(settings, home)
             print(json.dumps(result, ensure_ascii=False))

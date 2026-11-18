@@ -72,7 +72,9 @@ python scripts/manage.py install-codex
 python scripts/manage.py doctor
 ```
 
-[cache-me 스킬](../skills/cache-me/SKILL.md), UI metadata와 `runtime.json`은 `$CODEX_HOME/skills/cache-me/`에 설치된다. `CODEX_HOME`이 없으면 `~/.codex/skills/cache-me/`를 사용한다. `runtime.json`에는 `schema_version: 1`, MCP 등록 이름 `mcp_server: "cache_me"`, 설치한 Python·데이터 경로·포트·웹/MCP 주소와 진단·시작 명령이 들어가며 토큰은 포함하지 않는다. 이 파일은 설치 시 생성되므로 저장소의 스킬 원본에는 없다. 실행 중인 Codex가 연결을 다시 읽도록 하거나 새 대화에서 사용한다.
+설치기는 사용자 Codex 홈의 `config.toml`에 MCP 연결을 등록하고 `skills/cache-me/`에 [cache-me 스킬](../skills/cache-me/SKILL.md), UI metadata와 `runtime.json`을 설치한다. `CODEX_HOME`이 없거나 비어 있으면 `~/.codex`를 사용한다. 이 사용자 설정은 같은 Codex 홈을 사용하는 프로젝트 없는 대화에서도 적용된다. 실행 중인 Codex가 연결을 다시 읽도록 하거나 새 대화에서 사용한다.
+
+`runtime.json`에는 `schema_version: 1`, MCP 등록 이름 `mcp_server: "cache_me"`, 설치한 Python·데이터 경로·포트·웹/MCP 주소와 진단·시작 명령이 들어가며 토큰은 포함하지 않는다. 이 파일은 설치 시 생성되므로 저장소의 스킬 원본에는 없다.
 
 ```text
 $cache-me 오늘 배운 트랜잭션 격리 수준을 정리해서 저장해줘.
