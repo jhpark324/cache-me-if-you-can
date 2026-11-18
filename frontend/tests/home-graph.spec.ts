@@ -448,6 +448,7 @@ test("WebGL을 쓸 수 없어도 연결 목록에서 출처를 열 수 있다", 
   await page.addInitScript(() => {
     const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
       type: string,
       ...args: any[]
     ) {

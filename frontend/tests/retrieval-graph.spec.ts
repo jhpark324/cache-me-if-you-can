@@ -379,6 +379,7 @@ test("WebGL 없이도 키보드 목록에서 같은 기록의 다른 검색 구�
   await page.addInitScript(() => {
     const getContext = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (
+      this: HTMLCanvasElement,
       type: string,
       ...args: any[]
     ) {
