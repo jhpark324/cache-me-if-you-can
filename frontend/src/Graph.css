@@ -21,6 +21,14 @@
   font-size: 14px;
   font-weight: 500;
 }
+.graph-section[data-render-state="ready"]
+  .graph-label-layer
+  > .graph-label[data-positioned="true"] {
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+.graph-section .graph-label-layer > .graph-label[data-positioned="true"]:hover,
 .graph-section .graph-label-layer > .graph-label[data-highlighted="true"] {
   color: var(--color-text-primary);
   border-color: var(--color-border-emphasized);

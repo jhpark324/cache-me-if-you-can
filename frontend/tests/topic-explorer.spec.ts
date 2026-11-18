@@ -168,6 +168,71 @@ test("주제 선택은 현재 그래프를 강조하고 중복 없는 기록에�
   ).toHaveValue(topicId);
 });
 
+test("그래프에 표시된 주제·기록 이름과 이름이 숨겨진 노드를 직접 선택한다", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await fixture(page);
+  await page.goto("/");
+  const graph = page.locator(".graph-world");
+  await expect(graph).toHaveAttribute("data-render-state", "ready");
+  const labelFor = (id: string) =>
+    graph.locator(`.graph-label[data-node-id="${id}"]`);
+  const topic = labelFor(`concept:${topicId}`);
+
+  await expect(topic).toHaveCSS("opacity", "1");
+  const topicBox = (await topic.boundingBox())!;
+  await page.mouse.click(
+    topicBox.x + topicBox.width / 2,
+    topicBox.y + topicBox.height / 2,
+  );
+  await expect(graph).toHaveAttribute("data-topic-focus", `concept:${topicId}`);
+
+  const record = labelFor(records[0].id);
+  await expect(record).toHaveCSS("opacity", "1");
+  const recordBox = (await record.boundingBox())!;
+  const labelX = recordBox.x + recordBox.width / 2;
+  const labelY = recordBox.y + recordBox.height / 2;
+  await page.mouse.move(labelX, labelY);
+  await page.mouse.down();
+  await page.mouse.move(labelX + 12, labelY);
+  await page.mouse.move(labelX, labelY);
+  await page.mouse.up();
+  await expect(page.locator(".source-panel")).toHaveCount(0);
+  await page.mouse.click(labelX, labelY);
+  await expect(page.locator(".source-panel")).toContainText(records[0].title);
+  await page.getByRole("button", { name: "출처 닫기", exact: true }).click();
+
+  const hiddenLabel = labelFor(records[2].id);
+  await expect(hiddenLabel).toHaveCSS("opacity", "0");
+  let target: { x: number; y: number } | null = null;
+  await expect
+    .poll(async () => {
+      const previous = target;
+      target = await hiddenLabel.evaluate((label) => {
+        const canvas = label.closest(".graph-section")?.querySelector("canvas");
+        if (!canvas) return null;
+        const bounds = canvas.getBoundingClientRect();
+        const x = Math.round(bounds.left + Number(label.dataset.screenX)) + 5;
+        const y = Math.round(bounds.top + Number(label.dataset.screenY));
+        return document.elementFromPoint(x, y) === canvas ? { x, y } : null;
+      });
+      if (!target) return false;
+      await page.mouse.move(target.x, target.y);
+      return (
+        previous?.x === target.x &&
+        previous.y === target.y &&
+        (await hiddenLabel.getAttribute("data-highlighted")) === "true"
+      );
+    })
+    .toBe(true);
+  const hit = target as unknown as { x: number; y: number };
+  await page.mouse.down();
+  await page.mouse.move(hit.x - 1, hit.y);
+  await page.mouse.up();
+  await expect(page.locator(".source-panel")).toContainText(records[2].title);
+});
+
 test("모바일 WebGL 대체 목록에서도 주제를 선택하고 Escape로 전체 연결로 돌아간다", async ({
   page,
 }) => {
