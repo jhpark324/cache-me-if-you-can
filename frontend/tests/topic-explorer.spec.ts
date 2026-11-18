@@ -1,35 +1,38 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const topicId = "33333333-3333-4333-8333-000000000001";
-const records = [
+const makeRecords = (titles: string[]) =>
+  titles.map((title, i) => ({
+    id: `11111111-1111-4111-8111-${String(i).padStart(12, "0")}`,
+    revision_id: `22222222-2222-4222-8222-${String(i).padStart(12, "0")}`,
+    title,
+    body_markdown: `${title}\n\n설정 변경 뒤에는 기존 캐시의 유효 기간을 확인한다.`,
+    revision_no: 1,
+    state_version: 1,
+    kinds: ["knowledge"],
+    visibility: "private",
+    is_current: true,
+    created_at: "2026-11-16T00:00:00Z",
+    updated_at: "2026-11-16T00:00:00Z",
+    index_state: { status: "ready" },
+    concept_state: { status: "ready" },
+    review_state: "valid",
+    concepts: [],
+    nodes: [],
+    sources: [],
+    node_status: "absent",
+  }));
+const records = makeRecords([
   "DNS 전파와 캐시 만료를 정리한 기록",
   "서비스 변경 후 도메인 연결 확인",
   "다음 주에 읽을 책",
-].map((title, i) => ({
-  id: `11111111-1111-4111-8111-${String(i).padStart(12, "0")}`,
-  revision_id: `22222222-2222-4222-8222-${String(i).padStart(12, "0")}`,
-  title,
-  body_markdown: `${title}\n\n설정 변경 뒤에는 기존 캐시의 유효 기간을 확인한다.`,
-  revision_no: 1,
-  state_version: 1,
-  kinds: ["knowledge"],
-  visibility: "private",
-  is_current: true,
-  created_at: "2026-11-16T00:00:00Z",
-  updated_at: "2026-11-16T00:00:00Z",
-  index_state: { status: "ready" },
-  concept_state: { status: "ready" },
-  review_state: "valid",
-  concepts: [],
-  nodes: [],
-  sources: [],
-  node_status: "absent",
-}));
-const source = (i: number) => ({
-  capture_id: records[i].id,
-  revision_id: records[i].revision_id,
-});
-async function fixture(page: Page) {
+]);
+async function fixture(page: Page, entries = records, relatedCount = 2) {
+  const related = entries.slice(0, relatedCount);
+  const source = (i: number) => ({
+    capture_id: entries[i].id,
+    revision_id: entries[i].revision_id,
+  });
   await page.route("**/api/v1/**", async (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname;
@@ -41,15 +44,13 @@ async function fixture(page: Page) {
       return send({ items: [{ id: topicId, name: "DNS" }], next_cursor: null });
     if (path.endsWith("/captures"))
       return send({
-        items: url.searchParams.has("concept_ids")
-          ? records.slice(0, 2)
-          : records,
+        items: url.searchParams.has("concept_ids") ? related : entries,
         next_cursor: null,
       });
     if (path.endsWith("/graph"))
       return send({
         nodes: [
-          ...records.map((record, i) => ({
+          ...entries.map((record, i) => ({
             id: record.id,
             kind: "capture",
             label: record.title,
@@ -74,24 +75,19 @@ async function fixture(page: Page) {
           },
         ],
         edges: [
-          {
-            source: records[0].id,
+          ...related.map((record) => ({
+            source: record.id,
             target: `concept:${topicId}`,
             kind: "has_topic",
-          },
-          {
-            source: records[1].id,
-            target: `concept:${topicId}`,
-            kind: "has_topic",
-          },
-          { source: records[0].id, target: "part", kind: "contains" },
+          })),
+          { source: entries[0].id, target: "part", kind: "contains" },
           { source: "part", target: `concept:${topicId}`, kind: "has_topic" },
         ],
         truncated: true,
       });
     if (path.endsWith("/sources/resolve")) {
       const ref = route.request().postDataJSON();
-      const capture = records.find((record) => record.id === ref.capture_id)!;
+      const capture = entries.find((record) => record.id === ref.capture_id)!;
       return send({
         source: ref,
         capture,
@@ -413,3 +409,74 @@ test("그래프 빈 공간은 드래그나 라벨과 달리 카메라를 유지�
     .toBe(fullView.width);
   await expect.poll(() => distanceFrom(beforeClear)).toBeLessThan(1);
 });
+
+for (const width of [1440, 390]) {
+  test(`긴 연결 기록은 폭 ${width}에서 겹치지 않고 마지막까지 열 수 있다`, async ({
+    page,
+  }) => {
+    const entries = makeRecords([
+      "01 배포 전 DNS 전파와 캐시 만료 검증 절차를 정리한 긴 기록",
+      "02 여러 서비스가 같은 도메인을 사용할 때 소유권을 점검하는 방법",
+      "03 연결 제한과 시간 초과가 동시에 발생했을 때 참고할 운영 일지",
+      "04 배포 기록과 사용자 문의를 한 시간순으로 비교하기 위한 정리",
+      "05 오래된 캐시가 남은 환경에서 응답이 바뀌는 시점을 확인하는 방법",
+      "06 브라우저별 연결 설정을 비교하고 문제를 단계적으로 재현하는 기록",
+    ]);
+    await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await fixture(page, entries, entries.length);
+    await page.goto("/");
+
+    const panel = page.getByRole("region", { name: "주제로 살펴보기" });
+    if (width === 390)
+      await panel.getByRole("button", { name: "주제로 살펴보기" }).click();
+    await panel
+      .getByRole("button", { name: "DNS, 연결 기록 6개", exact: true })
+      .click();
+    const list = panel.locator(".topic-rows");
+    await expect(list.locator(".topic-record-open")).toHaveCount(
+      entries.length,
+    );
+    await page.evaluate(() => document.fonts.ready);
+
+    const layout = await list.evaluate((element) => {
+      const rows = Array.from(element.querySelectorAll(".topic-record-open"));
+      return rows.map((row, i) => {
+        const bounds = row.getBoundingClientRect();
+        const title = row.querySelector(".topic-record-title")!;
+        const titleBounds = title.getBoundingClientRect();
+        const via = row
+          .querySelector(".topic-record-via")!
+          .getBoundingClientRect();
+        return {
+          height: bounds.height,
+          twoLines:
+            titleBounds.height > parseFloat(getComputedStyle(title).lineHeight),
+          contained:
+            titleBounds.top >= bounds.top && via.bottom <= bounds.bottom + 1,
+          separated:
+            titleBounds.bottom <= via.top + 1 &&
+            (!rows[i + 1] ||
+              bounds.bottom <= rows[i + 1].getBoundingClientRect().top + 1),
+        };
+      });
+    });
+    expect(layout.some((row) => row.twoLines)).toBe(true);
+    expect(layout.every((row) => row.contained && row.separated)).toBe(true);
+    expect(layout.every((row) => row.height >= 44)).toBe(true);
+
+    const last = entries.at(-1)!;
+    const lastButton = list.getByRole("button", {
+      name: `${last.title} 출처 보기`,
+      exact: true,
+    });
+    await lastButton.scrollIntoViewIfNeeded();
+    expect(await list.evaluate((element) => element.scrollTop)).toBeGreaterThan(
+      0,
+    );
+    await lastButton.click();
+    await expect(
+      page.locator(".source-panel:visible, .source-mobile:visible"),
+    ).toContainText(last.title);
+  });
+}

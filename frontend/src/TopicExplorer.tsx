@@ -90,6 +90,7 @@ export default function TopicExplorer({
         ref={trigger}
         className="topic-explorer-toggle"
         variant="ghost"
+        size="sm"
         width="100%"
         label="주제로 살펴보기"
         icon={<Network />}
@@ -99,7 +100,7 @@ export default function TopicExplorer({
         onClick={() => setOpen(!open)}
       />
       {open && (
-        <VStack id={contentId} className="topic-explorer-content" gap={3}>
+        <VStack id={contentId} className="topic-explorer-content" gap={2}>
           {selected ? (
             <>
               <Button
@@ -136,6 +137,7 @@ export default function TopicExplorer({
                     key={record.id}
                     className="topic-record-open"
                     variant="ghost"
+                    size="sm"
                     width="100%"
                     label={`${record.label} 출처 보기`}
                     onClick={() => onSource(record.source)}
@@ -144,6 +146,8 @@ export default function TopicExplorer({
                       type="inherit"
                       color="inherit"
                       className="topic-record-title"
+                      maxLines={2}
+                      hasTruncateTooltip={false}
                     >
                       {record.label}
                     </Text>
@@ -151,6 +155,7 @@ export default function TopicExplorer({
                       type="inherit"
                       color="inherit"
                       className="topic-record-via"
+                      display="block"
                     >
                       {record.via === "both"
                         ? "기록과 세부 항목의 주제"
@@ -167,6 +172,7 @@ export default function TopicExplorer({
                 )}
               </VStack>
               <Button
+                className="topic-browse"
                 variant="secondary"
                 size="sm"
                 label="이 주제의 모든 기록"
@@ -201,6 +207,7 @@ export default function TopicExplorer({
                     key={group.node.id}
                     className="topic-choice"
                     variant="ghost"
+                    size="sm"
                     width="100%"
                     label={`${group.node.label || group.node.name || "주제"}, 연결 기록 ${group.records.length}개`}
                     onClick={() => onSelect(group.node.id)}
