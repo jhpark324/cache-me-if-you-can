@@ -263,12 +263,13 @@ test("아티클 재검토는 선택한 원문 구간만 해당 인용 번호에 
       { kind: "record", source: retained },
       external,
       { kind: "record", source: outdated },
+      { kind: "record", source: retained },
     ],
   };
   const currentArticle = Object.assign(records.get(currentId)!, {
     article,
     body_markdown:
-      "근거 [1](#cite-1), 원문 [2](#cite-2), 이전 근거 [3](#cite-3)",
+      "근거 [1](#cite-1), 원문 [2](#cite-2), 이전 근거 [3](#cite-3), 같은 구간의 다른 설명 [4](#cite-4)",
     sources: [
       {
         source: outdated,
@@ -309,17 +310,19 @@ test("아티클 재검토는 선택한 원문 구간만 해당 인용 번호에 
     .fill("현재 원문 구간으로 교체했습니다.");
   const save = page.getByRole("button", { name: "재검토 저장", exact: true });
   await expect(save).toBeDisabled();
-  await page
-    .getByRole("button", { name: "인용 [3] 교체", exact: true })
-    .click();
-  const pickerLabel = "인용 [3]에 사용할 기록";
-  const picker = page.getByRole("group", { name: pickerLabel });
-  await picker.getByLabel(pickerLabel + " 기록 찾기").fill(other.title);
-  await picker
-    .getByRole("button", { name: new RegExp("^" + other.title) })
-    .click();
-  await picker.getByLabel(pickerLabel + " 사용할 내용").selectOption("span");
-  await span(page, pickerLabel, 3, 6);
+  for (const number of [3, 4]) {
+    await page
+      .getByRole("button", { name: `인용 [${number}] 교체`, exact: true })
+      .click();
+    const pickerLabel = `인용 [${number}]에 사용할 기록`;
+    const picker = page.getByRole("group", { name: pickerLabel });
+    await picker.getByLabel(pickerLabel + " 기록 찾기").fill(other.title);
+    await picker
+      .getByRole("button", { name: new RegExp("^" + other.title) })
+      .click();
+    await picker.getByLabel(pickerLabel + " 사용할 내용").selectOption("span");
+    await span(page, pickerLabel, 3, 6);
+  }
   const request = page.waitForRequest((r) =>
     r.url().endsWith("/source-review"),
   );
@@ -331,6 +334,7 @@ test("아티클 재검토는 선택한 원문 구간만 해당 인용 번호에 
     citations: [
       { kind: "record", source: retained },
       external,
+      { kind: "record", source: replacement },
       { kind: "record", source: replacement },
     ],
   });

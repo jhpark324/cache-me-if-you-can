@@ -40,19 +40,24 @@ export function SourceReview({
   const [body, setBody] = useState(record.body_markdown),
     [reason, setReason] = useState(""),
     [sources, setSources] = useState(() =>
-      record.sources.map((s, i) => ({
-        ref: s.source,
-        title: `기존 출처 ${i + 1}`,
-        needsReview: s.review_state === "needs_review",
-        // Provenance order is independent of the numbered article citations.
-        citationNumbers: (record.article?.citations ?? []).flatMap(
-          (citation, index) =>
-            citation.kind === "record" &&
-            sourceKey(citation.source) === sourceKey(s.source)
-              ? [index + 1]
-              : [],
-        ),
-      })),
+      record.sources.flatMap((s, i) => {
+        // A provenance entry can back multiple independently editable citations.
+        const numbers: (number | null)[] = (
+          record.article?.citations ?? []
+        ).flatMap((citation, index) =>
+          citation.kind === "record" &&
+          sourceKey(citation.source) === sourceKey(s.source)
+            ? [index + 1]
+            : [],
+        );
+        if (numbers.length === 0) numbers.push(null);
+        return numbers.map((citationNumber) => ({
+          ref: s.source,
+          title: `기존 출처 ${i + 1}`,
+          needsReview: s.review_state === "needs_review",
+          citationNumber,
+        }));
+      }),
     ),
     [replacingNumber, setReplacingNumber] = useState<number | null>(null),
     [query, setQuery] = useState(""),
@@ -132,7 +137,7 @@ export function SourceReview({
               ref,
               title: candidate.title || "제목 없는 기록",
               needsReview: false,
-              citationNumbers: [],
+              citationNumber: null,
             },
           ],
     );
@@ -142,7 +147,7 @@ export function SourceReview({
     if (!picked || replacingNumber === null) return;
     setSources((prev) =>
       prev.map((item) =>
-        item.citationNumbers.includes(replacingNumber)
+        item.citationNumber === replacingNumber
           ? {
               ...item,
               ref: picked.source,
@@ -164,8 +169,11 @@ export function SourceReview({
     };
     if (article) {
       for (const item of sources) {
-        for (const number of item.citationNumbers) {
-          article.citations[number - 1] = { kind: "record", source: item.ref };
+        if (item.citationNumber !== null) {
+          article.citations[item.citationNumber - 1] = {
+            kind: "record",
+            source: item.ref,
+          };
         }
       }
     }
@@ -173,7 +181,9 @@ export function SourceReview({
       capture_id: record.id,
       expected_revision_id: record.revision_id,
       expected_state_version: record.state_version,
-      replacement_sources: sources.map((s) => s.ref),
+      replacement_sources: [
+        ...new Map(sources.map(({ ref }) => [sourceKey(ref), ref])).values(),
+      ],
       review_reason: reason.trim(),
       body_markdown: body,
       ...(article ? { article } : {}),
@@ -237,19 +247,24 @@ export function SourceReview({
         )}
         <VStack className="review-source-list" gap={2}>
           {sources.map((source, index) => {
-            const numbers = source.citationNumbers
-              .map((number) => `[${number}]`)
-              .join(", ");
+            const numberLabel =
+              source.citationNumber === null
+                ? ""
+                : `[${source.citationNumber}]`;
             return (
               <HStack
                 className="review-source-row"
-                key={numbers || sourceKey(source.ref)}
+                key={numberLabel || sourceKey(source.ref)}
                 gap={2}
                 hAlign="between"
                 vAlign="center"
               >
                 <Button
-                  label={numbers ? `${numbers} ${source.title}` : source.title}
+                  label={
+                    numberLabel
+                      ? `${numberLabel} ${source.title}`
+                      : source.title
+                  }
                   type="button"
                   variant="ghost"
                   className="text-button"
@@ -259,14 +274,12 @@ export function SourceReview({
                 {record.article && source.needsReview && (
                   <Text type="supporting">교체 필요</Text>
                 )}
-                {numbers ? (
+                {numberLabel ? (
                   <Button
                     type="button"
                     variant="secondary"
-                    label={`인용 ${numbers} 교체`}
-                    onClick={() =>
-                      setReplacingNumber(source.citationNumbers[0])
-                    }
+                    label={`인용 ${numberLabel} 교체`}
+                    onClick={() => setReplacingNumber(source.citationNumber)}
                   />
                 ) : (
                   <IconButton
