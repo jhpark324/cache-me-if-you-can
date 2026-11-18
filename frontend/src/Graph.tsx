@@ -22,6 +22,52 @@ type GraphNode = NodeObject & GraphData["nodes"][number];
 type GraphLink = LinkObject<GraphNode> &
   Omit<GraphData["edges"][number], "source" | "target">;
 type GraphPalette = ReturnType<typeof readGraphPalette>;
+
+const clickSlop = 4;
+type PointerPosition = Pick<PointerEvent, "clientX" | "clientY">;
+
+function movedForDrag(start: PointerPosition, current: PointerPosition) {
+  return (
+    Math.hypot(
+      current.clientX - start.clientX,
+      current.clientY - start.clientY,
+    ) > clickSlop
+  );
+}
+
+function preserveCanvasClicks(host: HTMLElement, canvas: HTMLCanvasElement) {
+  let press: PointerEvent | null = null;
+  function start(event: PointerEvent) {
+    if (
+      event.target === canvas &&
+      event.isPrimary &&
+      event.pointerType === "mouse" &&
+      event.button === 0
+    )
+      press = event;
+  }
+  function move(event: PointerEvent) {
+    if (!press || event.pointerId !== press.pointerId) return;
+    // The graph treats the first held mouse move as a drag, even on a click.
+    if (event.buttons === 1 && !movedForDrag(press, event))
+      event.stopPropagation();
+    else press = null;
+  }
+  function end(event: PointerEvent) {
+    if (event.pointerId === press?.pointerId) press = null;
+  }
+  host.addEventListener("pointerdown", start, true);
+  host.addEventListener("pointermove", move, true);
+  host.addEventListener("pointerup", end, true);
+  host.addEventListener("pointercancel", end, true);
+  return () => {
+    host.removeEventListener("pointerdown", start, true);
+    host.removeEventListener("pointermove", move, true);
+    host.removeEventListener("pointerup", end, true);
+    host.removeEventListener("pointercancel", end, true);
+  };
+}
+
 function readGraphPalette(element: HTMLElement) {
   const probe = document.createElement("span");
   element.append(probe);
@@ -143,6 +189,13 @@ export default function Graph({
     focusedTopic?.node.id === selection.current ? focusedTopic : null;
   const palette = useRef<GraphPalette | null>(null);
   const labelElements = useRef(new Map<string, HTMLSpanElement>());
+  const labelPress = useRef<
+    (PointerPosition & { id: string; pointerId: number }) | null
+  >(null);
+  function cancelLabelPress(event: { pointerId: number }) {
+    if (labelPress.current?.pointerId === event.pointerId)
+      labelPress.current = null;
+  }
   const hovered = useRef<string | null>(null);
   const actions = useRef({ onSource, onConcept, onPreview });
   actions.current = { onSource, onConcept, onPreview };
@@ -269,7 +322,7 @@ export default function Graph({
                   ? 1.5
                   : 0.8,
           )
-          .nodeRelSize(2.3)
+          .nodeRelSize(3.4)
           .nodeOpacity(0.95)
           .linkColor(() => translucent(palette.current!.secondary, 0.5))
           .linkWidth(0.65)
@@ -543,6 +596,7 @@ export default function Graph({
               const related =
                 topicSelection.current?.nodeIds.has(node.id) ?? false;
               const dimmed = Boolean(topicSelection.current && !related);
+              label.dataset.positioned = String(Boolean(placement));
               label.style.opacity = placement ? (dimmed ? "0.22" : "1") : "0";
               label.style.transform = `translate3d(${x}px,${y}px,0)`;
               label.dataset.highlighted = String(node.id === hovered.current);
@@ -585,6 +639,8 @@ export default function Graph({
           if (active) setFailed(true);
         };
         const canvas = el.querySelector("canvas");
+        const detachCanvasClickSlop =
+          canvas && preserveCanvasClicks(el, canvas);
         canvas?.addEventListener("webglcontextlost", contextLost);
         destroy = () => {
           cancelAnimationFrame(frame);
@@ -595,6 +651,7 @@ export default function Graph({
           if (syncActivity.current === updateActivity)
             syncActivity.current = null;
           canvas?.removeEventListener("webglcontextlost", contextLost);
+          detachCanvasClickSlop?.();
           graph._destructor();
           if (instance.current === graph) {
             instance.current = null;
@@ -686,6 +743,8 @@ export default function Graph({
     >
       <VStack ref={host} className="graph-canvas" aria-hidden="true" />
       {!failed && (
+        // The connected list provides the same actions without depending on
+        // the current visibility of the labels or the use of a pointer.
         <VStack className="graph-label-layer" aria-hidden="true">
           {data.nodes.map((node) => (
             <Text
@@ -698,6 +757,33 @@ export default function Graph({
               data-cited={
                 node.cited === undefined ? undefined : String(node.cited)
               }
+              onPointerDown={(event) => {
+                if (!event.isPrimary || event.button !== 0) return;
+                labelPress.current = {
+                  id: node.id,
+                  pointerId: event.pointerId,
+                  clientX: event.clientX,
+                  clientY: event.clientY,
+                };
+              }}
+              onPointerMove={(event) => {
+                const press = labelPress.current;
+                if (press && movedForDrag(press, event))
+                  cancelLabelPress(event);
+              }}
+              onPointerUp={(event) => {
+                const press = labelPress.current;
+                if (press?.pointerId !== event.pointerId) return;
+                labelPress.current = null;
+                if (
+                  press.id === node.id &&
+                  event.currentTarget.dataset.positioned === "true" &&
+                  !movedForDrag(press, event)
+                )
+                  activate(node);
+              }}
+              onPointerCancel={cancelLabelPress}
+              onPointerLeave={cancelLabelPress}
               ref={(el) => {
                 if (el) labelElements.current.set(node.id, el);
                 else labelElements.current.delete(node.id);
