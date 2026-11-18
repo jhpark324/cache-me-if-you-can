@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko" data-astryx-theme="cache-me" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="두 가지 TCP·UDP 요청을 바꿔 보며 Codex가 스킬을 읽고 MCP로 개인 서재에 기록과 아티클을 등록하는 과정을 살펴보세요.">
+  <title>스킬과 MCP · 캐시미 기능 가이드</title>
+  <link rel="stylesheet" href="astryx.css"><link rel="stylesheet" href="guide.css"><link rel="stylesheet" href="skills.css">
+</head>
+<body>
+  <a class="g-skip" href="#main">본문으로 건너뛰기</a>
+  <header class="g-header"><nav class="g-wrap g-nav" aria-label="심화 가이드">
+    <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
+    <a class="g-map-link" href="guide.html#map">가이드 목차 <span aria-hidden="true">☰</span></a>
+    <div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-skills.html" aria-current="page">스킬·MCP</a><a href="guide-features.html">기능</a><a href="guide-engine.html">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
+  </nav></header>
+  <main id="main" class="g-wrap g-main s-main">
+    <header class="g-intro s-intro">
+      <p class="g-kicker">기능 가이드 / Codex</p>
+      <h1 data-ax="Heading">스킬과 MCP</h1>
+      <p data-ax="Text" class="g-lead">스킬은 Codex가 읽는 작업 지침입니다. MCP는 내 서재의 도구를 호출하는 규약입니다.</p>
+    </header>
+
+    <section class="s-explorer" id="requests" aria-label="Codex 요청별 저장 과정">
+      <fieldset class="s-choices">
+        <legend>어떤 요청을 해 볼까요?</legend>
+        <div class="s-picks">
+          <label><input type="radio" name="request" id="choose-records" aria-controls="record-route" checked><span>기록 남기기</span></label>
+          <label><input type="radio" name="request" id="choose-article" aria-controls="article-route"><span>아티클 쓰기</span></label>
+        </div>
+      </fieldset>
+      <article id="record-route" class="s-route" aria-labelledby="record-request">
+        <header class="s-prompt"><p>내가 Codex에 하는 말</p><h2 id="record-request" data-ax="Heading">“방금 배운 TCP와 UDP, 각각 캐시미 해줘.”</h2></header>
+        <div class="s-run">
+          <ol class="s-steps" aria-label="기록 저장 과정">
+            <li><span class="s-who">Codex가 읽는 스킬</span><strong><code>cache-me</code></strong><p>나중에 따로 찾도록 TCP와 UDP를 각각 정리합니다.</p></li>
+            <li class="s-bridge"><span>MCP</span> 도구 호출</li>
+            <li><span class="s-who">내 로컬 서버가 실행하는 도구</span><strong><code>capture_create</code></strong><p>두 기록의 제목과 본문을 한 건씩 저장합니다.</p></li>
+          </ol>
+          <figure class="s-outcome"><figcaption><span class="s-who">웹 서재에서 보는 결과</span><strong>모든 기록에 두 건</strong></figcaption>
+            <img src="media/story-records.jpg" decoding="async" width="1440" height="810" alt="모든 기록에 ‘TCP는 순서를 어떻게 지킬까?’와 ‘UDP는 무엇을 보장할까?’가 별도 행으로 표시된 실제 화면">
+            <p>주제가 연결되면 지식 공간에서도 두 기록을 찾을 수 있습니다.</p>
+          </figure>
+        </div>
+      </article>
+      <article id="article-route" class="s-route" aria-labelledby="article-request">
+        <header class="s-prompt"><p>내가 Codex에 하는 말</p><h2 id="article-request" data-ax="Heading">“그 두 기록으로 TCP와 UDP 비교 아티클을 써줘.”</h2></header>
+        <div class="s-run">
+          <ol class="s-steps" aria-label="아티클 등록 과정">
+            <li><span class="s-who">Codex가 읽는 스킬</span><strong><code>cache-me-article</code></strong><p>관련 기록을 읽고 비교표와 출처가 있는 글을 씁니다.</p></li>
+            <li class="s-bridge"><span>MCP</span> 도구 호출</li>
+            <li><span class="s-who">내 로컬 서버가 실행하는 도구</span><strong><code>article_create</code></strong><p>완성한 글과 인용을 아티클 한 편으로 등록합니다.</p></li>
+          </ol>
+          <figure class="s-outcome"><figcaption><span class="s-who">웹 서재에서 보는 결과</span><strong>아티클에 글 한 편</strong></figcaption>
+            <img src="media/story-article.jpg" loading="lazy" decoding="async" width="1440" height="810" alt="‘TCP와 UDP, 언제 무엇을 쓸까?’ 아티클의 비교표 옆에 인용한 UDP 기록이 열린 실제 화면">
+            <p>Codex가 돌려준 글 링크를 열면, 읽던 자리에서 인용을 펼칠 수 있습니다.</p>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <div class="s-more">
+      <section class="g-section" id="map">
+        <h2 data-ax="Heading">두 경로 한눈에 보기</h2>
+        <figure class="s-map"><img src="media/diagrams/skill-to-library.svg" width="484" height="526" loading="lazy" alt="기록 요청은 cache-me 스킬과 capture_create를 거쳐 모든 기록으로, 글 요청은 cache-me-article 스킬과 article_create를 거쳐 아티클로 이어지는 흐름도"></figure>
+        <a class="s-download" href="media/diagrams/skill-to-library.excalidraw" download>편집 가능한 도식 내려받기</a>
+      </section>
+      <section class="g-section" id="followup">
+        <h2 data-ax="Heading">이미 저장한 뒤에는?</h2>
+        <details class="g-details"><summary>“그때 UDP에 대해 뭐라고 적었지?”</summary><p><code>cache-me</code>가 <code>knowledge_search</code>로 후보를 찾습니다. <code>source_get</code>으로 당시 저장한 본문 구간을 읽고 그 근거로 답합니다.</p></details>
+        <details class="g-details"><summary>“재전송 설명이 틀렸어. 고쳐줘.”</summary><p>원자료를 고치려면 기록을 읽고 <code>capture_update</code>를 호출합니다. 발행한 글을 고치려면 아티클 링크로 현재 버전을 읽고 <code>article_update</code>로 새 버전을 등록합니다.</p></details>
+        <details class="g-details"><summary>“아티클은 초안만 먼저 보여줘.”</summary><p>Codex가 기록을 읽고 대화에 초안을 보여 줍니다. 이때 <code>article_create</code>는 호출하지 않습니다. 글 등록을 요청하면 아티클 페이지의 링크를 받을 수 있습니다.</p></details>
+        <details class="g-details"><summary>저장한 기록만으로 설명이 부족하면?</summary><p>아티클 스킬은 공식 문서나 논문을 찾아 설명과 예시를 보강합니다. 글 안에서 기록 인용은 그때의 저장본을, 외부 원문 인용은 제목과 참고 요지를 보여 줍니다.</p></details>
+        <nav class="s-next" aria-label="더 살펴보기"><a href="guide-features.html#graph">기록이 주제로 연결되는 과정</a><a href="guide-system.html#tools">MCP 도구와 웹 API의 역할</a><a href="guide-engine.html#retrieval">질문에 맞는 구간을 찾는 방법</a></nav>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

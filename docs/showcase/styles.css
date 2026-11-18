@@ -42,40 +42,69 @@ img,video {display:block; max-width:100%}
 .github:hover,.viewer-toolbar button:hover,.pager button:not(:disabled):hover {background:var(--card)}
 #main {min-height:calc(100svh - 10.3rem)}
 #main:focus {outline:none}
-.book-heading {padding-block:clamp(2.4rem,5.4vw,4.7rem) 1.65rem; display:flex; align-items:flex-end; gap:2rem; justify-content:space-between}
-.book-heading h1,.book-heading h2 {font-size:clamp(2.15rem,4.5vw,4rem); line-height:1.12; font-weight:800; letter-spacing:-.075em}
+.book-heading {padding-block:clamp(1.65rem,3vw,2.7rem) 1.35rem; display:flex; align-items:flex-end; gap:2rem; justify-content:space-between}
+.book-heading h1,.book-heading h2 {font-size:clamp(1.85rem,3vw,2.8rem); line-height:1.12; font-weight:800; letter-spacing:-.075em}
 .book-heading p {max-width:23.5rem; color:var(--muted); font-size:1.02rem; line-height:1.65; letter-spacing:-.026em}
-.story-rail {display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.4rem; margin:0 0 1.2rem}
+.story-rail {display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.4rem; margin:0 0 1.1rem}
 .story-rail a {position:relative; display:flex; align-items:center; min-height:2.85rem; padding-block:.22rem .55rem; gap:.5rem; border-bottom:2px solid var(--rule); color:var(--muted); font-weight:650; font-size:.93rem}
-.story-rail a span {font:500 .78rem var(--mono)}
+
 .story-rail a[aria-current],.story-rail a:hover {color:var(--accent); border-color:var(--accent)}
 .book-pages {border:1px solid var(--rule); border-radius:1.55rem; background:var(--surface); overflow:hidden}
-.chapter {display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr); align-items:center; gap:clamp(1.7rem,4.5vw,4.25rem); padding:clamp(1.5rem,3.7vw,3.3rem); min-height:26rem; scroll-margin-top:1rem}
+.chapter {display:grid; grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr); align-items:center; gap:clamp(1.4rem,3.5vw,3.2rem); padding:clamp(1.15rem,2.8vw,2.3rem); min-height:23rem; scroll-margin-top:1rem}
 body:not(.enhanced) .chapter + .chapter {border-top:1px solid var(--rule)}
-.chapter:not(:first-child) {grid-template-columns:minmax(0,.7fr) minmax(0,1.3fr)}
+
 .scene-label {color:var(--accent); font-size:.86rem; font-weight:650; letter-spacing:.015em; margin-bottom:1rem}
-.chapter h2 {font-size:clamp(2.15rem,4.1vw,3.85rem); font-weight:780; letter-spacing:-.078em; line-height:1.16}
+.chapter h2 {font-size:clamp(1.85rem,3.15vw,2.75rem); font-weight:780; letter-spacing:-.078em; line-height:1.16}
 .chapter-intro {margin-block:.95rem 1.25rem; line-height:1.7; font-size:1rem; letter-spacing:-.027em; color:var(--muted); max-width:27rem}
 .advance {display:inline-flex; min-height:3rem; align-items:center; gap:.5rem; border:0; padding:.72rem 1.15rem; border-radius:.72rem; font-weight:750; background:var(--accent); color:var(--on-accent)}
 .advance:hover {background:color-mix(in srgb,var(--accent) 88%,white)}
 .advance .astryx-icon {color:inherit}
-#story .advance {margin-top:1rem}
-.conversation {border:1px solid var(--rule); border-radius:1.05rem; background:var(--page); padding:1.05rem 1.15rem 1.2rem; display:flex; flex-direction:column; gap:.7rem; position:relative}
-.conversation-title {display:flex; gap:.55rem; align-items:center; min-height:1.65rem; color:var(--muted); padding-bottom:.75rem; border-bottom:1px solid var(--rule); font-size:.86rem}
+.story-heading {padding-block:1.5rem .35rem; display:flex; justify-content:space-between; align-items:baseline; gap:1rem}
+.story-heading h1 {font-size:clamp(1.13rem,1.8vw,1.55rem); font-weight:720; letter-spacing:-.04em}
+.chapter.opening {display:block; padding:clamp(1.05rem,2.7vw,2.25rem); min-height:0}
+.opening-bar {display:flex; align-items:center; gap:.5rem; padding-bottom:.85rem; border-bottom:1px solid var(--rule); font-size:.86rem; font-weight:650; color:var(--muted)}
 .chat-mark {font:700 1.8rem/.55 Georgia,serif; color:var(--accent); transform:translateY(.18rem)}
-.bubble {max-width:88%; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:baseline; gap:.55rem; padding:.58rem .76rem; color:var(--ink); border:1px solid var(--rule); border-radius:.8rem; letter-spacing:-.035em; font-size:.97rem; line-height:1.55}
-.bubble > span {font:700 .73rem var(--mono); color:var(--accent)}
-.bubble.learner {align-self:flex-end; background:var(--burnt); border-color:color-mix(in srgb,var(--accent) 40%,var(--page)); border-bottom-right-radius:.14rem}
-.bubble.tutor {align-self:flex-start; background:var(--card); border-bottom-left-radius:.14rem}
-.bubble.tutor > span {color:var(--muted)}
-.packet-strip,.wave-strip {grid-column:2; display:flex; align-items:center; gap:.23rem; color:var(--accent); min-height:1.3rem}
-.packet-strip i {font:650 .69rem var(--mono); border-radius:.2rem; border:1px solid var(--accent); padding:.07rem .22rem}
-.packet-strip i.missing {border-style:dashed; color:var(--muted); border-color:var(--muted)}
-.packet-strip small,.wave-strip small {font-size:.72rem; color:var(--muted); margin-inline:.12rem; white-space:nowrap}
-.wave-strip i {width:.2rem; height:.7rem; border-radius:1rem; background:var(--accent)}
-.wave-strip i:nth-child(3n) {height:1.08rem}
-.wave-strip i:nth-child(3n+1) {height:.4rem}
-.wave-strip b {width:.8rem; border-bottom:1px dashed var(--muted)}
+.chat-pair {display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); align-items:center; gap:clamp(1.4rem,5vw,5rem); padding-block:1.4rem}
+.transcript {display:grid; gap:1rem}
+.utterance {display:grid; grid-template-columns:2.1rem minmax(0,1fr); align-items:start; gap:.7rem}
+.speaker {display:inline-grid; place-items:center; width:2rem; height:2rem; border-radius:.55rem; background:var(--card); border:1px solid var(--rule); color:var(--muted); font:700 .8rem var(--mono)}
+.learner .speaker,.udp-turn summary .speaker {color:var(--accent); background:var(--burnt); border-color:var(--burnt)}
+.utterance h2 {font-size:clamp(1.55rem,3.1vw,2.65rem); line-height:1.22; align-self:center; letter-spacing:-.055em}
+.utterance p {font-size:1.025rem; line-height:1.7; letter-spacing:-.024em; color:var(--muted)}
+.utterance p strong {color:var(--ink)}
+.packet-diagram,.audio-diagram {background:var(--page); border:1px solid var(--rule); border-radius:.85rem; padding:clamp(.85rem,2vw,1.35rem)}
+.packet-diagram figcaption,.audio-diagram figcaption {font-size:.86rem; font-weight:700; color:var(--muted); margin-bottom:.65rem}
+.packet-row {display:grid; grid-template-columns:minmax(4.4rem,1fr) repeat(3,minmax(2.4rem,1fr)); align-items:center; gap:.35rem; margin-top:.35rem}
+.packet-row > span,.audio-diagram small {color:var(--muted); font-size:.85rem}
+.packet-row b {display:grid; place-items:center; padding:.25rem .1rem; border-radius:.3rem; border:1px solid var(--rule); color:var(--ink); font:650 .95rem var(--mono)}
+.packet-row .gap-packet {border-style:dashed; font:500 .82rem var(--font-family-body,system-ui); color:var(--muted)}
+.packet-row .recovered {border-color:var(--accent); background:var(--burnt); color:var(--accent)}
+.udp-turn summary {cursor:pointer; list-style:none; display:flex; align-items:center; gap:.75rem; min-height:3.25rem; color:var(--ink); padding:.6rem .8rem; border:1px solid var(--rule); border-radius:.68rem; background:var(--card)}
+.udp-turn summary::-webkit-details-marker {display:none}
+.udp-turn summary strong {font-size:1.03rem; letter-spacing:-.03em}
+.udp-turn summary:hover {border-color:var(--accent)}
+.reveal-hint {margin-left:auto; color:var(--accent); font-size:.86rem; font-weight:650}
+.turn-chevron {font-size:1rem; color:var(--accent)}
+.udp-turn[open] .turn-chevron {transform:rotate(180deg)}
+.wave-strip {display:flex; align-items:center; gap:.35rem; color:var(--accent); min-height:2.5rem}
+.wave-strip i {width:.3rem; height:1.2rem; border-radius:1rem; background:var(--accent)}
+.wave-strip i:nth-child(3n) {height:1.8rem}
+.wave-strip i:nth-child(3n+1) {height:.65rem}
+.wave-strip b {width:1.6rem; border-bottom:1px dashed var(--muted)}
+.save-turn {display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; border-top:1px solid var(--rule); padding-top:1rem}
+.save-turn .utterance {align-items:center}
+.save-turn .utterance p {color:var(--ink)}
+.skill-trace {position:relative; display:grid; gap:.42rem; margin:.85rem 0 1rem; padding-left:.75rem; border-left:2px solid var(--accent)}
+.skill-trace > span {display:flex; align-items:baseline; flex-wrap:wrap; gap:.26rem .65rem; color:var(--muted); font-size:.88rem}
+.skill-trace code {font:.85rem var(--mono); color:var(--ink); overflow-wrap:anywhere}
+.skill-trace a {display:inline-flex; align-items:center; width:fit-content; min-height:2.75rem; color:var(--accent); text-decoration:underline; text-underline-offset:.23em; font-size:.9rem}
+.search-evidence {display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:.35rem 0 1rem; gap:.45rem}
+.search-evidence > div {border-left:2px solid var(--rule); padding-left:.55rem}
+.search-evidence > div:last-child {border-color:var(--accent)}
+.search-evidence dt {font:650 .86rem var(--mono); color:var(--ink)}
+.search-evidence dd {margin:.22rem 0 0; font-size:.88rem; color:var(--muted)}
+.search-evidence b {color:var(--accent)}
+.search-query {margin:.6rem 0; padding:.7rem .8rem; border:1px solid var(--rule); border-radius:.6rem; color:var(--ink); font-size:.96rem; line-height:1.5}
 .request {margin-block:.9rem 0; color:var(--ink); font-size:1.02rem; font-weight:600; line-height:1.6}
 .record-titles {padding:0; margin:-.45rem 0 1rem; list-style:none; display:grid; gap:.25rem; font-size:.89rem; color:var(--ink)}
 .record-titles li::before {content:"▤"; color:var(--accent); margin-right:.5rem}
@@ -86,7 +115,8 @@ body:not(.enhanced) .chapter + .chapter {border-top:1px solid var(--rule)}
 .story-media,.film-screen {border:1px solid var(--rule); border-radius:.8rem; overflow:hidden; background:var(--page); min-width:0}
 .story-media > img,.story-media noscript img,.film-screen video {width:100%; height:auto; aspect-ratio:16/9; object-fit:contain; background:var(--page)}
 .story-media figcaption,.film-screen figcaption {display:flex; gap:.45rem; align-items:center; justify-content:space-between; color:var(--muted); font-size:.875rem; line-height:1.4; border-top:1px solid var(--rule); padding:.35rem .6rem .35rem .8rem}
-.media-tools {display:flex; gap:.25rem}
+.media-tools {display:flex; flex:none; gap:.25rem; margin-left:auto}
+.media-tools button {white-space:nowrap}
 .media-tools button,.film-expand,.viewer-toolbar button,.pager button {min-height:2.75rem; min-width:2.75rem; border:1px solid var(--rule); border-radius:.55rem; padding:.42rem .68rem; background:transparent; color:var(--ink); font:650 .85rem/1.25 var(--font-family-body,system-ui)}
 .media-tools button,.film-expand {border-color:transparent}
 .media-tools button:hover,.film-expand:hover {background:var(--card)}
@@ -133,20 +163,34 @@ body:has(dialog[open]) {overflow:hidden}
   .book-heading p {margin-top:.45rem; font-size:.94rem; line-height:1.55; max-width:31rem}
   .story-rail {margin-bottom:.7rem; gap:.23rem}
   .story-rail a {font-size:.86rem; gap:.3rem}
-  .story-rail a span {font-size:.7rem}
+  .story-heading {display:block; padding-block:.65rem .05rem}
   .book-pages {border-radius:1rem}
-  .chapter,.chapter:not(:first-child) {grid-template-columns:1fr; gap:1.1rem; padding:1.15rem; min-height:0}
+  .chapter {grid-template-columns:1fr; gap:1.1rem; padding:1.15rem; min-height:0}
   .scene-label {margin-bottom:.45rem; font-size:.8rem}
   .chapter h2 {font-size:clamp(1.75rem,6vw,2.45rem)}
   .chapter h2 br {display:none}
   .chapter-intro {margin:.55rem 0 .75rem; font-size:.94rem; line-height:1.58}
   .record-titles,.topic-map {margin-block:.25rem .7rem}
-  .conversation {padding:.72rem; gap:.5rem}
-  .conversation-title {padding-bottom:.45rem}
-  .bubble {max-width:94%; font-size:.91rem; padding:.45rem .55rem; gap:.4rem}
+  .chapter.opening {padding:.85rem}
+  .opening-bar {padding-bottom:.55rem}
+  .chat-pair {grid-template-columns:1fr; gap:.7rem; padding-block:.75rem}
+  .transcript {gap:.66rem}
+  .utterance {grid-template-columns:1.7rem minmax(0,1fr); gap:.45rem}
+  .speaker {width:1.65rem; height:1.65rem; font-size:.74rem}
+  .utterance h2 {font-size:1.5rem}
+  .utterance p {font-size:.94rem; line-height:1.6}
+  .packet-diagram,.audio-diagram {padding:.55rem .7rem}
+  .packet-diagram figcaption,.audio-diagram figcaption {margin-bottom:.25rem}
+  .packet-row {margin-top:.22rem}
+  .packet-row b {padding:.15rem .05rem}
+  .udp-turn summary {gap:.5rem; padding:.45rem .55rem}
+  .save-turn {background:var(--surface); margin-top:.1rem}
+  .save-turn .advance {margin-left:2.15rem}
   .chapter:has(.story-media) {padding-bottom:.65rem}
+  .film-nav a {padding:.4rem .55rem; flex:1; min-width:2.75rem; font-size:.86rem}
   .story-media {margin-inline:-.6rem}
-  .story-media figcaption {padding:.15rem .35rem .15rem .55rem}
+  .story-media figcaption {padding:.15rem .35rem .15rem .55rem; flex-wrap:wrap}
+  .story-media figcaption > span:first-child {flex:1 1 8.5rem}
   .pager {margin-top:.55rem; justify-content:space-between}
   .film-panel {grid-template-columns:1fr; padding:.85rem; gap:.8rem}
   .film-copy p {margin-top:.4rem; font-size:.95rem}
@@ -156,7 +200,10 @@ body:has(dialog[open]) {overflow:hidden}
 }
 @media(max-width:22rem) {
   .wrap {width:calc(100% - 1.35rem)}
-  .chapter,.chapter:not(:first-child) {padding:.86rem}
+  .chapter {padding:.86rem}
+  .opening-bar {padding-bottom:.35rem}
+  .chat-pair {padding-block:.55rem; gap:.5rem}
+  .story-rail {margin-bottom:.45rem}
   .scene-label {margin-bottom:.3rem}
   .story-media figcaption {flex-wrap:wrap}
 }
