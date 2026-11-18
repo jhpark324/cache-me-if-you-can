@@ -1,6 +1,6 @@
 # 로컬 설치·실행
 
-**Cache Me If You Can**은 로컬 기록 저장소와 웹 화면을 제공한다. 기록 관리 스킬과 실행 명령은 **cache-me**, Python 패키지와 MCP 등록 키는 `cache_me`, 서버 표시 이름은 **Cache Me If You Can**이다. 현재 개발 버전은 `0.7.0`이며 [버전 정책](versioning.md)을 따른다.
+**Cache Me If You Can**은 로컬 기록 저장소와 웹 화면을 제공한다. 기록 관리 스킬과 실행 명령은 **cache-me**, Python 패키지와 MCP 등록 키는 `cache_me`, 서버 표시 이름은 **Cache Me If You Can**이다. 현재 제품 버전은 [백엔드 패키지 정보](../../backend/pyproject.toml)의 `version`에 표시하며, 버전 변경은 [버전 정책](versioning.md)을 따른다.
 
 실행을 확인한 환경은 WSL Linux x64, Python 3.12, CPU다. Windows·macOS·Linux 네이티브 지원의 상태와 패키지 제약은 [지원 환경](../architecture/platform-support.md)을 따른다.
 

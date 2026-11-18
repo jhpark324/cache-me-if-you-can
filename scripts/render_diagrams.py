@@ -8,6 +8,12 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+REFERENCE_DOCUMENTS = [
+    ('architecture/data-schema.md', '논리 스키마', ['SQLite의 기록·아티클·버전 관계']),
+    ('architecture/knowledge-layer.md', '지식 계층', ['주제와 기록에서 검색 결과까지']),
+    ('architecture/record-body-format.md', '구현', ['저장 본문에서 MCP·웹 답변까지']),
+    ('architecture/technology-stack.md', '구현', ['로컬 서버의 저장·검색·모델 호출']),
+]
 DOCUMENTS = [
     ('architecture/current-system.md', '구현', ['시스템과 신뢰 경계', '실행 모듈', '정본 데이터 관계', '배포와 실행 데이터']),
     ('architecture/runtime-flows.md', '구현', ['저장과 비동기 처리', '단일 질문과 답변', '수정과 출처 자격', '삭제 확인과 동시성', '로그인과 취소']),
@@ -15,6 +21,7 @@ DOCUMENTS = [
     ('project/evolution-proposals.md', '제품 제안', ['차별화 기능의 연결']),
     ('research/second-brain-comparison-2026-11.md', '구현·조사', ['로컬 저장과 외부 추론']),
     ('architecture/component-boundaries.md', '구현', ['공통 필터 의미', '웹 컴포넌트 경계']),
+    *REFERENCE_DOCUMENTS,
 ]
 CSS = '''@font-face{font-family:SUIT;src:url('../../frontend/public/fonts/SUIT-Variable.woff2')}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#09090b;color:#f4f4f5;font-family:SUIT,sans-serif;line-height:1.6}a{color:#ffac72;text-underline-offset:4px}a:focus-visible{outline:3px solid #ffac72;outline-offset:5px}header{max-width:1320px;margin:auto;padding:56px 28px 24px}h1{font-size:clamp(28px,4vw,48px);margin:0;letter-spacing:-.035em}header p{max-width:780px;color:#c8c8cd}nav{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:24px}nav a{padding:6px 0}main{max-width:1320px;margin:auto;padding:0 28px 64px}section{scroll-margin-top:20px;border-top:1px solid #33333a;padding:30px 0;margin-top:22px}.caption{display:flex;align-items:center;justify-content:space-between;gap:16px}h2{font-size:22px;margin:0}.caption span{font-size:13px;color:#ffac72;white-space:nowrap}section p{margin:8px 0 18px;font-size:14px}.diagram{display:block;background:white;border-radius:12px;padding:20px;overflow:auto}.diagram img{display:block;width:100%;height:auto;min-width:580px}@media(max-width:600px){header{padding-top:30px}main,header{padding-left:16px;padding-right:16px}.caption{align-items:flex-start}h2{font-size:20px}.diagram{padding:12px}}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}@media print{body{background:white;color:black}nav{display:none}section{break-inside:avoid}a{color:#333}.diagram img{min-width:0}}'''
 
@@ -24,6 +31,8 @@ def main():
     parser.add_argument('--mermaid-cli', help='mmdc executable; omit to use existing SVGs')
     parser.add_argument('--puppeteer-config', type=Path)
     parser.add_argument('--mermaid-config', type=Path)
+    parser.add_argument('--source', action='append', choices=[source for source, _, _ in DOCUMENTS],
+                        help='Render only this source; repeat for more. The gallery still includes all diagrams.')
     args = parser.parse_args()
     directory = ROOT / 'docs/architecture/diagrams'
     directory.mkdir(parents=True, exist_ok=True)
@@ -32,11 +41,15 @@ def main():
             document = ROOT / 'docs' / source
             if document.read_text(encoding='utf-8').count('```mermaid') != len(titles):
                 raise SystemExit(f'Diagram list differs from {source}; update DOCUMENTS.')
-            if not args.mermaid_cli:
+            if not args.mermaid_cli or (args.source and source not in args.source):
                 continue
             command = [args.mermaid_cli, '-i', str(document), '-o', str(Path(temporary) / (document.stem + '-rendered.md')),
                        '-a', str(directory), '--no-font-embed', '-j', '1']
-            for option, value in [('-p', args.puppeteer_config), ('-c', args.mermaid_config)]:
+            config = args.mermaid_config
+            if any(source == entry[0] for entry in REFERENCE_DOCUMENTS):
+                config = config or directory / 'reference-theme.json'
+                command += ['-b', '#161618']
+            for option, value in [('-p', args.puppeteer_config), ('-c', config)]:
                 if value:
                     command += [option, str(value.resolve())]
             subprocess.run(command, check=True)
@@ -68,6 +81,8 @@ python scripts/render_diagrams.py --mermaid-cli <mmdc 실행 경로>
 ```
 
 필요하면 `--puppeteer-config`로 Chromium 경로와 실행 인자를, `--mermaid-config`로 테마·글꼴을 지정한다. SVG가 이미 있으면 인자 없이 HTML과 인덱스만 다시 생성한다. 문서에 도식을 추가하면 스크립트의 목록·제목도 갱신한다.
+
+특정 문서만 렌더링하려면 `--source architecture/data-schema.md`처럼 원문 경로를 지정한다. 여러 문서는 `--source`를 반복한다. 자료집에 쓰는 네 도식은 [공통 테마](reference-theme.json)를 사용한다.
 '''
     (directory / 'index.md').write_text(intro + '\n'.join(rows) + '\n' + footer, encoding='utf-8')
     print(f'Created diagram gallery and index: {len(figures)} diagrams.')

@@ -2,11 +2,11 @@
 
 [![저장소 검사](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/repository-ci.yml/badge.svg?branch=main)](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/repository-ci.yml) [![웹 빌드와 브라우저 검사](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/frontend-ci.yml/badge.svg?branch=main)](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/frontend-ci.yml)
 
-**“지난 발표에서 막대그래프를 쓰기로 한 이유, 어느 대화에 있었지?”** 캐시미는 AI와 공부하며 남기고 싶은 지식과 결정의 이유를 내 컴퓨터에 저장합니다. 나중에 내 말로 질문하면 관련 기록을 찾아 답하고, 답변의 출처를 누르면 당시에 적은 문장을 바로 읽을 수 있습니다. 함께 복습할 기록이 모이면 예시와 차트가 있는 아티클로 엮을 수 있습니다.
+**“파일은 한 조각만 빠져도 곤란한데, 통화는 왜 소리가 잠깐 끊겨도 계속될까?”** AI와 TCP·UDP를 공부한 뒤 “이 대화에서 두 내용을 각각 캐시미 해줘”라고 말하면, 내 컴퓨터에 공부 기록 두 개가 남습니다. 나중에 그래프의 **전송 계층**에서 두 기록을 다시 찾고, 비교표와 인용이 있는 아티클 한 편으로 엮을 수 있습니다.
 
-**[프로젝트 소개와 시연 보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [휴대폰으로 열기 위한 QR](showcase/media/intro-qr.png) · [빠른 시작](#빠른-시작)
+**[네 장면으로 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [휴대폰용 QR](showcase/media/intro-qr.png) · [기술 가이드](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
 
-![합성 예시로 실행한 캐시미 웹. 로컬 저장을 선택한 이유를 물으니 가운데에 답변이, 오른쪽에 근거가 된 기록 원문이 열린다.](assets/readme/answer-and-source.png)
+![노트북용 캐시미 아티클 리더에서 TCP와 UDP를 비교한 표와 그 근거가 된 공부 기록을 나란히 읽는 화면](showcase/media/article-poster.jpg)
 
 ## 빠른 시작
 
@@ -30,14 +30,14 @@ python3 scripts/manage.py doctor
 
 ## Codex에서 이렇게 씁니다
 
-- **저장** · `$cache-me` 발표에서 막대그래프를 고른 이유를 저장해줘. 비슷한 응답 수를 항목별로 비교하려고 골랐어.
-- **다시 찾기** · `$cache-me` 지난 발표에서 막대그래프를 고른 이유를 찾아줘.
-- **아티클 쓰기** · `$cache-me-article` 그래프를 고르는 기준을 공부 기록과 예시로 정리해서 아티클로 써줘.
+- **저장** · `$cache-me` 이 대화에서 공부한 TCP와 UDP를 각각 캐시미 해줘.
+- **다시 찾기** · `$cache-me` 전송 계층을 공부하면서 어떤 내용을 기록했지?
+- **아티클 쓰기** · `$cache-me-article` 방금 저장한 두 기록으로 「TCP와 UDP, 언제 무엇을 쓸까?」라는 아티클을 써줘.
 
 `cache-me`는 기록을 저장하고 찾아줍니다. `cache-me-article`은 그 기록과 필요한 외부 원문을 인용해 별도의 아티클을 발행합니다. 웹에서는 글을 읽던 자리에서 출처를 펼쳐볼 수 있습니다.
 
 ## 더 알아보기
 
-- **구조** — Codex는 로컬 MCP 서버를 통해, 브라우저는 웹 API를 통해 같은 저장소를 사용합니다. SQLite에는 기록·아티클과 버전이, LanceDB에는 검색용 색인이 들어갑니다. [아키텍처 도식](https://jhpark324.github.io/cache-me-if-you-can/#architecture) · [서비스 계약](architecture/service-contracts.md)
+- **구조** — Codex는 로컬 MCP 서버를 통해, 브라우저는 웹 API를 통해 같은 저장소를 사용합니다. SQLite에는 기록·아티클과 버전이, LanceDB에는 검색용 색인이 들어갑니다. [아키텍처 도식](https://jhpark324.github.io/cache-me-if-you-can/guide-system.html#overview) · [서비스 계약](architecture/service-contracts.md)
 - **기여와 문의** — 동작을 제안하거나 문제를 재현했다면 사용 환경과 기대 결과를 알려주세요. 코드 변경 시 프로젝트 루트에서 `python3 scripts/manage.py check`로 점검할 수 있습니다. [이슈](https://github.com/jhpark324/cache-me-if-you-can/issues) · [기여 가이드](guides/index.md) · [전체 문서](index.md)
 - **라이선스** — 소스 코드를 열람할 수 있도록 공개합니다. 프로젝트 코드의 배포 라이선스는 아직 정하지 않았으며, 포함된 글꼴과 외부 의존성에는 각자의 라이선스가 적용됩니다. [라이선스 안내](guides/repository-readiness.md#의존성과-라이선스)

@@ -47,18 +47,23 @@ function inspect(reference) {
   };
 }
 
-const hero = document.querySelector(".hero-figure");
-const heroImages = hero?.querySelectorAll("img");
-const heroSource = heroImages?.[0]?.getAttribute("src");
-if (
-  !heroSource ||
-  heroImages.length !== 1 ||
-  hero.querySelector("source, img[srcset]")
-) {
-  throw new Error("Use the same full desktop hero image at every viewport.");
+// Templates keep inactive GIFs off the network. Inspect the source markup
+// so the desktop-frame contract covers frames inside templates as well.
+const slides = document.querySelectorAll("template");
+let loops = 0;
+for (const slide of slides) {
+  for (const image of slide.content.querySelectorAll("img[data-motion]")) {
+    const poster = inspect(image.getAttribute("src"));
+    const animation = inspect(image.getAttribute("data-motion"));
+    if (poster.codec !== "mjpeg" || animation.codec !== "gif" ||
+        Math.min(poster.width, animation.width) < 960 ||
+        poster.width * animation.height !== animation.width * poster.height) {
+      throw new Error("Story loops and their stills must share a complete desktop frame.");
+    }
+    loops++;
+  }
 }
-if (inspect(heroSource).width < 1280)
-  throw new Error(`${heroSource} must be at least 1280px wide.`);
+if (!loops) throw new Error("The guided story needs desktop animations and still images.");
 
 const films = document.querySelectorAll("video");
 if (!films.length) throw new Error("The showcase needs a product film.");
@@ -100,5 +105,5 @@ for (const film of films) {
   }
 }
 console.log(
-  `Verified desktop framing for the hero and ${films.length} films with posters.`,
+  `Verified desktop framing for ${loops} story loops and ${films.length} films with posters.`,
 );

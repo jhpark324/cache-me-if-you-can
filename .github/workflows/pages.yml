@@ -4,6 +4,13 @@ on:
   pull_request:
     paths:
       - 'docs/showcase/**'
+      - 'docs/architecture/**'
+      - 'docs/specs/**'
+      - 'docs/decisions/**'
+      - 'docs/skills/**'
+      - 'docs/guides/**'
+      - 'docs/project/**'
+      - 'frontend/src/theme/cache-me.css'
       - 'frontend/scripts/*showcase*.mjs'
       - 'frontend/package*.json'
       - 'scripts/build_showcase.py'
@@ -12,6 +19,13 @@ on:
     branches: [main]
     paths:
       - 'docs/showcase/**'
+      - 'docs/architecture/**'
+      - 'docs/specs/**'
+      - 'docs/decisions/**'
+      - 'docs/skills/**'
+      - 'docs/guides/**'
+      - 'docs/project/**'
+      - 'frontend/src/theme/cache-me.css'
       - 'frontend/scripts/*showcase*.mjs'
       - 'frontend/package*.json'
       - 'scripts/build_showcase.py'

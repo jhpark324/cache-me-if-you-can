@@ -1,0 +1,31 @@
+{
+  "theme": "base",
+  "look": "classic",
+  "htmlLabels": false,
+  "deterministicIds": true,
+  "fontFamily": "system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif",
+  "themeVariables": {
+    "darkMode": true,
+    "background": "#161618",
+    "primaryColor": "#2b2726",
+    "primaryBorderColor": "#c58f6d",
+    "primaryTextColor": "#faf4ef",
+    "lineColor": "#e8ac85",
+    "textColor": "#faf4ef",
+    "edgeLabelBackground": "#242123",
+    "fontSize": "16px"
+  },
+  "flowchart": {
+    "htmlLabels": false,
+    "diagramPadding": 18,
+    "nodeSpacing": 36,
+    "rankSpacing": 32,
+    "padding": 12
+  },
+  "er": {
+    "minEntityWidth": 194,
+    "diagramPadding": 10,
+    "nodeSpacing": 24,
+    "rankSpacing": 46
+  }
+}

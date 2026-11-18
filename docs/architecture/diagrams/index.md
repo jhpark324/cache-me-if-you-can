@@ -18,6 +18,10 @@
 | [로컬 저장과 외부 추론](second-brain-comparison-2026-11-rendered-1.svg) | 구현·조사 | [원문](../../research/second-brain-comparison-2026-11.md) |
 | [공통 필터 의미](component-boundaries-rendered-1.svg) | 구현 | [원문](../../architecture/component-boundaries.md) |
 | [웹 컴포넌트 경계](component-boundaries-rendered-2.svg) | 구현 | [원문](../../architecture/component-boundaries.md) |
+| [SQLite의 기록·아티클·버전 관계](data-schema-rendered-1.svg) | 논리 스키마 | [원문](../../architecture/data-schema.md) |
+| [주제와 기록에서 검색 결과까지](knowledge-layer-rendered-1.svg) | 지식 계층 | [원문](../../architecture/knowledge-layer.md) |
+| [저장 본문에서 MCP·웹 답변까지](record-body-format-rendered-1.svg) | 구현 | [원문](../../architecture/record-body-format.md) |
+| [로컬 서버의 저장·검색·모델 호출](technology-stack-rendered-1.svg) | 구현 | [원문](../../architecture/technology-stack.md) |
 
 ## 다시 생성
 
@@ -28,3 +32,5 @@ python scripts/render_diagrams.py --mermaid-cli <mmdc 실행 경로>
 ```
 
 필요하면 `--puppeteer-config`로 Chromium 경로와 실행 인자를, `--mermaid-config`로 테마·글꼴을 지정한다. SVG가 이미 있으면 인자 없이 HTML과 인덱스만 다시 생성한다. 문서에 도식을 추가하면 스크립트의 목록·제목도 갱신한다.
+
+특정 문서만 렌더링하려면 `--source architecture/data-schema.md`처럼 원문 경로를 지정한다. 여러 문서는 `--source`를 반복한다. 자료집에 쓰는 네 도식은 [공통 테마](reference-theme.json)를 사용한다.
