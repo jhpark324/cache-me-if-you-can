@@ -16,11 +16,11 @@
 
 [GitHub Actions](../../.github/workflows/pages.yml)는 [패키징 스크립트](../../scripts/build_showcase.py)로 소개 페이지와 미디어를 빌드한다. [정적 렌더러](../../frontend/scripts/render-showcase.mjs)는 HTML의 `data-ax` 표시를 [프런트엔드가 사용하는 Astryx](../guides/astryx.md)의 제목·본문·버튼·레이아웃 컴포넌트로 렌더링한다. 배포본에는 필요한 CSS와 [Astryx 라이선스 고지](licenses/astryx.txt)가 함께 들어간다. 변경 PR에서는 패키징을 검증하고 `main`에 반영되면 GitHub Pages에 배포한다.
 
-로컬 미리보기에는 Node.js, Python, FFmpeg의 `ffprobe`가 필요하다. 저장소 루트에서 다음 명령을 실행한 뒤 `http://127.0.0.1:8000`을 연다. 동작 기준은 [소개 사이트 명세](../specs/showcase.md)에 있다.
+로컬 미리보기에는 Node.js와 Python이 필요하다. 저장소 루트에서 다음 명령을 실행한 뒤 `http://127.0.0.1:8000`을 연다. 동작 기준은 [소개 사이트 명세](../specs/showcase.md)에 있다.
 
 ```sh
 npm --prefix frontend ci
 showcase_preview="$(mktemp -d)/site"
 python3 scripts/build_showcase.py "$showcase_preview"
-python3 -m http.server --bind 127.0.0.1 --directory "$showcase_preview" 8000
+frontend/node_modules/.bin/vite preview --outDir "$showcase_preview" --host 127.0.0.1 --port 8000 --strictPort
 ```
