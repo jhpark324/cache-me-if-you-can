@@ -5,6 +5,7 @@
 | 목적 | 진입 문서 |
 | --- | --- |
 | 제품 기능과 범위 이해 | [제품](project/index.md) |
+| 발표·전시용 소개와 기능 시연 | [프로젝트 소개 사이트](showcase/index.md) |
 | 도메인 용어와 코드 대응 확인 | [도메인 용어](project/domain-language.md) |
 | 설치·설정·문제 해결 | [로컬 실행](guides/local-development.md) |
 | Codex에서 기록 관리·아티클 작성 | [스킬](skills/index.md) |
