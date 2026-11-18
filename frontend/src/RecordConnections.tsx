@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { api, errorText, post, uid } from "./api";
 import { Markdown } from "./Markdown";
+import { mergeArticleExcerpt } from "./mergeArticleExcerpt";
 import {
   RELATION_LABELS,
   type Capture,
@@ -350,6 +351,20 @@ export function MergeDialog({
           : [...prev, value],
       );
   }
+  function append(source: PickedReference) {
+    const text = source.capture.article
+      ? mergeArticleExcerpt(
+          source.capture.body_markdown,
+          source.text,
+          source.source.body_start ?? 0,
+        )
+      : source.text;
+    const title = (source.capture.title || "추가한 내용").replace(
+      /[\\[\]]/g,
+      "\\$&",
+    );
+    setBody((prev) => `${prev}\n\n## ${title}\n\n${text}`);
+  }
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError("");
@@ -440,12 +455,7 @@ export function MergeDialog({
                   label="최종 본문에 추가"
                   type="button"
                   variant="ghost"
-                  onClick={() =>
-                    setBody(
-                      (prev) =>
-                        `${prev}\n\n## ${source.capture.title || "추가한 내용"}\n\n${source.text}`,
-                    )
-                  }
+                  onClick={() => append(source)}
                   icon={<Plus />}
                 />
               </VStack>
