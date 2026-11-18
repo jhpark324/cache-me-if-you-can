@@ -22,6 +22,7 @@ class ShowcasePage(HTMLParser):
         self.ids = set()
         self.anchors = set()
         self.assets = set()
+        self.linked_anchors = set()
         self.stylesheets = set()
         self.video = None
 
@@ -45,6 +46,8 @@ class ShowcasePage(HTMLParser):
         if tag == "link" and "stylesheet" in attrs.get("rel", "").split() and attrs.get("href"):
             self.stylesheets.add(Path(unquote(urlsplit(attrs["href"]).path)))
         references = [attrs[key] for key in ("href", "src", "poster") if key in attrs]
+        if attrs.get("data-motion"):
+            references.append(attrs["data-motion"])
         if "srcset" in attrs:
             for candidate in attrs["srcset"].split(","):
                 parts = candidate.split()
@@ -63,6 +66,8 @@ class ShowcasePage(HTMLParser):
                 if path.is_absolute() or ".." in path.parts:
                     raise ValueError(f"Asset must be within the published project: {path}")
                 self.assets.add(path)
+                if url.fragment and path.suffix == ".html":
+                    self.linked_anchors.add((path, unquote(url.fragment)))
             elif url.fragment:
                 self.anchors.add(unquote(url.fragment))
 
@@ -76,25 +81,40 @@ class ShowcasePage(HTMLParser):
 
 
 def assemble(site):
-    index = site / "index.html"
     subprocess.run(
-        ["node", "scripts/render-showcase.mjs", SOURCE / "index.html", index],
+        ["node", "scripts/render-showcase-reference.mjs", SOURCE, site],
         cwd=FRONTEND, check=True,
     )
+    for template in SOURCE.glob("*.html"):
+        if template.name != "guide-library.html":
+            subprocess.run(
+                ["node", "scripts/render-showcase.mjs", template, site / template.name],
+                cwd=FRONTEND, check=True,
+            )
+    pages = {}
+    referenced = set()
+    for html in sorted(site.glob("*.html")):
+        page = ShowcasePage()
+        page.feed(html.read_text(encoding="utf-8"))
+        page.close()
+        if page.github_links != int(html.name == "index.html"):
+            raise ValueError(f"Check the header GitHub link in {html.name}.")
+        if Path("astryx.css") not in page.stylesheets:
+            raise ValueError(f"The rendered page must load Astryx styles: {html.name}")
+        pages[Path(html.name)] = page
+        referenced.update(page.assets)
+    for name, page in pages.items():
+        for path, anchor in page.linked_anchors | {(name, target) for target in page.anchors}:
+            if path not in pages or anchor not in pages[path].ids:
+                raise ValueError(f"Missing destination for {name}: {path}#{anchor}")
     stylesheet = Path("astryx.css")
     subprocess.run(
-        ["node", "scripts/build-showcase-styles.mjs", index, site / stylesheet],
+        ["node", "scripts/build-showcase-styles.mjs", site, site / stylesheet],
         cwd=FRONTEND, check=True,
     )
-    page = ShowcasePage()
-    page.feed(index.read_text(encoding="utf-8"))
-    page.close()
-    if page.github_links != 1 or page.anchors - page.ids:
-        raise ValueError(f"Check the header GitHub link and fragment targets: {sorted(page.anchors - page.ids)}")
-    if stylesheet not in page.stylesheets:
-        raise ValueError("The rendered showcase must load its Astryx stylesheet.")
-    generated = {stylesheet, Path(index.name)}
-    for relative in page.assets - generated:
+    for relative in referenced - pages.keys() - {stylesheet}:
+        if (site / relative).is_file():
+            continue  # Diagram copied alongside its rendered reference document.
         asset = SOURCE / relative
         if not asset.resolve().is_relative_to(SOURCE) or not asset.is_file() or not asset.stat().st_size:
             raise ValueError(f"Missing or invalid showcase asset: {relative}")
@@ -103,12 +123,10 @@ def assemble(site):
         target = site / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(asset, target)
-    if not shutil.which("ffprobe"):
-        raise RuntimeError("Install FFmpeg with ffprobe to validate the showcase media.")
     subprocess.run(
         ["node", "scripts/check-showcase-media.mjs", site], cwd=FRONTEND, check=True,
     )
-    return len(page.assets | generated)
+    return sum(item.is_file() for item in site.rglob("*"))
 
 
 def build(destination):

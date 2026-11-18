@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko" data-astryx-theme="cache-me" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Cache Me If You Can의 기능 명세, 시스템 설계와 기술 결정 문서를 주제나 용어로 찾습니다.">
+  <title>명세와 설계 원문 · Cache Me If You Can</title>
+  <link rel="stylesheet" href="astryx.css">
+  <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="reference.css">
+  <script src="library-search.js" defer></script>
+</head>
+<body>
+  <a class="g-skip" href="#main">본문으로 건너뛰기</a>
+  <header class="g-header"><nav class="g-wrap g-nav" aria-label="심화 가이드">
+    <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
+    <div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-features.html">기능</a><a href="guide-engine.html">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html" aria-current="page">자료집</a></div>
+  </nav></header>
+  <main id="main" class="g-wrap g-main ref-library" tabindex="-1">
+    <header class="g-intro">
+      <p class="g-kicker">기술 자료집</p>
+      <h1>명세와 설계 원문</h1>
+      <p class="g-lead">기록의 수정 조건, 검색 순위 계산, 설계 결정의 이유를 프로젝트 원문에서 찾아보세요.</p>
+    </header>
+    <form id="ref-search" class="ref-search" role="search" hidden>
+      <label for="ref-query">문서와 본문 찾기</label>
+      <div><input type="search" name="q" id="ref-query" placeholder="예: 수정 충돌, 출처, LanceDB" autocomplete="off"><button type="submit">찾기</button></div>
+    </form>
+    <p id="ref-count" role="status" aria-live="polite"></p>
+    <section id="ref-results" class="ref-results" aria-label="일치하는 문서와 절" hidden></section>
+    <div id="ref-catalog"></div>
+  </main>
+</body>
+</html>

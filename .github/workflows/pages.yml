@@ -4,6 +4,13 @@ on:
   pull_request:
     paths:
       - 'docs/showcase/**'
+      - 'docs/architecture/**'
+      - 'docs/specs/**'
+      - 'docs/decisions/**'
+      - 'docs/skills/**'
+      - 'docs/guides/**'
+      - 'docs/project/**'
+      - 'frontend/src/theme/cache-me.css'
       - 'frontend/scripts/*showcase*.mjs'
       - 'frontend/package*.json'
       - 'scripts/build_showcase.py'
@@ -12,6 +19,13 @@ on:
     branches: [main]
     paths:
       - 'docs/showcase/**'
+      - 'docs/architecture/**'
+      - 'docs/specs/**'
+      - 'docs/decisions/**'
+      - 'docs/skills/**'
+      - 'docs/guides/**'
+      - 'docs/project/**'
+      - 'frontend/src/theme/cache-me.css'
       - 'frontend/scripts/*showcase*.mjs'
       - 'frontend/package*.json'
       - 'scripts/build_showcase.py'
@@ -36,12 +50,6 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install locked build dependencies
         run: npm --prefix frontend ci
-      - name: Ensure ffprobe is available for media checks
-        run: |
-          if ! command -v ffprobe >/dev/null; then
-            sudo apt-get update
-            sudo apt-get install -y --no-install-recommends ffmpeg
-          fi
       - name: Render static showcase and check links, videos and captions
         run: python3 scripts/build_showcase.py "$RUNNER_TEMP/showcase"
       - name: Check Astryx in the published files

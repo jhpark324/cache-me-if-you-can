@@ -1,0 +1,11 @@
+.system-map, .sys-screen { margin: 1.35rem 0; padding: clamp(.85rem, 2.5vw, 1.6rem); background: var(--color-background-surface); border: 1px solid var(--color-border-primary, #494541); border-radius: 1rem; }
+.system-map { text-align: center; }
+.sys-pair { display: grid; grid-template-columns: 1fr 1fr; gap: .55rem; }
+.sys-pair > div, .sys-core { display: grid; align-content: center; gap: .42rem; padding: .85rem .45rem; border: 1px solid #51504e; border-radius: .6rem; }
+.sys-core { margin: auto; max-width: 35rem; background: var(--color-accent-muted); border-color: var(--color-accent); }
+.sys-pair strong, .sys-core strong { color: var(--color-text-primary); }
+.sys-arrow { color: var(--color-accent); line-height: 1.65; }
+.system-map span, .system-map figcaption, .sys-screen figcaption { color: var(--color-text-secondary); font-size: .94rem; }
+.system-map figcaption, .sys-screen figcaption { margin: .8rem 0 0; }
+.sys-screen img { display: block; width: 100%; height: auto; }
+.tool-list { margin: 1rem 0; }.tool-list dt { margin-top: .85rem; }.tool-list dd { margin: .25rem 0 0; }

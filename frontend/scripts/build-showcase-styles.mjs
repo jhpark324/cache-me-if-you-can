@@ -1,24 +1,26 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, readdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { transform } from "lightningcss";
 import { parseHTML } from "linkedom";
 
-const [htmlPath, outputPath] = process.argv.slice(2);
-const { document } = parseHTML(await readFile(htmlPath, "utf8"));
+const [site, outputPath] = process.argv.slice(2);
 const usedClasses = new Set();
-for (const node of document.querySelectorAll("[class]")) {
-  for (const name of node.classList) usedClasses.add(name);
+for (const name of await readdir(site)) {
+  if (!name.endsWith(".html")) continue;
+  const { document } = parseHTML(await readFile(join(site, name), "utf8"));
+  for (const node of document.querySelectorAll("[class]")) {
+    for (const className of node.classList) usedClasses.add(className);
+  }
 }
 
 const stylesheets = [
-  "@astryxdesign/core/reset.css",
-  "@astryxdesign/core/astryx.css",
-  "@astryxdesign/theme-neutral/theme.css",
+  import.meta.resolve("@astryxdesign/core/reset.css"),
+  import.meta.resolve("@astryxdesign/core/astryx.css"),
+  new URL("../src/theme/cache-me.css", import.meta.url),
 ];
 const styles = await Promise.all(
-  stylesheets.map((name) =>
-    readFile(fileURLToPath(import.meta.resolve(name)), "utf8"),
-  ),
+  stylesheets.map((url) => readFile(fileURLToPath(url), "utf8")),
 );
 const css = styles.join("\n");
 // StyleX generates atomic class names only at build time. Include all states
