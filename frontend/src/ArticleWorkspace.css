@@ -1,0 +1,371 @@
+.article-workspace {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  min-inline-size: 0;
+  overflow: auto;
+  pointer-events: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.article-shelf,
+.article-reader {
+  box-sizing: border-box;
+  inline-size: min(100%, 48rem);
+  margin-inline: auto;
+  padding: var(--spacing-6) var(--spacing-4) var(--spacing-10);
+  align-items: stretch;
+}
+
+.article-shelf {
+  max-inline-size: 55rem;
+  inline-size: 100%;
+}
+
+.article-page-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.4vw, 2.625rem);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.35;
+  letter-spacing: -0.044em;
+  text-wrap: balance;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.article-page-title:focus {
+  outline: none;
+}
+
+.article-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block-start: thin solid var(--color-border);
+}
+
+.article-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6) var(--spacing-2);
+  border-block-end: thin solid var(--color-border);
+  text-decoration: none;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.article-row > svg {
+  flex: none;
+  color: var(--color-text-secondary);
+}
+
+.article-row h2,
+.article-source-panel h3,
+.article-source-mobile h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+}
+
+.article-row p,
+.article-source-note {
+  margin: 0;
+  line-height: 1.75;
+}
+
+.article-row:hover {
+  background: var(--color-background-surface);
+}
+
+.article-date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.article-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  align-self: flex-start;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  padding-block: var(--spacing-2);
+  text-decoration: none;
+}
+
+.article-back:hover,
+.article-row:hover h2 {
+  color: var(--color-text-accent);
+}
+
+.article-intro {
+  padding-block-end: var(--spacing-6);
+  margin-block-end: var(--spacing-6);
+  border-block-end: thin solid var(--color-border);
+}
+
+.article-summary {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.article-reader article,
+.article-body .markdown {
+  min-width: 0;
+}
+
+.article-body > .markdown {
+  color: var(--color-text-primary);
+  font-size: clamp(1rem, 1.2vw, 1.125rem);
+  line-height: 1.9;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.article-body .markdown p {
+  font-size: inherit;
+  line-height: inherit;
+  margin-block: 0 1.2em;
+}
+
+.article-source-scroll .markdown p {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.article-body .markdown :is(h2, h3, h4) {
+  margin-block: 1.9em 0.55em;
+  line-height: 1.45;
+  color: var(--color-text-primary);
+}
+
+.article-body .markdown > :first-child {
+  margin-block-start: 0;
+}
+
+.article-body .markdown strong {
+  color: var(--color-text-primary);
+}
+
+.article-body .markdown table {
+  max-inline-size: 100%;
+  margin-block: var(--spacing-5);
+}
+
+.article-body .markdown th {
+  background: var(--color-background-surface);
+  text-align: start;
+}
+
+.article-body .markdown .article-citation {
+  display: inline-flex;
+  vertical-align: super;
+  height: auto;
+  min-height: 1.45rem;
+  min-width: 1.45rem;
+  padding: 0 var(--spacing-1);
+  margin-inline: 0.1em;
+  border-radius: var(--radius-inner);
+  background: var(--color-background-card);
+  color: var(--color-text-accent);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.article-body .markdown .article-flow {
+  display: grid;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4);
+  margin: var(--spacing-5) 0;
+  background: var(--color-background-surface);
+  border-radius: var(--radius-container);
+  list-style: none;
+  counter-reset: flow;
+}
+
+.article-body .markdown .article-flow li {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-3);
+  margin: 0;
+  counter-increment: flow;
+}
+
+.article-flow li::before {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  min-width: 1.6em;
+  height: 1.6em;
+  content: counter(flow);
+  color: var(--color-text-accent);
+  background: var(--color-background-card);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.article-flow li svg {
+  position: absolute;
+  inset-inline-start: 0.3em;
+  top: -1em;
+  color: var(--color-icon-secondary);
+}
+
+.article-source-panel {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  z-index: 50;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: var(--article-source-width);
+  background: var(--color-background-surface);
+  border-inline-start: thin solid var(--color-border-emphasized);
+}
+
+.article-source-heading,
+.article-source-scroll {
+  padding: var(--spacing-6);
+}
+
+.article-source-heading {
+  flex: none;
+  border-block-end: thin solid var(--color-border);
+}
+
+.article-source-scroll {
+  overflow: auto;
+  overscroll-behavior: contain;
+  overflow-wrap: anywhere;
+}
+
+.article-source-scroll details > summary {
+  cursor: pointer;
+  color: var(--color-text-accent);
+}
+
+.article-source-scroll .astryx-button,
+.article-shelf > .astryx-button,
+.article-reader > .astryx-button {
+  align-self: flex-start;
+}
+
+.article-source-mobile .article-source-scroll {
+  padding: var(--spacing-4) 0;
+}
+
+@media (max-width: 50em) {
+  .article-shelf,
+  .article-reader {
+    padding: var(--spacing-2) var(--spacing-1) var(--spacing-8);
+  }
+  .article-body .markdown .article-citation {
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    vertical-align: baseline;
+    background: radial-gradient(
+      circle,
+      var(--color-background-card) 43%,
+      transparent 45%
+    );
+  }
+}
+
+.article-body {
+  min-inline-size: 0;
+  container-type: inline-size;
+}
+
+.article-review {
+  margin-block-end: var(--spacing-5);
+  padding: var(--spacing-3) var(--spacing-4);
+  border-inline-start: medium solid var(--color-text-accent);
+  background: var(--color-background-card);
+}
+
+.article-review p {
+  margin: 0;
+}
+
+@container (min-width: 34rem) {
+  .article-body .markdown .article-flow[data-layout="compact"] {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: var(--spacing-6);
+  }
+
+  .article-flow[data-layout="compact"] li {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+
+  .article-flow[data-layout="compact"] li svg {
+    inset-inline-start: calc(-1 * var(--spacing-5));
+    top: 0.2em;
+    transform: rotate(-90deg);
+  }
+}
+
+.article-source-panel,
+.main-content {
+  --article-source-width: 24rem;
+}
+
+.article-row-meta {
+  flex-wrap: wrap;
+}
+
+.article-topics {
+  padding-inline-start: var(--spacing-2);
+  border-inline-start: thin solid var(--color-border-emphasized);
+}
+
+.article-contents {
+  border-block-end: thin solid var(--color-border);
+  margin-block-end: var(--spacing-5);
+  padding-block-end: var(--spacing-4);
+}
+
+.article-contents summary {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.article-contents ol {
+  margin-block: var(--spacing-2) 0;
+  padding-inline-start: var(--spacing-6);
+}
+
+.article-contents .astryx-button {
+  max-inline-size: 100%;
+}
+
+.article-body .markdown h2 {
+  scroll-margin-block-start: var(--spacing-4);
+}
+
+@media (min-width: 70.001em) {
+  /* Budget the same line length with the source pane open or closed. */
+  .article-workspace .article-reader {
+    inline-size: min(48rem, calc(100% - var(--article-source-width)));
+  }
+
+  .main-content:has(.article-body[data-source-open="true"]) {
+    margin-inline-end: var(--article-source-width);
+  }
+
+  .article-workspace:has(.article-body[data-source-open="true"])
+    .article-reader {
+    inline-size: min(48rem, 100%);
+  }
+}

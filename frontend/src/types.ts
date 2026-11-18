@@ -14,6 +14,34 @@ export interface SourceRef {
   body_start?: number | null;
   body_end?: number | null;
 }
+export function sourceKey(source: SourceRef): string {
+  return JSON.stringify([
+    source.capture_id,
+    source.revision_id,
+    source.node_id ?? null,
+    source.body_start ?? null,
+    source.body_end ?? null,
+  ]);
+}
+export type ArticleCitation =
+  | { kind: "record"; source: SourceRef }
+  | { kind: "external"; title: string; url: string; note: string };
+export interface ArticleSummary {
+  id: string;
+  title: string;
+  summary: string;
+  topics: string[];
+  created_at: string;
+  updated_at: string;
+}
+export interface ArticleDocument extends ArticleSummary {
+  revision_id: string;
+  revision_no: number;
+  body_markdown: string;
+  citations: ArticleCitation[];
+  sources: SourceView[];
+  review_state: string;
+}
 export interface Concept {
   id: string;
   name: string;
@@ -84,7 +112,11 @@ export type CaptureSummary = Pick<
   | "created_at"
   | "index_state"
   | "review_state"
-> & { excerpt?: string; body_excerpt?: string; preview?: string };
+> & {
+  excerpt?: string;
+  body_excerpt?: string;
+  preview?: string;
+};
 export interface Page<T> {
   items: T[];
   next_cursor: string | null;

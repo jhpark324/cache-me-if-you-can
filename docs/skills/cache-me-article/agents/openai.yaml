@@ -1,0 +1,10 @@
+interface:
+  display_name: "cache-me 아티클"
+  short_description: "공부 기록과 원문으로 읽기 쉬운 아티클을 작성하고 등록한 글을 수정"
+  default_prompt: "$cache-me-article 방금 공부한 주제를 예시와 도식으로 정리해서 아티클로 써줘."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "cache_me"
+      description: "공부 기록의 근거 조회와 아티클 등록·조회·수정 서버"

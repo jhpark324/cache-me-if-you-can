@@ -24,6 +24,7 @@ Cache Me If You Can은 AI와 대화하며 정리한 지식, 선택의 이유, �
 | 한국어 검색과 답변 | KURE-v2 벡터 검색과 키워드 검색을 결합하고, 기록을 근거로 답변 |
 | 출처 확인 | 답변이 참조한 정확한 저장본과 본문 구간을 조회 |
 | 목록·타임라인 | 유형·주제·저장 월로 좁히고, 목록 정렬이나 저장일별 묶음으로 탐색 |
+| [아티클](specs/articles.md) | Codex에서 공부한 주제를 아티클로 등록하고, 표·흐름도와 문단별 출처를 한 화면에서 읽기 |
 | 3D 지식 그래프 | 기록·주제·본문 맥락과 검색 근거의 연결을 탐색 |
 | Codex 연동 | `cache-me` 스킬과 MCP로 저장·조회·정정·확인 후 삭제 |
 | 백업 내보내기 | 기록과 이력을 담은 SQLite snapshot을 ZIP으로 다운로드 |
@@ -89,17 +90,18 @@ python3 scripts/manage.py install-codex
 python3 scripts/manage.py doctor
 ```
 
-새 Codex 세션에서 `cache-me`를 선택하거나 다음처럼 요청합니다.
+새 Codex 세션에서 기록을 저장하거나 아티클을 작성할 수 있습니다.
 
 ```text
 $cache-me 오늘 배운 트랜잭션 격리 수준을 정리해서 저장해줘.
 $cache-me 지난번 복습 계획을 줄인 이유를 찾아줘.
 $cache-me 그 기록에 직접 예제로 확인한 내용을 추가해줘.
+$cache-me-article 트랜잭션 격리 수준을 비교표와 예시로 정리해줘.
 ```
 
-스킬 이름은 `cache-me`, MCP 등록 키는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`입니다. 삭제는 사용자 재확인을 거칩니다.
+아티클을 요청하면 저장한 기록과 필요한 원문 자료를 바탕으로 글을 작성하고 **아티클**에서 열 수 있는 링크를 줍니다. 두 스킬은 같은 `cache_me` MCP 연결에서 기록을 `capture_create`, 아티클을 `article_create`로 각각 저장합니다. 일반 기록 목록·지식 검색·그래프는 원자료를 대상으로 합니다. 서버 표시 이름은 `Cache Me If You Can`이며 기록 삭제는 사용자 재확인을 거칩니다.
 
-설치된 현재 이름의 관리 설정·스킬을 갱신할 때는 `install-codex --replace`를 사용한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. Python 패키지는 `cache_me`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`입니다. 이전 제품 이름의 별칭이나 자동 이전은 제공하지 않습니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 변경](guides/local-development.md#포트-변경) · [백업과 데이터 배치](guides/local-development.md#백업과-새-환경의-데이터-배치) · [스킬 원본](skills/cache-me/SKILL.md)
+설치된 현재 이름의 관리 설정·스킬을 갱신할 때는 `install-codex --replace`를 사용한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. Python 패키지는 `cache_me`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`입니다. 이전 제품 이름의 별칭이나 자동 이전은 제공하지 않습니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 변경](guides/local-development.md#포트-변경) · [백업과 데이터 배치](guides/local-development.md#백업과-새-환경의-데이터-배치) · [기록·아티클 스킬](skills/index.md)
 
 ## 동작 구조
 

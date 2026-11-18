@@ -10,6 +10,9 @@ from fastapi import APIRouter, Depends, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from .article_contracts import (ArticleMutationResult, ArticleSummary, ArticleView,
+                                CreateArticleInput, UpdateArticleInput)
+from .articles import ArticleService
 from .records import DomainError, HumanConfirmation, RecordService
 from .outputs import (CaptureSummary, CaptureView, ConceptMutationView, ConceptView,
                       DeleteResult, DeletionPreview, MutationResult, NodeView,
@@ -51,6 +54,34 @@ def install_error_handlers(app: FastAPI):
         # Pydantic errors contain the submitted input by default; never echo it.
         details = {"fields": [{"location": list(item["loc"]), "type": item["type"]} for item in error.errors()]}
         return JSONResponse(status_code=422, content={"schema_version": 1, "ok": False, "error": {"code": "VALIDATION_ERROR", "message": "요청 형식이나 범위가 올바르지 않습니다.", "retryable": False, "details": details}})
+
+
+def get_articles(records: Records) -> ArticleService:
+    return ArticleService(records)
+
+
+Articles = Annotated[ArticleService, Depends(get_articles)]
+
+
+@router.post("/articles", response_model=OutputEnvelope[ArticleMutationResult])
+def article_create(data: CreateArticleInput, articles: Articles):
+    return success(articles.create(data))
+
+
+@router.get("/articles", response_model=OutputEnvelope[Page[ArticleSummary]])
+def article_list(articles: Articles, query: str | None = None, limit: int = Query(20, ge=1, le=100), cursor: str | None = None):
+    return success(articles.list(query=query, limit=limit, cursor=cursor))
+
+
+@router.get("/articles/{article_id}", response_model=OutputEnvelope[ArticleView])
+def article_get(article_id: UUID, articles: Articles, revision_id: UUID | None = None):
+    return success(articles.get(article_id, revision_id))
+
+
+@router.patch("/articles/{article_id}", response_model=OutputEnvelope[ArticleMutationResult])
+def article_update(article_id: UUID, data: UpdateArticleInput, articles: Articles):
+    check_path(article_id, data.article_id)
+    return success(articles.update(data))
 
 
 @router.post("/captures", response_model=OutputEnvelope[MutationResult])

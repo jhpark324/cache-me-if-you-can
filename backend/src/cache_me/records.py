@@ -329,6 +329,11 @@ class RecordService:
         with self.db.read() as session:
             return self._source_status(session, source)
 
+    def source_statuses(self, session, sources):
+        """Resolve pinned record references within the caller's transaction."""
+        memo = {}
+        return [self._source_status(session, source, _memo=memo) for source in sources]
+
     def eligible_capture(self, capture_id):
         view = self.get(capture_id)
         if view["review_state"] != "valid":

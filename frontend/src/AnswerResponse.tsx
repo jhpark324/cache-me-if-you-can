@@ -1,17 +1,7 @@
 import { VStack } from "@astryxdesign/core/VStack";
 import { Text } from "@astryxdesign/core/Text";
 import { Markdown } from "./Markdown";
-import type { AnswerResult, SourceRef } from "./types";
-
-function sourceKey(source: SourceRef) {
-  return JSON.stringify([
-    source.capture_id,
-    source.revision_id,
-    source.node_id ?? null,
-    source.body_start ?? null,
-    source.body_end ?? null,
-  ]);
-}
+import { sourceKey, type AnswerResult, type SourceRef } from "./types";
 
 export function buildAnswerDraft(answer: AnswerResult) {
   const body = answer.parts

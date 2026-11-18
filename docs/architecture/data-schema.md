@@ -6,7 +6,7 @@
 - 용어: [도메인 용어](../project/domain-language.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
-기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py), [고정 baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 테이블 추가 0002](../../backend/alembic/versions/0002_topic_backfill.py)가 구현되어 있다. 0002는 기존 주제를 작업으로 등록하지 않는다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
+기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py), [고정 baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 테이블 추가 0002](../../backend/alembic/versions/0002_topic_backfill.py), [아티클 메타데이터 추가 0003](../../backend/alembic/versions/0003_article_metadata.py), [독립 아티클로 이전하는 0004](../../backend/alembic/versions/0004_independent_articles.py)가 구현되어 있다. 0002는 기존 주제를 작업으로 등록하지 않는다. 0003은 기존 기록 버전의 본문과 출처를 보존한다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
 
 ## 공통 규약
 
@@ -27,6 +27,9 @@
 
 ```mermaid
 erDiagram
+    LOCAL_BRAIN ||--o{ ARTICLE : owns
+    ARTICLE ||--|{ ARTICLE_REVISION : editions
+    ARTICLE_REVISION ||--o{ ARTICLE_RECEIPT : committed
     LOCAL_BRAIN ||--o{ CAPTURE : contains
     CAPTURE ||--|{ CAPTURE_REVISION : versions
     CAPTURE_REVISION ||--o{ REVISION_KIND : classifies
@@ -45,6 +48,18 @@ erDiagram
 - `id: UUID PK`, `created_at: datetime`
 - `active_index_build_id: UUID?` → 현재 검색 테이블을 가리키는 `index_builds.id`
 - 현재는 한 개만 사용한다. 이 테이블은 로그인 토큰이나 대화 기록을 저장하지 않는다.
+
+### 아티클과 발행 이력
+
+| 테이블 | 저장 내용 |
+| --- | --- |
+| `articles` | 글의 고정 ID, `brain_id`, 현재 버전 ID, 생성·수정·삭제 시각. 현재 버전은 이 글의 버전만 가리키며 커밋 시점에 검증한다. |
+| `article_revisions` | 버전별 제목·요약·Markdown 본문, 순서를 유지하는 인용과 주제 배열, 버전 번호와 생성 시각. 동일 글의 버전 번호는 유일하며 발행 후에는 수정·삭제할 수 없다. |
+| `article_receipts` | 호출자 범위와 요청 ID별로 발행·수정 요청의 지문, 아티클 ID와 커밋한 버전 ID를 보존한다. |
+
+0004는 0003 형식으로 발행한 글과 아티클 버전을 같은 ID로 옮긴다. 버전별 인용과 연결 주제, 이미 삭제한 글의 삭제 시각을 보존한다. 처음부터 아티클이었던 기록 사본에는 삭제 표시를 하고 색인 제거 작업을 등록한다.
+
+일반 기록을 수정해 아티클로 발행한 경우에는 같은 ID로 두 주소가 유지된다. 기록 주소는 발행 직전의 원자료 버전을 열고, 아티클 주소는 최신 발행본을 연다. 이전 원자료를 인용한 버전 ID·Node·본문 구간은 그대로 유효하다. 발행 이후의 기록 사본은 삭제 표시한 내부 기록에 귀속시키고 해당 사본을 가리키던 관계와 출처의 외래키도 함께 옮긴다. 일반 기록 검색 색인은 원자료 버전으로 갱신한다. 이미 삭제된 기록과 글은 삭제 상태를 유지한다. 이후 쓰기와 읽기의 계약은 [학습 아티클 명세](../specs/articles.md)를 따른다.
 
 ### `captures` — 기록의 안정적인 식별자·현재 상태
 

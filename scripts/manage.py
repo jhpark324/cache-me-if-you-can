@@ -51,8 +51,10 @@ def main():
     elif args.action == 'run':
         execute(base + ['cache-me'])
     elif args.action == 'install-codex':
+        skills_dir = ROOT / 'docs' / 'skills'
         execute(base + ['python', '-m', 'cache_me.codex_integration', 'install',
-                        '--skill-source', str(ROOT / 'docs/skills/cache-me/SKILL.md')]
+                        '--skill-source', str(skills_dir / 'cache-me' / 'SKILL.md'),
+                        '--article-skill-source', str(skills_dir / 'cache-me-article' / 'SKILL.md')]
                 + (['--replace'] if args.replace else []))
     elif args.action == 'check':
         execute([sys.executable, str(ROOT / 'scripts' / 'preflight.py')])

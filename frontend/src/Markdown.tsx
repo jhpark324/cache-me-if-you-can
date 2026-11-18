@@ -64,9 +64,11 @@ function appendCitationSlot() {
 export function Markdown({
   children,
   after,
+  renderers,
 }: {
   children: string;
   after?: ReactNode;
+  renderers?: Components;
 }) {
   return (
     <TrailingContext.Provider value={after}>
@@ -75,7 +77,7 @@ export function Markdown({
           remarkPlugins={[remarkGfm]}
           rehypePlugins={after ? [appendCitationSlot] : []}
           skipHtml
-          components={components}
+          components={renderers ? { ...components, ...renderers } : components}
         >
           {children}
         </ReactMarkdown>

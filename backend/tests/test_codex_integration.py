@@ -286,6 +286,54 @@ def test_install_without_optional_metadata(tmp_path):
     assert not (Path(result['skill']).parent / 'agents').exists()
 
 
+def make_article_package(source_package):
+    article = source_package.parent.parent / 'cache-me-article'
+    (article / 'agents').mkdir(parents=True)
+    (article / 'SKILL.md').write_text('Article instructions')
+    (article / 'agents/openai.yaml').write_text('interface:\n  display_name: "cache-me-article"\n')
+    return article
+
+
+@pytest.mark.parametrize('existing_install', [False, True])
+def test_install_article_package_with_shared_endpoint(tmp_path, source_package, existing_install, monkeypatch):
+    home = tmp_path / 'codex'
+    data = tmp_path / 'data'
+    python = Path(sys.executable)
+    server = server_config(python, data, 54321)
+    runtime = codex_integration.runtime_config(python, data, 54321, home)
+    if existing_install:
+        legacy = install(home, source_package, server, runtime_metadata=runtime)
+        assert set(legacy['skills']) == {'cache-me'}
+    article = make_article_package(source_package)
+    result = install(home, source_package, server, runtime_metadata=runtime)
+    assert set(result['skills']) == {'cache-me', 'cache-me-article'}
+    package = Path(result['skills']['cache-me-article']).parent
+    assert package == home / 'skills' / 'cache-me-article'
+    assert (package / 'SKILL.md').read_bytes() == (article / 'SKILL.md').read_bytes()
+    assert (package / 'agents/openai.yaml').read_bytes() == (article / 'agents/openai.yaml').read_bytes()
+    assert json.loads((package / 'runtime.json').read_text()) == runtime
+    assert (package / 'runtime.json').read_bytes() == Path(result['runtime_metadata']).read_bytes()
+    assert tomllib.loads((home / 'config.toml').read_text())['mcp_servers'] == {MCP_SERVER_KEY: server}
+    monkeypatch.setattr(codex_integration, 'atomic_write', lambda *_: pytest.fail('Identical install rewrote files'))
+    install(home, source_package, server, runtime_metadata=runtime)
+
+
+def test_article_conflict_checked_before_installing_other_package(tmp_path, source_package):
+    home = tmp_path / 'codex'
+    source = make_article_package(source_package) / 'SKILL.md'
+    installed = home / 'skills' / 'cache-me-article' / 'SKILL.md'
+    installed.parent.mkdir(parents=True)
+    installed.write_text('User customization')
+    server = server_config(Path(sys.executable), tmp_path / 'data', 54321)
+    with pytest.raises(ValueError, match='--replace'):
+        install(home, source_package, server)
+    assert not (home / 'config.toml').exists()
+    assert not (home / 'skills' / 'cache-me').exists()
+    assert installed.read_text() == 'User customization'
+    install(home, source_package, server, replace=True)
+    assert installed.read_bytes() == source.read_bytes()
+
+
 @pytest.mark.parametrize('conflict', ['SKILL.md', 'agents/openai.yaml'])
 def test_package_conflict_preserves_config_and_unrelated_skill(tmp_path, source_package, unrelated_package, conflict):
     home = tmp_path / 'codex'

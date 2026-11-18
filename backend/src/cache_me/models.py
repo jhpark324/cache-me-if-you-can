@@ -64,6 +64,50 @@ class CaptureRevision(Base):
     )
 
 
+class Article(Base):
+    __tablename__ = "articles"
+    id: Mapped[str] = mapped_column(primary_key=True)
+    brain_id: Mapped[str] = mapped_column(ForeignKey("local_brain.id"), index=True)
+    current_revision_id: Mapped[str]
+    created_at: Mapped[str]
+    updated_at: Mapped[str]
+    deleted_at: Mapped[str | None]
+    __table_args__ = (
+        ForeignKeyConstraint(["current_revision_id", "id"], ["article_revisions.id", "article_revisions.article_id"],
+                             deferrable=True, initially="DEFERRED"),
+    )
+
+
+class ArticleRevision(Base):
+    __tablename__ = "article_revisions"
+    id: Mapped[str] = mapped_column(primary_key=True)
+    article_id: Mapped[str] = mapped_column(ForeignKey("articles.id"))
+    revision_no: Mapped[int]
+    title: Mapped[str]
+    summary: Mapped[str]
+    body_markdown: Mapped[str] = mapped_column(Text)
+    citations: Mapped[list] = mapped_column(JSON)
+    topics: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[str]
+    __table_args__ = (
+        UniqueConstraint("id", "article_id"), UniqueConstraint("article_id", "revision_no"),
+        CheckConstraint("revision_no >= 1"),
+    )
+
+
+class ArticleReceipt(Base):
+    __tablename__ = "article_receipts"
+    principal_scope: Mapped[str] = mapped_column(primary_key=True)
+    request_id: Mapped[str] = mapped_column(primary_key=True)
+    operation: Mapped[str]
+    request_fingerprint: Mapped[str]
+    article_id: Mapped[str] = mapped_column(ForeignKey("articles.id"))
+    committed_revision_id: Mapped[str]
+    __table_args__ = (
+        ForeignKeyConstraint(["committed_revision_id", "article_id"], ["article_revisions.id", "article_revisions.article_id"]),
+    )
+
+
 class RevisionKind(Base):
     # Keep all historical values in the SQLite CHECK: revisions are immutable.
     # Public reads and new writes use the six canonical kinds in record_kinds.

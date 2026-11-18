@@ -13,6 +13,7 @@ from mcp.client import Client
 from mcp.types import ElicitResult
 from mcp.shared.exceptions import MCPError
 
+from cache_me.articles import ArticleService
 from cache_me.auth import ModelAuth, AuthError
 from cache_me.config import Settings
 from cache_me.db import Database
@@ -75,6 +76,11 @@ def test_web_security_and_delete_session_binding(web):
 def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
     client, app = web
     capture = create(client, '백업의 정본')
+    article = ArticleService(app.state.records).create({
+        'request_id': str(uuid4()), 'title': '복습', 'summary': '공부 기록으로 정리한 글',
+        'body_markdown': '근거 [1](#cite-1)', 'citations': [{'kind': 'record', 'source': {
+            'capture_id': capture['id'], 'revision_id': capture['revision_id']}}],
+    })['article']
     app.state.records.concept_create({'request_id': str(uuid4()), 'name': '백업 주제'})
     jobs = TopicBackfillJobs(app.state.records)
     job = jobs.claim()
@@ -86,7 +92,7 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         manifest = json.loads(archive.read('manifest.json'))
         assert manifest['app_version'] == version('cache-me')
         assert manifest['includes_soft_deleted_history'] is True
-        assert manifest['schema_revision'] == '0002'
+        assert manifest['schema_revision'] == '0004'
         assert manifest['embedding_profiles'][0]['model_id'] == 'nlpai-lab/KURE-v2'
         assert b'access_token' not in archive.read('manifest.json')
         assert archive.read('cache-me.sqlite3').startswith(b'SQLite format 3')
@@ -104,6 +110,7 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         assert saved['id'] == capture['id']
         assert saved['revision_id'] == capture['revision_id']
         assert saved['body_markdown'] == '백업의 정본'
+        assert restored.get(f"/api/v1/articles/{article['id']}").json()['data'] == article
         with restored_app.state.db.read() as session:
             restored_job = session.get(TopicBackfillJob, job['job_id'])
             assert (restored_job.call_count, restored_job.attempt_count) == (1, 1)

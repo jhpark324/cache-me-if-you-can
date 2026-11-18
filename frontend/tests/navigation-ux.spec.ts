@@ -86,6 +86,26 @@ async function expectFocusInsideMenu(page: Page) {
     .toBe(true);
 }
 
+test("기록 주소에 아티클 ID를 넣으면 기록 조회 오류를 표시한다", async ({
+  page,
+}) => {
+  const articleId = "33333333-3333-4333-8333-333333333333";
+  const state = await fixture(page);
+  await page.route(`**/api/v1/captures/${articleId}`, (route) =>
+    route.fulfill({
+      status: 404,
+      json: { ok: false, error: { code: "NOT_FOUND", message: "기록 없음" } },
+    }),
+  );
+
+  await page.goto(`/#capture/${articleId}`);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "더 이상 조회할 수 없는 기록입니다",
+  );
+  await expect(page).toHaveURL(new RegExp(`#capture/${articleId}$`));
+  expect(state.unexpectedRequests).toEqual([]);
+});
+
 for (const viewport of [
   { name: "mobile", width: 390, height: 844 },
   { name: "tablet", width: 1024, height: 768 },

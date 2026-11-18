@@ -21,6 +21,7 @@ import { Heading } from "@astryxdesign/core/Heading";
 import {
   ArrowLeft,
   ArrowUp,
+  BookOpen,
   Clock3,
   Check,
   ChevronRight,
@@ -40,6 +41,7 @@ import {
 } from "lucide-react";
 import { api, post, streamQuestion, errorText, uid, ApiError } from "./api";
 import { Markdown } from "./Markdown";
+import { ArticleWorkspace } from "./ArticleWorkspace";
 import AnswerResponse, { buildAnswerDraft } from "./AnswerResponse";
 import SearchLoading from "./SearchLoading";
 import { RecordDates } from "./RecordDates";
@@ -147,6 +149,17 @@ function useMedia(query: string) {
   }, [query]);
   return v;
 }
+type View = "home" | "library" | "timeline" | "articles";
+function viewFromHash(hash: string): View {
+  if (hash === "#articles" || hash.startsWith("#article/")) return "articles";
+  if (hash === "#timeline") return "timeline";
+  if (hash === "#library") return "library";
+  return "home";
+}
+function articleIdFromHash(hash: string) {
+  const match = hash.match(/^#article\/([^/]+)$/);
+  return match?.[1] ?? null;
+}
 function KindBadges({ values }: { values: RecordKind[] }) {
   return (
     <>
@@ -161,22 +174,21 @@ export default function App() {
     [cursor, setCursor] = useState<string | null>(null),
     [listLoading, setListLoading] = useState(true),
     [listError, setListError] = useState("");
+  const [view, setView] = useState<View>(() => viewFromHash(location.hash));
+  const inArticleWorkspace = view === "articles";
   const {
     concepts,
     error: conceptError,
     loading: conceptsLoading,
     refresh: refreshConcepts,
-  } = useConceptCatalog();
-  type View = "home" | "library" | "timeline";
-  const [view, setView] = useState<View>(() =>
-    location.hash === "#timeline"
-      ? "timeline"
-      : location.hash === "#library"
-        ? "library"
-        : "home",
+  } = useConceptCatalog(!inArticleWorkspace);
+  const [articleId, setArticleId] = useState(() =>
+    articleIdFromHash(location.hash),
   );
   const viewRef = useRef<View>(view);
-  const recordOrigin = useRef<View>(view === "home" ? "library" : view);
+  const recordOrigin = useRef<"timeline" | "library">(
+    view === "timeline" ? "timeline" : "library",
+  );
   const recordTrigger = useRef<string | null>(null);
   const [kind, setKind] = useState(""),
     [concept, setConcept] = useState("");
@@ -255,6 +267,7 @@ export default function App() {
       !exampleMode &&
       !settingsOpen &&
       !editor,
+    !inArticleWorkspace,
   );
   const refreshHomeGraph = useCallback(() => {
     setExampleMode(false);
@@ -363,12 +376,13 @@ export default function App() {
     [kind, concept, cursor, activeMonth, activeSort],
   );
   useEffect(() => {
+    if (inArticleWorkspace) return;
     void loadRecords();
     return () => {
       listController.current?.abort();
       listVersion.current++;
     };
-  }, [kind, concept, activeMonth, activeSort]);
+  }, [kind, concept, activeMonth, activeSort, inArticleWorkspace]);
   useEffect(() => {
     if (new URLSearchParams(location.search).has("login")) {
       setSettingsOpen(true);
@@ -401,7 +415,7 @@ export default function App() {
     const version = ++detailVersion.current;
     if (updateHash) {
       recordOrigin.current =
-        viewRef.current === "home" ? "library" : viewRef.current;
+        viewRef.current === "timeline" ? "timeline" : "library";
       recordTrigger.current = id;
     } else {
       const origin =
@@ -458,7 +472,7 @@ export default function App() {
     setNavOpen(false);
   }, [closeSource]);
   const navigateView = useCallback(
-    (target: View, push = true) => {
+    (target: View, push = true, nextArticleId: string | null = null) => {
       detailVersion.current++;
       searchController.current?.abort();
       searchVersion.current++;
@@ -476,6 +490,7 @@ export default function App() {
       closeSource();
       viewRef.current = target;
       setView(target);
+      setArticleId(nextArticleId);
       setNavOpen(false);
       menuDestination.current = "record";
       if (push)
@@ -484,7 +499,11 @@ export default function App() {
           "",
           location.pathname +
             location.search +
-            (target === "home" ? "" : "#" + target),
+            (nextArticleId
+              ? "#article/" + encodeURIComponent(nextArticleId)
+              : target === "home"
+                ? ""
+                : "#" + target),
         );
       requestAnimationFrame(() =>
         document.getElementById("main")?.focus({ preventScroll: true }),
@@ -519,12 +538,9 @@ export default function App() {
         }
       } else {
         navigateView(
-          location.hash === "#timeline"
-            ? "timeline"
-            : location.hash === "#library"
-              ? "library"
-              : "home",
+          viewFromHash(location.hash),
           false,
+          articleIdFromHash(location.hash),
         );
       }
     };
@@ -1024,6 +1040,7 @@ export default function App() {
             ["home", "지식 공간", Network],
             ["library", "모든 기록", FileText],
             ["timeline", "타임라인", Clock3],
+            ["articles", "아티클", BookOpen],
           ] as const
         ).map(([target, label, Icon]) => (
           <button
@@ -1235,7 +1252,14 @@ export default function App() {
               )}
             </VStack>
           </section>
-          {view !== "home" && (
+          {inArticleWorkspace && (
+            <ArticleWorkspace
+              articleId={articleId}
+              onOpenArticle={(id) => navigateView("articles", true, id)}
+              onBack={() => navigateView("articles")}
+            />
+          )}
+          {(view === "library" || view === "timeline") && (
             <VStack
               className="record-browser-host"
               hidden={Boolean(selected || detailLoading || detailError)}

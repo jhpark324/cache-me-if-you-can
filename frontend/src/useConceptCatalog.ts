@@ -21,13 +21,14 @@ export async function loadConcepts(signal: AbortSignal): Promise<Concept[]> {
   return [...items.values()];
 }
 
-export function useConceptCatalog() {
+export function useConceptCatalog(enabled: boolean) {
   const [concepts, setConcepts] = useState<Concept[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [generation, setGeneration] = useState(0);
   const refresh = useCallback(() => setGeneration((value) => value + 1), []);
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     setLoading(true);
     setError("");
@@ -42,11 +43,12 @@ export function useConceptCatalog() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [generation]);
+  }, [enabled, generation]);
   useEffect(() => {
+    if (!enabled) return;
     // Records created from Codex can add concepts while this tab is inactive.
     window.addEventListener("focus", refresh);
     return () => window.removeEventListener("focus", refresh);
-  }, [refresh]);
+  }, [enabled, refresh]);
   return { concepts, loading, error, refresh };
 }

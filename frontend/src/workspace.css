@@ -203,6 +203,10 @@ a {
 .main-content.is-browsing {
   background: var(--color-background-body);
 }
+.app-shell[data-view="articles"] .main-content {
+  pointer-events: auto;
+  min-height: 0;
+}
 .record-detail {
   background: var(--color-background-surface);
   width: min(100%, 860px);

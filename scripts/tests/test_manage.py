@@ -68,6 +68,8 @@ class ManageTests(unittest.TestCase):
                 manage.main()
                 command = execute.call_args.args[0]
                 self.assertEqual(command[command.index('--skill-source') + 1], str(manage.ROOT / 'docs/skills/cache-me/SKILL.md'))
+                self.assertEqual(command[command.index('--article-skill-source') + 1],
+                                 str(manage.ROOT / 'docs/skills/cache-me-article/SKILL.md'))
                 self.assertEqual('--replace' in command, replace)
                 self.assertIn('cache_me.codex_integration', command)
 

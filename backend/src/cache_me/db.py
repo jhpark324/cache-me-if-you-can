@@ -68,7 +68,7 @@ def migrate_database(path: str | Path) -> None:
 
 def install_guards(connection):
     # Canonical history cannot accidentally be updated by a later service method.
-    for table in ("capture_revisions", "revision_kinds", "knowledge_nodes", "revision_concepts", "node_concepts", "provenance_links"):
+    for table in ("article_revisions", "capture_revisions", "revision_kinds", "knowledge_nodes", "revision_concepts", "node_concepts", "provenance_links"):
         for action in ("UPDATE", "DELETE"):
             connection.exec_driver_sql(f"CREATE TRIGGER IF NOT EXISTS immutable_{table}_{action.lower()} BEFORE {action} ON {table} BEGIN SELECT RAISE(ABORT, 'immutable revision data'); END")
     connection.exec_driver_sql("CREATE TRIGGER IF NOT EXISTS no_capture_restore BEFORE UPDATE OF deleted_at ON captures WHEN OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NOT OLD.deleted_at BEGIN SELECT RAISE(ABORT, 'deleted captures cannot be restored'); END")
