@@ -15,14 +15,14 @@
   <header class="g-header">
     <nav class="g-wrap g-nav" aria-label="심화 가이드">
       <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
-      <div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-features.html">기능</a><a href="guide-engine.html" aria-current="page">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
+      <a class="g-map-link" href="guide.html#map">가이드 목차 <span aria-hidden="true">☰</span></a><div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-skills.html">스킬·MCP</a><a href="guide-features.html">기능</a><a href="guide-engine.html" aria-current="page">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
     </nav>
   </header>
   <main id="main" class="g-wrap g-main">
     <header class="g-intro">
       <p class="g-kicker">심화 가이드 / 검색 엔진</p>
       <h1 data-ax="Heading">검색 엔진과 저장 구조</h1>
-      <p class="g-lead">“전송 계층에서 빠진 데이터는 어떻게 처리했지?”라는 질문을 따라가 보세요. 캐시미가 어떤 기록을 먼저 읽고 어느 문장을 답변의 근거로 쓰는지 살펴봅니다.</p>
+      <p class="g-lead">본문을 작은 구간으로 나누고, 질문에 맞는 구간을 찾아 순위를 합칩니다.</p>
     </header>
     <nav class="g-jumps" aria-label="이 페이지 목차"><a href="#storage">원문과 색인</a><a href="#retrieval">세 가지 검색 단서</a><a href="#rrf">RRF 계산기</a><a href="#evidence">근거 검토</a><a href="#runtime">실행과 권한</a><a href="#backup">백업과 복구</a></nav>
 
@@ -34,10 +34,12 @@
         <li><strong>Markdown 분할</strong><span>짧은 글은 한 구간으로 둡니다. 긴 글은 제목·절, 블록, 문장 경계를 따라 나누고 각 구간의 원문 시작·끝 위치를 기억합니다.</span></li>
         <li><strong>LanceDB에 색인</strong><span>청크마다 제목·절과 본문을 합친 검색용 텍스트, 벡터, 원문 버전·위치·색인 세대를 씁니다. 준비된 기록이 검색 후보가 됩니다.</span></li>
       </ol>
+      <details class="g-details"><summary>본문이 바뀌거나 색인이 중단되면?</summary>
       <div class="g-grid">
         <article class="g-card"><h3>본문을 고치면</h3><p>수정본이 새로운 현재 버전이 됩니다. 검색은 SQLite의 버전·세대가 일치하는 준비 완료 구간만 채택합니다. 새 색인을 만드는 중에는 예전 구간이 최신 답변의 근거로 나오지 않습니다.</p></article>
         <article class="g-card"><h3>색인 도중 앱이 꺼지면</h3><p>SQLite에 남은 작업을 다시 읽습니다. 실행 중인 작업의 임대 시간이 지나면 다시 가져올 수 있습니다. 이미 더 새 버전이 생긴 작업은 건너뜁니다. 실패한 최신 작업은 다시 시도할 수 있습니다.</p></article>
       </div>
+      </details>
       <details class="g-details"><summary>원문 위치와 토큰 예산 펼치기</summary><p>한 청크의 모델 입력은 제목·헤더·특수 토큰을 포함해 최대 512토큰입니다. 제목과 헤더 맥락은 최대 64토큰이며 큰 블록을 강제로 나눌 때만 최대 64토큰을 겹칩니다. 원문 위치는 유니코드 문자 기준 <code>[시작, 끝)</code>입니다. 검색용으로 덧붙인 제목은 인용할 본문 범위에서 빠집니다.</p></details>
     </section>
 

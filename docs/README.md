@@ -2,9 +2,9 @@
 
 [![저장소 검사](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/repository-ci.yml/badge.svg?branch=main)](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/repository-ci.yml) [![웹 빌드와 브라우저 검사](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/frontend-ci.yml/badge.svg?branch=main)](https://github.com/jhpark324/cache-me-if-you-can/actions/workflows/frontend-ci.yml)
 
-**“파일은 한 조각만 빠져도 곤란한데, 통화는 왜 소리가 잠깐 끊겨도 계속될까?”** AI와 TCP·UDP를 공부한 뒤 “이 대화에서 두 내용을 각각 캐시미 해줘”라고 말하면, 내 컴퓨터에 공부 기록 두 개가 남습니다. 나중에 그래프의 **전송 계층**에서 두 기록을 다시 찾고, 비교표와 인용이 있는 아티클 한 편으로 엮을 수 있습니다.
+**“TCP에 대해 알려줘.”** AI와 TCP·UDP의 차이를 공부하고 “지금까지 배운 걸 cache-me로 정리해줘”라고 말하면 내 컴퓨터에 두 기록이 남습니다. 그래프에서 한 문단을 열거나, 기억나는 말로 검색하거나, 두 기록을 비교 아티클로 엮을 수 있습니다.
 
-**[네 장면으로 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [휴대폰용 QR](showcase/media/intro-qr.png) · [기술 가이드](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
+**[TCP·UDP 이야기 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [스킬과 MCP 한눈에 보기](https://jhpark324.github.io/cache-me-if-you-can/guide-skills.html) · [휴대폰용 QR](showcase/media/intro-qr.png) · [기술 가이드](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
 
 ![노트북용 캐시미 아티클 리더에서 TCP와 UDP를 비교한 표와 그 근거가 된 공부 기록을 나란히 읽는 화면](showcase/media/article-poster.jpg)
 

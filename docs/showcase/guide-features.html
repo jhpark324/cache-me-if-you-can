@@ -11,15 +11,15 @@
   <a class="g-skip" href="#main">본문으로 건너뛰기</a>
   <header class="g-header"><nav class="g-wrap g-nav" aria-label="심화 가이드">
     <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
-    <div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-features.html" aria-current="page">기능</a><a href="guide-engine.html">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
+    <a class="g-map-link" href="guide.html#map">가이드 목차 <span aria-hidden="true">☰</span></a><div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-skills.html">스킬·MCP</a><a href="guide-features.html" aria-current="page">기능</a><a href="guide-engine.html">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
   </nav></header>
   <main id="main" class="g-wrap g-main">
-    <header class="g-intro"><p class="g-kicker">심화 가이드 / 사용자 기능</p><h1 data-ax="Heading">기록에서 아티클까지</h1><p class="g-lead">오늘 배운 TCP와 UDP를 다음 주의 내가 다시 설명할 수 있을까요? 쓸 때는 대화 한 줄이면 되고, 찾을 때는 기억나는 단서 하나에서 시작할 수 있습니다.</p></header>
+    <header class="g-intro"><p class="g-kicker">심화 가이드 / 사용자 기능</p><h1 data-ax="Heading">기록에서 아티클까지</h1><p class="g-lead">TCP·UDP 공부 기록을 남기고, 찾고, 한 편의 글로 엮어 보세요.</p></header>
     <nav class="g-jumps" aria-label="기능 바로가기"><a href="#records">기록 남기기</a><a href="#recall">목록·타임라인</a><a href="#graph">주제·그래프</a><a href="#answers">검색·답변</a><a href="#sources">출처·정정</a><a href="#articles">아티클·시각화</a><a href="#skills">Codex 스킬</a></nav>
 
     <section class="g-section" id="records">
       <h2 data-ax="Heading">무엇을 남길지 정하기</h2>
-      <p>“방금 배운 TCP와 UDP, 나중에 따로 복습할 수 있게 캐시미 해줘.” Codex는 요청한 범위에서 각 기록의 제목과 본문을 정리합니다. 같은 설명에 필요한 이유와 예시는 함께 남기고, 독립적으로 꺼내 쓸 내용은 나눕니다.</p>
+      <p>“지금까지 배운 TCP와 UDP를 cache-me로 정리해줘.”</p>
       <ol class="g-flow" aria-label="공부 내용 저장 예시"><li><strong>저장 요청</strong><span>대화 중 남기고 싶은 부분을 지정</span></li><li><strong>두 기록으로 정리</strong><span>TCP의 순서·재전송 / UDP의 독립적인 데이터그램</span></li><li><strong>저장한 내용 확인</strong><span>Codex의 응답과 웹의 ‘모든 기록’에서 확인</span></li></ol>
       <details class="g-details"><summary>웹에서 직접 쓰거나 한 기록으로 남기려면?</summary><p>‘모든 기록’의 ‘새 기록’에서 Markdown 본문을 쓰고 미리 본 뒤 저장합니다. 제목과 유형은 선택 사항입니다. 편집 중 닫으면 변경한 초안을 버릴지 확인합니다. Codex에는 “한 문서로 남겨줘” 또는 “인용문은 원문대로 남겨줘”처럼 원하는 단위를 지정할 수 있습니다.</p></details>
       <details class="g-details"><summary>공부 노트 외에 어떤 내용을 남길 수 있나요?</summary><div class="g-table"><table><thead><tr><th scope="col">기록 유형</th><th scope="col">나중에 되찾을 내용</th></tr></thead><tbody>
@@ -38,17 +38,37 @@
     </section>
 
     <section class="g-section" id="graph">
-      <h2 data-ax="Heading">주제 하나에서 연결된 기록 찾기</h2>
-      <div class="g-pair"><div><p>‘지식 공간’의 주제 탐색에서 이름을 고르면 그 주제와 연결된 기록이 강조됩니다. 기록 한 편 전체에 붙은 주제와, 본문 일부인 ‘세부 항목’에 붙은 주제를 구분해서 볼 수 있습니다.</p><p>점이나 그 옆의 이름을 누르면 내용을 읽을 수 있습니다. ‘이 주제의 모든 기록’을 누르면 전체 목록에 해당 주제 필터가 적용됩니다. 그래프 안의 연결 수는 현재 표시된 범위를 기준으로 셉니다.</p></div>
-        <figure class="g-screen"><img src="media/graph-poster.jpg" width="1440" height="810" loading="lazy" alt="전송 계층을 선택해 TCP 기록과 UDP 기록이 한 주제로 이어진 실제 그래프"><figcaption>‘전송 계층’에 TCP 기록과 UDP 기록, 두 개가 연결되어 있습니다.</figcaption></figure></div>
+      <h2 data-ax="Heading">그래프의 점 안에는 무엇이 있을까?</h2>
+      <div class="g-pair">
+        <figure class="g-node-demo">
+          <figcaption>점을 골라 연결된 내용을 열어 보세요.</figcaption>
+          <details name="graph-example" open>
+            <summary><i class="legend-topic" aria-hidden="true"></i><strong>전송 계층</strong><small>주제</small></summary>
+            <div><span>연결된 기록 2개</span><p>TCP는 순서를 어떻게 지킬까?<br>UDP는 무엇을 보장할까?</p></div>
+          </details>
+          <details name="graph-example">
+            <summary><i class="legend-record" aria-hidden="true"></i><strong>UDP는 무엇을 보장할까?</strong><small>기록</small></summary>
+            <div><span>이 기록의 세부 항목</span><p>데이터그램과 전달 순서<br>실시간 음성</p></div>
+          </details>
+          <details name="graph-example">
+            <summary><i class="legend-part" aria-hidden="true"></i><strong>데이터그램과 전달 순서</strong><small>세부 항목</small></summary>
+            <div><span>참조한 부분 · UDP 기록 첫 문단</span><p>UDP는 메시지를 독립적인 데이터그램으로 보낸다. 도착 순서나 전달 성공을 보장하지 않으며, 빠진 데이터그램을 자동으로 재전송하지 않는다.</p></div>
+          </details>
+        </figure>
+        <figure class="g-screen"><img src="media/graph-poster.jpg" width="1440" height="810" loading="lazy" alt="지식 공간 그래프에서 UDP 기록의 세부 항목을 선택한 실제 화면"><figcaption><a href="index.html#graph">그래프에서 본문 구간 여는 시연 보기 →</a></figcaption></figure>
+      </div>
       <details class="g-details"><summary>두 기록을 잇는 선은 어떻게 생기나요?</summary><p>저장 후 분류 작업이 본문에 맞는 기존 주제를 찾아 연결하고, 새로 구별할 범위가 뚜렷하면 주제를 만듭니다. 기록에 세부 항목이 있으면 어느 기록의 일부인지도 표시됩니다. 두 주장 사이의 ‘뒷받침함’, ‘정정함’ 같은 관계는 사용자가 근거와 함께 명시합니다.</p><p>확정하기 어려운 주제는 보류될 수 있습니다. 주제 이름이나 잘못 연결된 기록을 정정하려면 Codex에서 대상을 지정해 요청합니다. 연결 작업이 아직 끝나지 않았거나 실패했을 때도 이미 저장한 본문을 열 수 있습니다. WebGL을 쓸 수 없는 환경에서는 목록으로 연결을 살펴봅니다.</p></details>
     </section>
 
     <section class="g-section" id="answers">
-      <h2 data-ax="Heading">기억나는 말로 질문하고 근거 확인하기</h2>
-      <p class="g-question">“내가 정리했던 전송 방식 중 순서가 뒤바뀌면 수신 쪽에서 다시 맞춰 주는 건 뭐였지?”</p>
-      <ol class="g-flow"><li><strong>질문하기</strong><span>‘지식 공간’ 검색창에 자신의 말로 입력</span></li><li><strong>관련 구간 읽기</strong><span>단어·의미·주제에서 후보를 찾고 실제 본문 확인</span></li><li><strong>답변 검토하기</strong><span>답변에 붙은 번호를 열어 그 설명의 근거 확인</span></li></ol>
-      <p>그래프에서는 질문 중에 읽은 기록과 최종 답변에 인용한 근거를 구분해 볼 수 있습니다. 답변을 다시 쓸 자료로 보관하고 싶다면 직접 새 기록으로 저장합니다.</p>
+      <h2 data-ax="Heading">제목을 잊었을 때는 질문으로 찾기</h2>
+      <div class="g-pair">
+        <div>
+          <p class="g-question">“UDP에서 음성 조각이 빠지면 어떻게 돼?”</p>
+          <ol class="g-trail"><li><strong>질문 입력</strong><span>지식 공간 검색창에 기억나는 말을 적습니다.</span></li><li><strong>근거 확인</strong><span>답변의 출처 번호를 누르면 그 설명을 뒷받침한 문장이 열립니다.</span></li><li><strong>그래프 탐색</strong><span>그래프에서 본문 조각(청크)을 누르면 원문이 열립니다. 이번 검색에서는 TCP와 UDP를 읽었고, UDP 조각만 ‘답변 출처’로 표시됩니다.</span></li></ol>
+        </div>
+        <figure class="g-screen"><img src="media/search-poster.jpg" width="1440" height="810" loading="lazy" alt="지식 공간에서 TCP와 UDP에 대해 질문한 뒤 답변과 연결된 근거를 보는 데스크톱 검색 화면"><figcaption><a href="index.html#search">지식 공간 검색 시연 보기 →</a></figcaption></figure>
+      </div>
       <details class="g-details"><summary>아무 결과가 없을 때 무엇을 확인할까요?</summary><p>설정에서 먼저 검색 모델과 기록의 검색 준비 상태를 확인합니다. 준비 중인 기록과 검색 준비에 실패한 기록이 따로 표시됩니다. 답변 생성에는 연결한 모델 계정이 필요합니다.</p><p>검색할 수 있는 상태여도 읽은 근거가 질문을 뒷받침하지 않으면 확인 범위가 제한됩니다. 유형이나 시점을 기억한다면 목록·타임라인에서 해당 기록을 직접 열 수 있습니다.</p></details>
       <div class="g-links"><a href="guide-engine.html#rrf">어떤 후보를 먼저 읽는지 계산해 보기</a></div>
     </section>
@@ -71,12 +91,7 @@
 
     <section class="g-section" id="skills">
       <h2 data-ax="Heading">요청에 맞는 두 가지 스킬</h2>
-      <div class="g-grid">
-        <article class="g-card"><h3 data-ax="Heading">기록을 다루는 <code>cache-me</code></h3><p>“이 결정과 이유를 캐시미 해줘”, “그때 무슨 조건이었지?”, “잘못 적은 부분을 고쳐줘.” 기록을 생성·조회·정정하고 필요한 출처를 다시 읽습니다. <code>capture_create</code>가 저장하는 대상은 기록 본문입니다.</p></article>
-        <article class="g-card"><h3 data-ax="Heading">글을 쓰는 <code>cache-me-article</code></h3><p>“이 자료들로 복습용 아티클을 써줘.” 기록에서 근거를 읽고 글과 인용을 구성해 <code>article_create</code>로 등록합니다. 발행한 글은 <code>article_update</code>로 수정합니다.</p></article>
-      </div>
-      <p class="g-note">스킬에는 어떤 자료를 읽고 어떻게 쓸지 담겨 있습니다. MCP는 스킬이 내 기기의 서재를 검색하거나 저장할 때 호출하는 도구 연결 방식입니다. 웹에서 질문을 보내면 로컬 서버의 답변 기능이 처리합니다.</p>
-      <div class="g-links"><a href="guide-system.html#tools">MCP 도구별 책임</a><a href="guide-engine.html#storage">기록과 아티클의 저장 구조</a><a href="index.html#demo">실제 기능 시연</a></div>
+      <ul class="g-paths"><li><a href="guide-skills.html"><strong>“지금까지 배운 걸 정리해줘”와 “이 기록으로 글 써줘”</strong><span>두 요청을 골라 스킬, MCP 도구, 저장 위치를 비교해 보세요.</span></a></li></ul>
     </section>
     <a href="guide.html">가이드 지도로</a>
   </main>

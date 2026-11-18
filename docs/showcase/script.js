@@ -8,6 +8,8 @@ const filmTabs = [...demos.querySelectorAll(".film-nav a")];
 const sections = [...document.querySelectorAll(".section-nav a")];
 const previous = story.querySelector(".prev");
 const next = story.querySelector(".next");
+const udpTurn = document.querySelector(".udp-turn");
+const udpAnswer = udpTurn.querySelector(".udp-answer");
 const imageViewer = document.getElementById("image-viewer");
 const filmViewer = document.getElementById("film-viewer");
 const qrViewer = document.getElementById("qr-viewer");
@@ -73,6 +75,7 @@ function select(chapter, film) {
   chapterIndex = chapter;
   previous.disabled = chapter <= 0;
   next.disabled = chapter >= chapters.length - 1;
+  updateNextLabel();
   story.querySelector(".position").textContent = (chapter + 1) + " / " + chapters.length;
   refreshPictures();
 }
@@ -97,7 +100,8 @@ function renderAddress() {
     filmViewer.querySelector("video")?.pause();
     filmViewer.close();
   }
-  const film = hash === "demo" ? 0 : hash === "recall" ? films.length - 1 : films.findIndex(panel => panel.id === hash);
+  const filmId = hash.startsWith("demo-") ? hash.slice(5) : hash;
+  const film = hash === "demo" ? 0 : hash === "recall" ? films.length - 1 : films.findIndex(panel => panel.id === filmId);
   const chapter = chapters.findIndex(panel => panel.id === hash);
   select(chapter < 0 ? 0 : chapter, film);
 }
@@ -127,11 +131,29 @@ for (const link of document.querySelectorAll("a[href^='#']")) {
 
 function turnPage(index, focus) {
   if (index < 0 || index >= chapters.length) return;
+  // Sequential navigation follows the conversation. The chapter rail is a direct jump.
+  if (chapterIndex === 0 && index === 1 && !udpTurn.open) {
+    udpTurn.open = true;
+    if (focus) udpAnswer.focus({ preventScroll:true });
+    return;
+  }
   navigate("#" + chapters[index].id);
   if (focus) rail[index].focus({ preventScroll: true });
 }
 previous.addEventListener("click", () => turnPage(chapterIndex - 1, true));
 next.addEventListener("click", () => turnPage(chapterIndex + 1, true));
+
+function updateNextLabel() {
+  next.textContent = chapterIndex === 0 && !udpTurn.open ? "대화 계속 ↓" : "다음 →";
+}
+
+udpTurn.addEventListener("toggle", () => {
+  udpTurn.querySelector(".reveal-hint").textContent = udpTurn.open ? "답 접기" : "AI 답 보기";
+  updateNextLabel();
+  if (udpTurn.open && !story.hidden && chapterIndex === 0 && matchMedia("(max-width:48rem)").matches) {
+    udpTurn.scrollIntoView({ block:"start", behavior:reducedMotion.matches ? "instant" : "smooth" });
+  }
+});
 
 document.addEventListener("keydown", event => {
   if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || document.querySelector("dialog[open]")) return;
@@ -148,7 +170,7 @@ document.addEventListener("keydown", event => {
 let touchStart;
 const book = story.querySelector(".book-pages");
 book.addEventListener("touchstart", event => {
-  touchStart = event.touches.length === 1 && !event.target.closest("button,a")
+  touchStart = event.touches.length === 1 && !event.target.closest("button,a,summary")
     ? { x:event.touches[0].clientX, y:event.touches[0].clientY } : null;
 }, { passive:true });
 book.addEventListener("touchcancel", () => { touchStart = null; }, { passive:true });
