@@ -369,3 +369,102 @@
     inline-size: min(48rem, 100%);
   }
 }
+
+.article-chart {
+  margin: var(--spacing-6) 0;
+  padding: var(--spacing-4);
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-container);
+  background: var(--color-background-surface);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.article-chart figcaption {
+  margin-block-end: var(--spacing-4);
+  line-height: 1.4;
+}
+
+.article-chart-group + .article-chart-group {
+  margin-block-start: var(--spacing-4);
+  padding-block-start: var(--spacing-4);
+  border-block-start: thin solid var(--color-border);
+}
+
+.article-chart-heading,
+.article-chart-scale {
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.article-chart .article-chart-values {
+  display: grid;
+  gap: var(--spacing-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.article-chart[data-mode="stacked"] .article-chart-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-1) var(--spacing-4);
+}
+
+.article-chart .article-chart-values li {
+  min-inline-size: 0;
+  margin: 0;
+}
+
+.article-chart-label {
+  flex-wrap: wrap;
+}
+
+.article-chart[data-mode="grouped"] .article-chart-label {
+  margin-block-end: var(--spacing-1);
+}
+
+.article-chart[data-mode="grouped"] .article-chart-value {
+  margin-inline-start: auto;
+}
+
+.article-chart-track {
+  inline-size: 100%;
+  block-size: var(--spacing-3);
+  overflow: hidden;
+  background: var(--color-background-muted);
+  border-radius: var(--radius-inner);
+}
+
+.article-chart[data-mode="stacked"] .article-chart-track {
+  block-size: var(--spacing-5);
+}
+
+.article-chart-key,
+.article-chart-segment {
+  flex: none;
+  background-color: var(--chart-ink);
+}
+
+.article-chart-key {
+  inline-size: .65em;
+  block-size: .65em;
+  border-radius: var(--radius-inner);
+}
+
+.article-chart-segment {
+  block-size: 100%;
+}
+
+.article-chart [data-ink="0"] { --chart-ink: var(--color-text-accent); }
+.article-chart [data-ink="1"] { --chart-ink: var(--color-icon-teal); }
+.article-chart [data-ink="2"] { --chart-ink: var(--color-icon-blue); }
+.article-chart [data-ink="3"] { --chart-ink: var(--color-icon-purple); }
+.article-chart [data-ink="4"] { --chart-ink: var(--color-icon-yellow); }
+
+.article-chart-scale {
+  margin-block-start: var(--spacing-3);
+  border-block-start: thin solid var(--color-border-emphasized);
+  padding-block-start: var(--spacing-1);
+}

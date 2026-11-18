@@ -127,10 +127,144 @@ async function position(citation: Locator) {
   }));
 }
 
+function chartBlock(chart: unknown) {
+  return ["```article-chart", JSON.stringify(chart), "```"].join("\n");
+}
+
+const stackedChart = {
+  title: "실행별 문항 결과",
+  mode: "stacked",
+  unit: "문항",
+  series: ["정답", "오답", "미완료"],
+  groups: [
+    { label: "전체 실행", values: [1, 9, 10] },
+    { label: "추가 실행", values: [0, 10, 0] },
+  ],
+};
+
+const groupedChart = {
+  title: "분모를 바꾼 통과율",
+  mode: "grouped",
+  unit: "%",
+  series: ["전체 기준", "CSV 기준"],
+  groups: [
+    {
+      label: "첫 실험",
+      values: [
+        { part: 21, total: 135 },
+        { part: 21, total: 85 },
+      ],
+    },
+    {
+      label: "두 번째 실험",
+      values: [
+        { part: 0, total: 10 },
+        { part: 6, total: 9 },
+      ],
+    },
+  ],
+};
+
+async function barFractions(chart: Locator) {
+  return chart.locator(".article-chart-segment").evaluateAll((segments) =>
+    segments.map((segment) => {
+      const track = segment.closest(".article-chart-track")!;
+      return (
+        segment.getBoundingClientRect().width /
+        track.getBoundingClientRect().width
+      );
+    }),
+  );
+}
+
 for (const [device, width, height] of [
   ["데스크톱", 1440, 900],
   ["모바일", 390, 844],
 ] as const) {
+  test(`${device}에서 차트의 공통 눈금과 실제 수치를 읽고 출처를 확인한다`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await fixture(page, {
+      ...article,
+      body_markdown: [
+        chartBlock(stackedChart),
+        chartBlock(groupedChart),
+        "분모에 따라 통과율이 달라진다. [2](#cite-2)",
+      ].join("\n\n"),
+    });
+    await page.goto("/#article/" + articleId);
+    const stacked = page.getByRole("figure", { name: stackedChart.title });
+    const grouped = page.getByRole("figure", { name: groupedChart.title });
+    await expect(stacked).toBeVisible();
+    await expect(grouped).toBeVisible();
+    const counts = await stacked.ariaSnapshot();
+    for (const label of [
+      "전체 실행",
+      "추가 실행",
+      "정답",
+      "오답",
+      "미완료",
+      "합계 20문항",
+      "9문항",
+      "0문항",
+    ]) {
+      expect(counts).toContain(label);
+    }
+    const percentages = await grouped.ariaSnapshot();
+    for (const label of [
+      "15.56%",
+      "21/135",
+      "24.71%",
+      "21/85",
+      "0/10",
+      "66.67%",
+    ]) {
+      expect(percentages).toContain(label);
+    }
+
+    const stackWidths = await barFractions(stacked);
+    const percentWidths = await barFractions(grouped);
+    const expectedWidths = [
+      1 / 20,
+      9 / 20,
+      10 / 20,
+      0,
+      10 / 20,
+      0,
+      21 / 135,
+      21 / 85,
+      0,
+      6 / 9,
+    ];
+    const widths = [...stackWidths, ...percentWidths];
+    expect(widths).toHaveLength(expectedWidths.length);
+    expectedWidths.forEach((fraction, i) =>
+      expect(widths[i]).toBeCloseTo(fraction, 2),
+    );
+
+    for (const chart of [stacked, grouped]) {
+      const layout = await chart.evaluate((el) => ({
+        left: el.getBoundingClientRect().left,
+        right: el.getBoundingClientRect().right,
+        overflow: el.scrollWidth - el.clientWidth,
+      }));
+      expect(layout.left).toBeGreaterThanOrEqual(0);
+      expect(layout.right).toBeLessThanOrEqual(width);
+      expect(layout.overflow).toBeLessThanOrEqual(1);
+    }
+    const citation = page.getByRole("button", { name: "출처 2 보기" });
+    await citation.click();
+    const panel = page.getByRole(device === "모바일" ? "dialog" : "region", {
+      name: "출처 2",
+      exact: true,
+    });
+    await expect(panel).toContainText(external.note);
+    await page.keyboard.press("Escape");
+    await expect(citation).toBeFocused();
+    await expect(page).toHaveURL(new RegExp("#article/" + articleId + "$"));
+  });
+
   test(`${device}에서 출처를 읽어도 본문 주소·위치·포커스를 유지한다`, async ({
     page,
   }, testInfo) => {
@@ -218,6 +352,40 @@ for (const [device, width, height] of [
     );
   });
 }
+
+test("해석할 수 없는 차트 블록은 원문을 표시하고 이후의 차트는 계속 그린다", async ({
+  page,
+}) => {
+  const negative = {
+    ...stackedChart,
+    groups: [{ label: "오류", values: [-1, 2, 3] }],
+  };
+  const invalidRatio = {
+    ...groupedChart,
+    groups: [{ label: "오류", values: [0, { part: 1, total: 0 }] }],
+  };
+  const malformed = "{invalid JSON}";
+  await fixture(page, {
+    ...article,
+    body_markdown: [
+      chartBlock(negative),
+      chartBlock(invalidRatio),
+      ["```article-chart", malformed, "```"].join("\n"),
+      chartBlock(groupedChart),
+    ].join("\n\n"),
+  });
+  await page.goto("/#article/" + articleId);
+  const reader = page.getByRole("article", { name: title });
+  await expect(reader.locator("pre code")).toHaveText([
+    JSON.stringify(negative),
+    JSON.stringify(invalidRatio),
+    malformed,
+  ]);
+  await expect(reader.getByRole("figure")).toHaveCount(1);
+  await expect(
+    reader.getByRole("figure", { name: groupedChart.title }),
+  ).toBeVisible();
+});
 
 test("아티클 전용 목록·직접 주소·새로고침과 브라우저 뒤로 가기가 같은 글을 가리킨다", async ({
   page,
