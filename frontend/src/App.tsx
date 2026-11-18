@@ -213,6 +213,8 @@ export default function App() {
   const [selected, setSelected] = useState<Capture | null>(null),
     [detailLoading, setDetailLoading] = useState(false),
     [detailError, setDetailError] = useState("");
+  // A successful edit can reopen the same detail without changing its record ID.
+  const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
   const [requestedRecordId, setRequestedRecordId] = useState<string | null>(
     null,
   );
@@ -729,6 +731,7 @@ export default function App() {
       return;
     }
     setSelected(result.capture);
+    setSavedRequestId(result.request_id);
     setRequestedRecordId(result.capture.id);
     setDetailError("");
     if (editor && !editor.record)
@@ -744,9 +747,6 @@ export default function App() {
         "#capture/" + result.capture.id,
       );
     setToast("저장한 내용을 확인해 주세요.");
-    requestAnimationFrame(() =>
-      recordHeading.current?.focus({ preventScroll: true }),
-    );
     void loadRecords();
   }
   useEffect(() => {
@@ -991,12 +991,12 @@ export default function App() {
   useEffect(() => {
     if (detailLoading) return;
     const frame = requestAnimationFrame(() => {
-      if (selected) recordHeading.current?.focus({ preventScroll: true });
+      if (selected?.id) recordHeading.current?.focus({ preventScroll: true });
       else if (detailError)
         recordErrorHeading.current?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [selected?.id, detailLoading, detailError]);
+  }, [selected?.id, detailLoading, detailError, savedRequestId]);
   useEffect(() => {
     if (!compactNav) setNavOpen(false);
   }, [compactNav]);
