@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { Button } from "@astryxdesign/core/Button";
 import { ArrowDown } from "lucide-react";
 import type { Components } from "react-markdown";
+import { ArticleChart } from "./ArticleChart";
 import { Markdown } from "./Markdown";
 
 interface CitationControls {
@@ -47,13 +48,19 @@ const renderers: Components = {
     if (
       code?.type !== "element" ||
       code.tagName !== "code" ||
-      !Array.isArray(code.properties.className) ||
-      !code.properties.className.includes("language-article-flow")
+      !Array.isArray(code.properties.className)
     ) {
       return <pre>{children}</pre>;
     }
     const content = code.children[0];
     if (content?.type !== "text") return <pre>{children}</pre>;
+    if (code.properties.className.includes("language-article-chart")) {
+      return (
+        <ArticleChart source={content.value} fallback={<pre>{children}</pre>} />
+      );
+    }
+    if (!code.properties.className.includes("language-article-flow"))
+      return <pre>{children}</pre>;
     const steps = content.value
       .split("\n")
       .map((step) => step.trim())
