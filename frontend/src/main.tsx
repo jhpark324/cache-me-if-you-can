@@ -10,6 +10,7 @@ import "./theme/cache-me.css";
 import "./styles.css";
 import "./workspace.css";
 import "./RecordBrowser.css";
+import "./ArticleWorkspace.css";
 import "./SearchLoading.css";
 import "./Graph.css";
 import App from "./App";

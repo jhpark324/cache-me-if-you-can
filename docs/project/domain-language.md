@@ -48,7 +48,7 @@
 
 ## 제품 이름과 실행 식별자
 
-제품 이름과 MCP 서버 표시 이름은 **Cache Me If You Can**, 스킬 이름과 호출 이름은 **`cache-me`**, MCP 등록 키와 스킬 의존성 ID는 **`cache_me`**다. 일반적인 개인 지식 관리 방식은 세컨드 브레인이라고 설명할 수 있지만 현재 제품 이름으로 `Second Brain`을 섞어 쓰지 않는다.
+제품 이름과 MCP 서버 표시 이름은 **Cache Me If You Can**이다. 기록 관리는 **`cache-me`**, [아티클 작성·등록](../specs/articles.md)은 **`cache-me-article`**로 호출한다. 두 스킬의 MCP 등록 키와 의존성 ID는 **`cache_me`**다. 일반적인 개인 지식 관리 방식은 세컨드 브레인이라고 설명할 수 있지만 현재 제품 이름으로 `Second Brain`을 섞어 쓰지 않는다.
 
 개발 버전의 Python 패키지와 MCP 등록 키는 `cache_me`, 배포 패키지와 실행 명령은 `cache-me`, 웹 패키지는 `cache-me-web`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`, SQLite 파일은 `cache-me.sqlite3`를 사용한다. 백업 ZIP도 `cache-me-YYYY-MM-DD.zip`으로 내려받는다. 이전 제품 이름의 별칭·환경 변수 fallback·설정 및 스킬 자동 이전은 제공하지 않는다.
 

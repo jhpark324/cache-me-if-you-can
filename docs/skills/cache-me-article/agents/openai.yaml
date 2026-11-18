@@ -1,0 +1,10 @@
+interface:
+  display_name: "cache-me 아티클"
+  short_description: "공부 기록과 원문을 읽기 쉬운 아티클로 엮어 개인 서재에 등록"
+  default_prompt: "$cache-me-article 방금 공부한 주제를 예시와 도식으로 정리해서 아티클로 써줘."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "cache_me"
+      description: "cache-me 로컬 기록 검색·출처 조회·아티클 등록 서버"

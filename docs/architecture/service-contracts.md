@@ -175,6 +175,8 @@ review_state는 서버가 전체 현재 출처로 계산하며 클라이언트�
 | 질문에 쓸 맥락 | `knowledge_context` | `POST /api/v1/context` | ContextResult |
 | 웹 질의응답 | 기본 MCP는 조회 도구 제공 | `POST /api/v1/questions` | 이벤트 스트림·AnswerResult |
 
+아티클은 기존 기록 생성과 상세 조회를 공유한다. 웹·MCP 목록에 `articles_only=true`를 주면 등록된 글만 조회한다. 인용 순서와 두 종류의 출처 형식은 [아티클 명세](../specs/articles.md)를 따른다.
+
 일반 조회는 deleted_at IS NULL인 기록만 대상으로 한다. 삭제된 기록의 목록·상세·이력·Node 조회, 상태 필터 우회, 수정·병합·출처 재검토는 제공하지 않는다. 삭제된 기록을 반환하게 하는 입력 필드는 허용하지 않는다. 모든 관련 도구에서 부모 기록 상태를 확인한다.
 
 ## 삭제 확인 계약

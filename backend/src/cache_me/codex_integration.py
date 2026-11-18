@@ -1,4 +1,4 @@
-"""Install the local skill and secret-free Codex HTTP MCP configuration."""
+"""Install the local skills and secret-free Codex HTTP MCP configuration."""
 from __future__ import annotations
 
 import argparse
@@ -22,6 +22,7 @@ START = '# BEGIN CACHE ME MANAGED MCP\n'
 END = '# END CACHE ME MANAGED MCP\n'
 SKILL_NAME = 'cache-me'
 SKILL_SLUG = 'cache-me'
+ARTICLE_SKILL_SLUG = 'cache-me-article'
 
 
 def resolve_codex_home(override: Path | None = None) -> Path:
@@ -210,22 +211,35 @@ def atomic_write(path: Path, value: str) -> None:
 
 
 def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool = False,
-            runtime_metadata: dict | None = None) -> dict:
+            runtime_metadata: dict | None = None, article_skill_source: Path | None = None) -> dict:
     config = codex_home / 'config.toml'
-    package = codex_home / 'skills' / SKILL_SLUG
-    skill = package / 'SKILL.md'
-    artifacts = {skill: skill_source.read_text(encoding='utf-8')}
-    runtime_path = package / 'runtime.json'
+    skills_dir = codex_home / 'skills'
+    sources = {SKILL_SLUG: skill_source}
+    if article_skill_source is None:
+        sibling = skill_source.parent.parent / ARTICLE_SKILL_SLUG
+        if sibling.is_dir():
+            article_skill_source = sibling / 'SKILL.md'
+    if article_skill_source is not None:
+        sources[ARTICLE_SKILL_SLUG] = article_skill_source
+
+    runtime = None
     if runtime_metadata is not None:
         if runtime_metadata.get('mcp_url') != server['url']:
             raise ValueError('런타임 정보와 MCP 주소가 일치하지 않습니다.')
         if runtime_metadata.get('mcp_server') != MCP_SERVER_KEY:
             raise ValueError('런타임 정보와 MCP 등록 이름이 일치하지 않습니다.')
-        artifacts[runtime_path] = json.dumps(runtime_metadata, ensure_ascii=False, indent=2) + '\n'
-    metadata_source = skill_source.parent / 'agents' / 'openai.yaml'
-    metadata = package / 'agents' / 'openai.yaml'
-    if metadata_source.exists():
-        artifacts[metadata] = metadata_source.read_text(encoding='utf-8')
+        runtime = json.dumps(runtime_metadata, ensure_ascii=False, indent=2) + '\n'
+
+    artifacts = {}
+    for slug, source in sources.items():
+        package = skills_dir / slug
+        artifacts[package / 'SKILL.md'] = source.read_text(encoding='utf-8')
+        metadata_source = source.parent / 'agents' / 'openai.yaml'
+        if metadata_source.exists():
+            artifacts[package / 'agents' / 'openai.yaml'] = metadata_source.read_text(encoding='utf-8')
+        if runtime is not None:
+            artifacts[package / 'runtime.json'] = runtime
+
     codex_home.mkdir(parents=True, exist_ok=True)
     with FileLock(str(codex_home / '.cache-me-install.lock')):
         original = config.read_text(encoding='utf-8') if config.exists() else ''
@@ -244,7 +258,7 @@ def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool
             installed = path.read_text(encoding='utf-8') if path.exists() else None
             if installed != canonical:
                 if path.exists() and not replace:
-                    raise ValueError(f'설치된 {SKILL_NAME} 파일이 다릅니다: {path}. 확인 후 --replace를 사용하세요.')
+                    raise ValueError(f'설치된 스킬 파일이 다릅니다: {path}. 확인 후 --replace를 사용하세요.')
                 writes[path] = canonical
 
         # Preflight the whole package and config before changing any of them.
@@ -252,8 +266,12 @@ def install(codex_home: Path, skill_source: Path, server: dict, *, replace: bool
             atomic_write(path, canonical)
         if result != original:
             atomic_write(config, result)
-    return {'config': str(config), 'skill': str(skill), 'server': MCP_SERVER_KEY,
+    primary = skills_dir / SKILL_SLUG
+    metadata = primary / 'agents' / 'openai.yaml'
+    runtime_path = primary / 'runtime.json'
+    return {'config': str(config), 'skill': str(primary / 'SKILL.md'), 'server': MCP_SERVER_KEY,
             'skill_name': SKILL_NAME, 'skill_slug': SKILL_SLUG,
+            'skills': {slug: str(skills_dir / slug / 'SKILL.md') for slug in sources},
             'metadata': str(metadata) if metadata in artifacts else None,
             'runtime_metadata': str(runtime_path) if runtime_path in artifacts else None,
             'restart_required': True}
@@ -265,6 +283,7 @@ def main() -> None:
     parser.add_argument('--data-dir', type=Path)
     parser.add_argument('--codex-home', type=Path)
     parser.add_argument('--skill-source', type=Path)
+    parser.add_argument('--article-skill-source', type=Path)
     parser.add_argument('--replace', action='store_true')
     parser.add_argument('--port', type=int)
     args = parser.parse_args()
@@ -289,7 +308,7 @@ def main() -> None:
         except (OSError, ValueError):
             raise ValueError('로컬 MCP 인증 파일을 사용할 수 없습니다. 서버를 먼저 실행하세요.') from None
         result = install(home, source, server_config(Path(sys.executable), data_dir, settings.port),
-                         replace=args.replace,
+                         replace=args.replace, article_skill_source=args.article_skill_source,
                          runtime_metadata=runtime_config(Path(sys.executable), data_dir, settings.port, home))
         print(json.dumps(result, ensure_ascii=False))
     except (OSError, ValueError) as exc:

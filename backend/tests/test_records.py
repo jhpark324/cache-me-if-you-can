@@ -538,7 +538,7 @@ def test_alembic_baseline_applies_idempotently(tmp_path):
         assert service.get(capture["id"])["body_markdown"] == "원본 지식"
         with database.engine.connect() as connection:
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
-            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
+            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
     finally:
         database.close()
 
@@ -556,15 +556,26 @@ def test_migration_helper_adopts_only_matching_unversioned_schema(tmp_path):
             connection.execute(statement)
     database = Database(original_path, initialize=False)
     records = RecordService(database)
-    original = create(records, "마이그레이션 후 보존")
     from cache_me.db import new_id, utcnow
+    capture_id, revision_id, now = new_id(), new_id(), utcnow()
     with database.write() as session:
+        # Insert the historical row using only columns that existed in 0001.
+        session.execute(text("""INSERT INTO captures
+            (id, brain_id, current_revision_id, visibility, state_version, index_generation, created_at, updated_at)
+            VALUES (:id,:brain,:revision,'private',1,1,:now,:now)"""),
+            {"id": capture_id, "brain": records.brain_id, "revision": revision_id, "now": now})
+        session.execute(text("""INSERT INTO capture_revisions
+            (id, brain_id, capture_id, revision_no, body_markdown, concept_hints, node_status, change_kind, created_via, created_at)
+            VALUES (:id,:brain,:capture,1,'마이그레이션 후 보존','[]','absent','create','web',:now)"""),
+            {"id": revision_id, "brain": records.brain_id, "capture": capture_id, "now": now})
         session.add(Concept(id=new_id(), brain_id=records.brain_id, name="기존 주제", description=None,
                             state_version=1, created_at=utcnow(), updated_at=utcnow()))
     migrate_database(records.db.path)
-    assert records.get(original["id"])["body_markdown"] == "마이그레이션 후 보존"
+    saved = records.get(capture_id)
+    assert saved["body_markdown"] == "마이그레이션 후 보존" and saved["article"] is None
+    assert records.list(articles_only=True)["items"] == []
     with records.db.engine.connect() as connection:
-        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0002"
+        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
         assert connection.exec_driver_sql("SELECT count(*) FROM concepts").scalar() == 1
         assert connection.exec_driver_sql("SELECT count(*) FROM topic_backfill_jobs").scalar() == 0
         assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []

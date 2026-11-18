@@ -72,18 +72,19 @@ python scripts/manage.py install-codex
 python scripts/manage.py doctor
 ```
 
-설치기는 사용자 Codex 홈의 `config.toml`에 MCP 연결을 등록하고 `skills/cache-me/`에 [cache-me 스킬](../skills/cache-me/SKILL.md), UI metadata와 `runtime.json`을 설치한다. `CODEX_HOME`이 없거나 비어 있으면 `~/.codex`를 사용한다. 이 사용자 설정은 같은 Codex 홈을 사용하는 프로젝트 없는 대화에서도 적용된다. 실행 중인 Codex가 연결을 다시 읽도록 하거나 새 대화에서 사용한다.
+설치기는 사용자 Codex 홈의 `config.toml`에 MCP 연결 하나를 등록한다. 기록 관리용 [cache-me](../skills/cache-me/SKILL.md)는 `skills/cache-me/`에, 학습 아티클 작성용 [cache-me-article](../skills/cache-me-article/SKILL.md)은 `skills/cache-me-article/`에 설치한다. 두 스킬에는 각자의 UI metadata와 같은 웹 주소를 담은 `runtime.json`이 있다. `CODEX_HOME`이 없거나 비어 있으면 `~/.codex`를 사용한다. 이 사용자 설정은 같은 Codex 홈을 사용하는 프로젝트 없는 대화에서도 적용된다. 실행 중인 Codex가 연결을 다시 읽도록 하거나 새 대화에서 사용한다.
 
 `runtime.json`에는 `schema_version: 1`, MCP 등록 이름 `mcp_server: "cache_me"`, 설치한 Python·데이터 경로·포트·웹/MCP 주소와 진단·시작 명령이 들어가며 토큰은 포함하지 않는다. 이 파일은 설치 시 생성되므로 저장소의 스킬 원본에는 없다.
 
 ```text
 $cache-me 오늘 배운 트랜잭션 격리 수준을 정리해서 저장해줘.
 $cache-me 지난번 복습 계획을 찾아줘.
+$cache-me-article 트랜잭션 격리 수준에 대해 공부한 기록을 찾아 예시와 함께 아티클로 작성해줘.
 ```
 
 스킬 목록에서 **cache-me**를 선택하거나 자연어로 `cache-me, …`라고 요청할 수도 있다. 자연어 선택은 스킬 설명과 요청 의도에 따라 이뤄진다. [스킬의 동작 범위](../specs/cache-me.md)를 참고한다.
 
-설치기는 `[mcp_servers.cache_me]`를 등록하고 다른 스킬·MCP 설정을 보존한다. 설치된 현재 이름의 관리 파일을 갱신할 때는 `install-codex --replace`를 사용하며, 외부에서 작성한 같은 MCP 설정은 자동 교체하지 않는다. 이전 이름의 연결·관리 마커·스킬을 감지하거나 자동 이전하지 않는다. 설치는 실행 호스트의 Python 경로를 등록하므로 다른 OS나 가상환경으로 옮겼다면 해당 환경에서 다시 설치한다.
+기존 설치에 아티클 스킬을 추가할 때도 `python scripts/manage.py install-codex`를 실행한다. 설치기는 쓰기 전에 두 스킬과 MCP 설정의 충돌을 검사한다. 관리 파일이 달라 갱신이 필요한 경우 차이를 확인한 후 `python scripts/manage.py install-codex --replace`를 사용한다. 다른 스킬과 외부에서 작성한 MCP 설정은 보존한다. 설치는 실행 호스트의 Python 경로를 등록하므로 다른 OS나 가상환경으로 옮겼다면 해당 환경에서 다시 설치한다.
 
 연결 설정을 영구 설치하지 않고 Codex CLI를 실행하려면 다음 명령을 사용한다. 자식 Codex는 `cache_me`로 연결하며 로컬 MCP 인증은 자식 프로세스에 전달된다. 이 명령은 기존 설정 파일을 자동으로 수정하지 않는다.
 

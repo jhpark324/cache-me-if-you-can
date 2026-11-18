@@ -240,6 +240,106 @@ test("관리 대화상자는 작업 이름을 제공하고 Escape로 닫힌다",
   }
 });
 
+test("아티클 재검토는 선택한 원문 구간만 해당 인용 번호에 교체한다", async ({
+  page,
+}) => {
+  const { records } = await fixture(page);
+  const retained = { ...ref(other), body_start: 0, body_end: 1 };
+  const outdated = {
+    ...ref(other),
+    revision_id: "older-revision",
+    body_start: 2,
+    body_end: 4,
+  };
+  const external = {
+    kind: "external",
+    title: "원문",
+    url: "https://example.org/paper",
+    note: "원문의 해설",
+  };
+  const article = {
+    summary: "학습 원칙의 변화",
+    citations: [
+      { kind: "record", source: retained },
+      external,
+      { kind: "record", source: outdated },
+    ],
+  };
+  const currentArticle = Object.assign(records.get(currentId)!, {
+    article,
+    body_markdown:
+      "근거 [1](#cite-1), 원문 [2](#cite-2), 이전 근거 [3](#cite-3)",
+    sources: [
+      {
+        source: outdated,
+        review_state: "needs_review",
+        availability: "available",
+      },
+      { source: retained, review_state: "valid", availability: "available" },
+    ],
+    review_state: "needs_review",
+  });
+  await page.route("**/captures/*/source-review", async (route) => {
+    const payload = route.request().postDataJSON();
+    await route.fulfill({
+      json: {
+        schema_version: 1,
+        ok: true,
+        data: {
+          capture: {
+            ...currentArticle,
+            article: payload.article,
+            state_version: 2,
+            revision_no: 2,
+            review_state: "valid",
+          },
+          request_id: payload.request_id,
+          replayed: false,
+          result_state: "available",
+          committed_ref: ref(currentArticle),
+          warnings: [],
+        },
+      },
+    });
+  });
+  await openCurrent(page);
+  await page.getByRole("button", { name: "출처 재검토", exact: true }).click();
+  await page
+    .getByLabel("정정 이유", { exact: true })
+    .fill("현재 원문 구간으로 교체했습니다.");
+  const save = page.getByRole("button", { name: "재검토 저장", exact: true });
+  await expect(save).toBeDisabled();
+  await page
+    .getByRole("button", { name: "인용 [3] 교체", exact: true })
+    .click();
+  const pickerLabel = "인용 [3]에 사용할 기록";
+  const picker = page.getByRole("group", { name: pickerLabel });
+  await picker.getByLabel(pickerLabel + " 기록 찾기").fill(other.title);
+  await picker
+    .getByRole("button", { name: new RegExp("^" + other.title) })
+    .click();
+  await picker.getByLabel(pickerLabel + " 사용할 내용").selectOption("span");
+  await span(page, pickerLabel, 3, 6);
+  const request = page.waitForRequest((r) =>
+    r.url().endsWith("/source-review"),
+  );
+  await save.click();
+  const payload = (await request).postDataJSON();
+  const replacement = { ...ref(other), body_start: 2, body_end: 5 }; // Emoji occupies two UTF-16 units.
+  expect(payload.article).toEqual({
+    ...article,
+    citations: [
+      { kind: "record", source: retained },
+      external,
+      { kind: "record", source: replacement },
+    ],
+  });
+  expect(payload.replacement_sources).toEqual([replacement, retained]);
+  await expect(
+    page.getByRole("dialog", { name: "출처 재검토", exact: true }),
+  ).toHaveCount(0);
+});
+
 test("자동 연결된 주제를 읽고 다른 기록으로 이동해도 수동 정정을 요구하지 않는다", async ({
   page,
 }) => {

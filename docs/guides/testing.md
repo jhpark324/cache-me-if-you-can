@@ -96,7 +96,7 @@ Codex CLI가 설치되어 있어야 한다. 프로토콜 검사는 자체 임시
 uv run --locked --project backend --extra embedding python scripts/check_codex.py --decline-only
 ```
 
-이 명령은 모델 호출 없이 생성·정정·조회와 삭제 거부 후 보존을 확인한다. 실제 모델이 삭제 요청을 수행하고 사람이 확인하는 경로를 검사하려면 다음 명령을 사용한다. 기존 Codex 로그인이 필요하고 모델 사용량이 발생한다.
+이 명령은 모델 호출 없이 기록 생성·정정·조회, 아티클 스킬 발견·등록·서재 필터, 삭제 거부 후 원문 보존을 확인한다. 실제 모델이 삭제 요청을 수행하고 사람이 확인하는 경로를 검사하려면 다음 명령을 사용한다. 기존 Codex 로그인이 필요하고 모델 사용량이 발생한다.
 
 ```sh
 uv run --locked --project backend --extra embedding python scripts/check_codex.py --model-turn --human

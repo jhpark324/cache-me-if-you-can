@@ -151,8 +151,10 @@ async def run(args):
                 assert active[0].get('httpOrigin') == f'http://127.0.0.1:{args.port}', 'MCP endpoint is not the isolated application'
                 assert {'capture_create', 'capture_update', 'capture_get', 'capture_delete_prepare', 'capture_delete'} <= set(active[0]['tools']), 'Expected record tools were not discovered'
                 skills = await codex.call('skills/list', {'cwds': [str(temp)], 'forceReload': True})
-                assert any(skill.get('name') == 'cache-me' and skill.get('enabled') is True
-                           for group in skills.get('data', []) for skill in group.get('skills', [])), 'Installed skill not discovered'
+                enabled_skills = {skill.get('name') for group in skills.get('data', [])
+                                  for skill in group.get('skills', []) if skill.get('enabled') is True}
+                expected_skills = {'cache-me'} if args.model_turn else {'cache-me', 'cache-me-article'}
+                assert expected_skills <= enabled_skills, 'Installed skill not discovered'
 
                 async def tool(name, arguments):
                     result = await codex.call('mcpServer/tool/call', {'threadId': thread_id,
@@ -178,6 +180,15 @@ async def run(args):
                 record = updated['data']['capture']
                 fetched = await tool('capture_get', {'capture_id': record['id']})
                 assert fetched['ok'] and fetched['data']['body_markdown'] == record['body_markdown']
+                article = await tool('capture_create', {'input': {
+                    'request_id': str(uuid4()), 'title': '기록을 어떻게 다시 읽을까?',
+                    'body_markdown': '기록의 버전별로 당시 근거를 열어 볼 수 있다. [1](#cite-1)',
+                    'kinds': ['artifact'], 'article': {'summary': '인용한 버전을 열어 당시 맥락을 확인한다.',
+                        'citations': [{'kind': 'record', 'source': {
+                            'capture_id': record['id'], 'revision_id': record['revision_id']}}]}}})
+                assert article['ok']
+                shelf = await tool('capture_list', {'articles_only': True})
+                assert shelf['ok'] and [item['id'] for item in shelf['data']['items']] == [article['data']['capture']['id']]
                 version = {'capture_id': record['id'], 'expected_revision_id': record['revision_id'],
                            'expected_state_version': record['state_version']}
                 preview = await tool('capture_delete_prepare', {'input': version})
@@ -208,6 +219,8 @@ async def run(args):
                     assert len(codex.confirmations) == 2, 'Codex turn did not expose both elicitations'
                 summary = {'client': 'actual Codex app-server', 'isolated_storage': True,
                     'skill_discovered': True, 'mcp_config_contains_credentials': False,
+                    'article_skill_discovered': 'cache-me-article' in enabled_skills,
+                    'article_registration_and_shelf': 'passed',
                     'create_update_read': 'passed', 'decline_preserves_record': True,
                     'delete': 'not_executed_decline_only' if args.decline_only else ('passed' if deleted['ok'] else 'human_declined'),
                     'confirmation_events': codex.confirmations,

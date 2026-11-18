@@ -62,9 +62,9 @@ def capture_create(data: CreateCaptureInput, records: Records):
 def capture_list(records: Records, query: str | None = None, kinds: Annotated[RecordKinds | None, Query()] = None,
                  concept_ids: Annotated[list[UUID] | None, Query()] = None, limit: int = Query(20, ge=1, le=100), cursor: str | None = None,
                  created_from: str | None = None, created_before: str | None = None,
-                 sort: Literal["created_desc", "title_asc"] = "created_desc"):
+                 sort: Literal["created_desc", "title_asc"] = "created_desc", articles_only: bool = False):
     return success(records.list(query=query, kinds=kinds, concept_ids=concept_ids, limit=limit, cursor=cursor,
-                                created_from=created_from, created_before=created_before, sort=sort))
+                                created_from=created_from, created_before=created_before, sort=sort, articles_only=articles_only))
 
 
 @router.get("/captures/{capture_id}", response_model=OutputEnvelope[CaptureView])

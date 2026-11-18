@@ -6,7 +6,7 @@
 - 용어: [도메인 용어](../project/domain-language.md)
 - 입출력 계약: [MCP·웹 서비스 계약](service-contracts.md)
 
-기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py), [고정 baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 테이블 추가 0002](../../backend/alembic/versions/0002_topic_backfill.py)가 구현되어 있다. 0002는 기존 주제를 작업으로 등록하지 않는다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
+기존 계층을 필드·타입·제약으로 옮긴 공통 설계다. 실제 [ORM](../../backend/src/cache_me/models.py), [고정 baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 테이블 추가 0002](../../backend/alembic/versions/0002_topic_backfill.py), [아티클 메타데이터 추가 0003](../../backend/alembic/versions/0003_article_metadata.py)가 구현되어 있다. 0002는 기존 주제를 작업으로 등록하지 않는다. 0003은 기존 기록 버전의 본문과 출처를 보존한다. 이 문서의 논리 이름·범위와 물리 테이블은 구분하며 [현재 ER 도식](current-system.md#정본-데이터-관계)과 [검증 안내](../guides/testing.md)을 함께 확인한다.
 
 ## 공통 규약
 
@@ -72,6 +72,7 @@ erDiagram
 | `revision_no` | integer ≥ 1 | `UNIQUE(capture_id, revision_no)` |
 | `title` | string? | 제목 없이 저장 가능 |
 | `body_markdown` | 비어 있지 않은 string | 실제 저장한 전체 내용; 임베딩 입력 길이로 자르지 않음 |
+| `article` | JSON 또는 SQL NULL | 등록된 아티클의 한 줄 요약과 순서 있는 기록·외부 인용 목록. [아티클 명세](../specs/articles.md) |
 | `concept_hints` | 검증한 string 배열, 기본 `[]` | 요청자가 준 선택적 분류 힌트. 실제 주제 연결은 revision_concepts에 저장 |
 | `completion_state` | `incomplete \| completed` 또는 null, 기본 null | 내용에 완료 여부가 있을 때만 사용; 생성 시 미완료를 추정하지 않음 |
 | `event_time` | `EventTime?` | 본문이 말하는 사건·계획의 시각; 알 수 없으면 null |

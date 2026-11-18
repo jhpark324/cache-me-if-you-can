@@ -86,7 +86,7 @@ flowchart TB
 | 모델 연결·PII | [chat_model.py](../../backend/src/cache_me/chat_model.py), [auth.py](../../backend/src/cache_me/auth.py), [privacy.py](../../backend/src/cache_me/privacy.py) | OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
 | 자동 분류 | [enrichment.py](../../backend/src/cache_me/enrichment.py) | LangGraph 분류·커밋 흐름. 본문 저장·로그인·임베딩과 독립 실패 가능 |
 | 주제 연결 보강 | [topic_backfill.py](../../backend/src/cache_me/topic_backfill.py), [topic_backfill_jobs.py](../../backend/src/cache_me/topic_backfill_jobs.py) | 새 주제·실제 정의 변경의 본문 후보 조회, 제한된 모델 판단, 영속 lease·호출 예산·판단 캐시와 추가 전용 커밋 |
-| 데이터 수명 | [db.py](../../backend/src/cache_me/db.py), [baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 0002](../../backend/alembic/versions/0002_topic_backfill.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
+| 데이터 수명 | [db.py](../../backend/src/cache_me/db.py), [baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 0002](../../backend/alembic/versions/0002_topic_backfill.py), [아티클 0003](../../backend/alembic/versions/0003_article_metadata.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
 | 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordBrowser.tsx](../../frontend/src/RecordBrowser.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 기록 라이브러리·타임라인, 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
 
 한 로컬 서버 프로세스에서 동작한다. 분산 큐·별도 벡터 서버·그래프 DB·LangSmith·영구 대화 체크포인터는 필수가 아니다. 두 DB의 작업을 하나의 원자적 트랜잭션으로 간주하지 않는다.

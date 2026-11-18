@@ -86,7 +86,7 @@ def test_backup_is_snapshot_and_excludes_credentials(web, tmp_path):
         manifest = json.loads(archive.read('manifest.json'))
         assert manifest['app_version'] == version('cache-me')
         assert manifest['includes_soft_deleted_history'] is True
-        assert manifest['schema_revision'] == '0002'
+        assert manifest['schema_revision'] == '0003'
         assert manifest['embedding_profiles'][0]['model_id'] == 'nlpai-lab/KURE-v2'
         assert b'access_token' not in archive.read('manifest.json')
         assert archive.read('cache-me.sqlite3').startswith(b'SQLite format 3')

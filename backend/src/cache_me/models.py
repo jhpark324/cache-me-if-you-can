@@ -44,6 +44,7 @@ class CaptureRevision(Base):
     revision_no: Mapped[int]
     title: Mapped[str | None]
     body_markdown: Mapped[str] = mapped_column(Text)
+    article: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     concept_hints: Mapped[list] = mapped_column(JSON, default=list)
     completion_state: Mapped[str | None]
     event_time: Mapped[dict | None] = mapped_column(JSON, nullable=True)
