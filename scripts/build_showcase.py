@@ -103,6 +103,11 @@ def assemble(site):
         target = site / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(asset, target)
+    if not shutil.which("ffprobe"):
+        raise RuntimeError("Install FFmpeg with ffprobe to validate the showcase media.")
+    subprocess.run(
+        ["node", "scripts/check-showcase-media.mjs", site], cwd=FRONTEND, check=True,
+    )
     return len(page.assets | generated)
 
 

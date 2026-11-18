@@ -35,9 +35,9 @@
       </div>
       <figure class="hero-figure">
         <div class="graph-window">
-          <picture><source media="(max-width: 49rem)" srcset="media/graph-poster.jpg"><img src="media/knowledge-space.png" width="1440" height="960" alt="지식 공간에서 한 주제와 관련된 기록들이 점과 선으로 이어진 실제 화면" fetchpriority="high"></picture>
+          <img src="media/knowledge-space.png" width="1440" height="960" alt="노트북 서재의 왼쪽 탐색 메뉴, 위쪽 검색창과 ‘로컬 퍼스트’ 등 주제의 연결을 보여 주는 지식 공간 전체 화면" fetchpriority="high">
         </div>
-        <figcaption><span class="live-dot" aria-hidden="true"></span><span><strong>지식 공간</strong><small><span class="graph-caption-wide">저장한 기록과 주제가 연결된 실제 화면</span><span class="graph-caption-narrow">꽃가루받이 → 벌은 왜 꽃을 다시 찾을까</span></small></span></figcaption>
+        <figcaption><span class="live-dot" aria-hidden="true"></span><span class="graph-caption"><strong>지식 공간</strong><small>‘로컬 퍼스트’와 ‘프로젝트 설계’가 보이는 서재</small></span><button type="button" class="graph-open" aria-haspopup="dialog" aria-controls="image-viewer" hidden>화면 확대</button></figcaption>
       </figure>
     </section>
 
@@ -45,7 +45,7 @@
       <div class="wrap">
         <div class="section-heading">
           <h2 data-ax="Heading" id="demo-title">하나의 기록이<br><em>다시 쓰이기까지.</em></h2>
-          <p data-ax="Text">그때 어떤 근거로 결정했는지 원문부터 다시 찾아봅니다. 보고 싶은 장면을 골라 재생해 보세요.</p>
+          <p data-ax="Text">그때 어떤 근거로 결정했는지 원문부터 다시 찾아봅니다. 보고 싶은 장면을 골라 재생해 보세요. 휴대폰을 가로로 돌려 전체 화면으로 보면 글씨까지 읽기 쉽습니다.</p>
         </div>
         <nav data-ax="Stack" data-ax-props='{"direction":"horizontal","wrap":"wrap","gap":2}' class="film-nav" aria-label="시연 선택">
           <a id="tab-recall" href="#recall">출처 찾기</a>
@@ -60,7 +60,7 @@
             <p data-ax="Text">결정 기록에서 출처를 따라가면 버튼을 발견한 사람이 5명 중 2명이던 당시 원문이 열립니다. 이후 5명 모두가 찾은 최신 결과도 따로 확인합니다.</p>
             <ol class="film-steps" aria-label="이 영상에서 볼 장면"><li>결정 기록</li><li>당시 원문</li><li>최신 기록</li></ol>
           </div>
-          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/recall-poster.jpg" width="430" height="760" aria-label="결정 기록에서 당시 출처와 현재 기록을 확인하는 시연"><source src="media/recall.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/recall.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption>11초 · 예시 사용성 테스트 기록의 저장 버전 확인</figcaption></figure>
+          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/recall-poster.jpg" width="1440" height="810" aria-label="결정 기록에서 당시 출처와 현재 기록을 확인하는 시연"><source src="media/recall.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/recall.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption><span>12초 · 예시 사용성 테스트 기록의 저장 버전 확인</span><button type="button" class="film-expand" hidden>전체 화면</button></figcaption></figure>
         </article>
         <article class="film-panel" id="records" aria-labelledby="records-title">
           <div data-ax="Stack" data-ax-props='{"hAlign":"start","vAlign":"center"}' class="film-copy">
@@ -69,7 +69,7 @@
             <p data-ax="Text">공부하면서 발견한 검색 실험 결과를 짧은 기록으로 남깁니다. 타임라인에서 저장한 날을 찾아 다시 열면 그때 적은 본문이 보입니다.</p>
             <ol class="film-steps" aria-label="이 영상에서 볼 장면"><li>기록 작성</li><li>저장</li><li>타임라인에서 다시 열기</li></ol>
           </div>
-          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/records-poster.jpg" width="450" height="650" aria-label="공부 기록을 저장하고 타임라인에서 여는 시연"><source src="media/records.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/records.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption>9초 · 실제 서재에 예시 기록 저장</figcaption></figure>
+          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/records-poster.jpg" width="1440" height="810" aria-label="공부 기록을 저장하고 타임라인에서 여는 시연"><source src="media/records.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/records.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption><span>9초 · 실제 서재에 예시 기록 저장</span><button type="button" class="film-expand" hidden>전체 화면</button></figcaption></figure>
         </article>
         <article class="film-panel" id="graph" aria-labelledby="graph-title">
           <div data-ax="Stack" data-ax-props='{"hAlign":"start","vAlign":"center"}' class="film-copy">
@@ -78,7 +78,7 @@
             <p data-ax="Text">정원 관찰 기록들이 지식 그래프에서 이어집니다. ‘꽃가루받이’를 골라 연결된 기록을 좁히고, 벌이 꽃을 다시 찾는 이유를 적어 둔 원문을 엽니다.</p>
             <ol class="film-steps" aria-label="이 영상에서 볼 장면"><li>지식 공간</li><li>주제 선택</li><li>연결된 기록 열기</li></ol>
           </div>
-          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/graph-poster.jpg" width="720" height="1050" aria-label="지식 그래프에서 주제와 연결된 기록을 찾는 시연"><source src="media/graph.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/graph.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption>15초 · 예시 정원 기록의 주제와 연결 탐색</figcaption></figure>
+          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/graph-poster.jpg" width="1440" height="810" aria-label="지식 그래프에서 주제와 연결된 기록을 찾는 시연"><source src="media/graph.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/graph.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption><span>13초 · 예시 정원 기록의 주제와 연결 탐색</span><button type="button" class="film-expand" hidden>전체 화면</button></figcaption></figure>
         </article>
         <article class="film-panel" id="article" aria-labelledby="article-title">
           <div data-ax="Stack" data-ax-props='{"hAlign":"start","vAlign":"center"}' class="film-copy">
@@ -87,7 +87,7 @@
             <p data-ax="Text">저장한 검색 실험을 바탕으로 쓴 아티클입니다. 차트로 결과를 비교하고 인용 번호를 눌러 근거를 확인한 뒤 읽던 문장으로 돌아옵니다.</p>
             <ol class="film-steps" aria-label="이 영상에서 볼 장면"><li>아티클 열기</li><li>차트 비교</li><li>인용한 기록 확인</li></ol>
           </div>
-          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/article-poster.jpg" width="450" height="650" aria-label="아티클에서 차트를 읽고 인용 출처를 확인하는 시연"><source src="media/article.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/article.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption>10초 · 실제 아티클 리더에서 비교 차트와 출처 열기</figcaption></figure>
+          <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/article-poster.jpg" width="1440" height="810" aria-label="아티클에서 차트를 읽고 인용 출처를 확인하는 시연"><source src="media/article.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/article.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption><span>11초 · 실제 아티클 리더에서 비교 차트와 출처 열기</span><button type="button" class="film-expand" hidden>전체 화면</button></figcaption></figure>
         </article>
       </div>
     </section>
@@ -188,6 +188,22 @@
       <div><h2 data-ax="Heading" id="share-title">다른 화면에서 이어보기</h2><p data-ax="Text">휴대폰 카메라로 QR을 찍으면 이 소개가 바로 열립니다.</p><a href="media/intro-qr.png" download="cache-me-intro-qr.png">QR 이미지 저장 <span aria-hidden="true">↓</span></a></div>
     </section>
   </main>
+  <dialog id="image-viewer" class="image-viewer" aria-labelledby="viewer-title">
+    <div class="viewer-toolbar">
+      <h2 data-ax="Heading" id="viewer-title">지식 공간</h2>
+      <button type="button" class="viewer-size" aria-controls="viewer-frame">전체 맞춤</button>
+      <form method="dialog"><button type="submit" autofocus>닫기</button></form>
+    </div>
+    <div id="viewer-frame" class="viewer-frame" tabindex="0" role="region" aria-label="확대한 노트북 화면">
+      <img src="media/knowledge-space.png" width="1440" height="960" alt="왼쪽 메뉴와 검색창, 기록과 주제의 연결을 표시한 지식 공간 전체 화면">
+    </div>
+  </dialog>
+  <dialog id="film-viewer" class="film-viewer" aria-labelledby="film-viewer-title">
+    <div class="viewer-toolbar">
+      <h2 data-ax="Heading" id="film-viewer-title">시연 영상</h2>
+      <form method="dialog"><button type="submit" autofocus>닫기</button></form>
+    </div>
+  </dialog>
   <footer class="footer"><div class="wrap"><span>Cache Me If You Can</span><a href="#main">처음으로 ↑</a></div></footer>
 </body>
 </html>
