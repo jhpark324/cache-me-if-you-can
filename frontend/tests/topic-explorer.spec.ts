@@ -286,3 +286,130 @@ test("모바일 WebGL 대체 목록에서도 주제를 선택하고 Escape로 �
   await page.getByRole("button", { name: "검색", exact: true }).click();
   await expect(page.locator(".topic-explorer")).toHaveCount(0);
 });
+
+test("그래프 빈 공간은 드래그나 라벨과 달리 카메라를 유지하며 주제 선택을 해제한다", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await fixture(page);
+  await page.goto("/");
+  const graph = page.locator(".graph-world");
+  const canvas = graph.locator(".graph-canvas canvas");
+  const selectedTopic = `concept:${topicId}`;
+  const label = graph.locator(`.graph-label[data-node-id="${selectedTopic}"]`);
+  await expect(graph).toHaveAttribute("data-render-state", "ready");
+  await page
+    .getByRole("button", { name: "DNS, 연결 기록 2개", exact: true })
+    .click();
+  await expect(graph).toHaveAttribute("data-topic-focus", selectedTopic);
+  await expect(label).toHaveCSS("opacity", "1");
+  const labelBounds = (await label.boundingBox())!;
+  await page.mouse.click(
+    labelBounds.x + labelBounds.width / 2,
+    labelBounds.y + labelBounds.height / 2,
+  );
+  await expect(graph).toHaveAttribute("data-topic-focus", selectedTopic);
+
+  function projection() {
+    return graph.evaluate((element) => {
+      const host = element.querySelector(".graph-canvas")!;
+      // Center-relative coordinates let us compare views across a canvas resize.
+      return {
+        width: host.clientWidth,
+        points: Array.from(
+          element.querySelectorAll<HTMLElement>(".graph-label"),
+          (label) => ({
+            x: Number(label.dataset.screenX) - host.clientWidth / 2,
+            y: Number(label.dataset.screenY) - host.clientHeight / 2,
+          }),
+        ),
+      };
+    });
+  }
+  async function distanceFrom(view: Awaited<ReturnType<typeof projection>>) {
+    const current = await projection();
+    return Math.max(
+      ...current.points.map((point, index) =>
+        Math.hypot(
+          point.x - view.points[index].x,
+          point.y - view.points[index].y,
+        ),
+      ),
+    );
+  }
+  async function blankPoint() {
+    const point = await canvas.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const labels = [
+        ...element
+          .closest(".graph-world")!
+          .querySelectorAll<HTMLElement>(".graph-label"),
+      ];
+      for (const column of [0.65, 0.8, 0.4]) {
+        for (const row of [0.72, 0.8, 0.6]) {
+          const x = bounds.left + bounds.width * column;
+          const y = bounds.top + bounds.height * row;
+          if (
+            document.elementFromPoint(x, y) === element &&
+            labels.every((label) => {
+              const rect = label.getBoundingClientRect();
+              const overLabel =
+                label.style.opacity === "1" &&
+                x >= rect.left &&
+                x <= rect.right &&
+                y >= rect.top &&
+                y <= rect.bottom;
+              return (
+                !overLabel &&
+                Math.hypot(
+                  x - bounds.left - Number(label.dataset.screenX),
+                  y - bounds.top - Number(label.dataset.screenY),
+                ) > 75
+              );
+            })
+          )
+            return { x, y };
+        }
+      }
+      return null;
+    });
+    expect(point).not.toBeNull();
+    return point!;
+  }
+
+  const fullView = await projection();
+  await page
+    .getByRole("button", { name: `${records[0].title} 출처 보기`, exact: true })
+    .click();
+  const sourcePanel = page.locator(".source-panel");
+  await expect(sourcePanel).toBeVisible();
+  await expect
+    .poll(async () => (await projection()).width)
+    .toBeLessThan(fullView.width);
+  await sourcePanel.getByRole("heading", { level: 2 }).click();
+  await expect(graph).toHaveAttribute("data-topic-focus", selectedTopic);
+
+  const beforeDrag = await projection();
+  const start = await blankPoint();
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(start.x + 55, start.y - 40, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(() => distanceFrom(beforeDrag)).toBeGreaterThan(3);
+  await expect(graph).toHaveAttribute("data-topic-focus", selectedTopic);
+
+  const beforeZoom = await projection();
+  await graph.getByRole("button", { name: "그래프 확대", exact: true }).click();
+  await expect.poll(() => distanceFrom(beforeZoom)).toBeGreaterThan(1);
+  await expect(graph).toHaveAttribute("data-topic-focus", selectedTopic);
+  const beforeClear = await projection();
+  const target = await blankPoint();
+  await page.mouse.click(target.x, target.y);
+  await expect(graph).not.toHaveAttribute("data-topic-focus", /.+/);
+  await expect(page.locator(".topic-record-open")).toHaveCount(0);
+  await expect(sourcePanel).toHaveCount(0);
+  await expect
+    .poll(async () => (await projection()).width)
+    .toBe(fullView.width);
+  await expect.poll(() => distanceFrom(beforeClear)).toBeLessThan(1);
+});

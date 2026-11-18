@@ -1,4 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IconButton } from "@astryxdesign/core/IconButton";
 import { Tooltip } from "@astryxdesign/core/Tooltip";
 import { HStack } from "@astryxdesign/core/HStack";
@@ -236,6 +243,37 @@ export default function Graph({
     setLocalSelected(null);
     if (id) setListOpen(false);
   }
+  const preserveViewOnCommit = useRef(false);
+  const clearTopicFromBackground = useRef<(event: MouseEvent) => void>(
+    () => {},
+  );
+  clearTopicFromBackground.current = (event) => {
+    if (!focusedTopic || !ready || failed) return;
+    // A visible label can cover the canvas without receiving pointer events.
+    for (const label of labelElements.current.values()) {
+      if (label.style.opacity !== "1") continue;
+      const bounds = label.getBoundingClientRect();
+      if (
+        event.clientX >= bounds.left &&
+        event.clientX < bounds.right &&
+        event.clientY >= bounds.top &&
+        event.clientY < bounds.bottom
+      )
+        return;
+    }
+    preserveViewOnCommit.current = true;
+    selectTopic(null);
+  };
+  useLayoutEffect(() => {
+    if (!preserveViewOnCommit.current) return;
+    preserveViewOnCommit.current = false;
+    const graph = instance.current;
+    const el = host.current;
+    // Closing the source panel may resize the canvas. Apply that size before auto-fit.
+    if (graph && el && el.clientWidth > 0 && el.clientHeight > 0) {
+      graph.width(el.clientWidth).height(el.clientHeight);
+    }
+  });
   useEffect(() => {
     if (
       !canExploreTopics ||
@@ -338,6 +376,11 @@ export default function Graph({
             layoutVersion++;
           })
           .onNodeClick((n) => activateRef.current(n))
+          .onBackgroundClick((event) => {
+            if (event.target === graph.renderer().domElement)
+              clearTopicFromBackground.current(event);
+          })
+          .showPointerCursor((object) => Boolean(object))
           .onNodeHover((n) => {
             el.style.cursor = n ? "pointer" : "grab";
             hovered.current = n?.id || null;
@@ -465,8 +508,13 @@ export default function Graph({
         const resize = new ResizeObserver(() => {
           measurements.clear();
           previousView = "";
-          if (el.clientWidth > 0 && el.clientHeight > 0) {
-            graph.width(el.clientWidth).height(el.clientHeight);
+          const { clientWidth: width, clientHeight: height } = el;
+          if (
+            width > 0 &&
+            height > 0 &&
+            (width !== graph.width() || height !== graph.height())
+          ) {
+            graph.width(width).height(height);
             if (fitted) fitView();
           }
         });
