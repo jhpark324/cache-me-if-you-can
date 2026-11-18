@@ -6,6 +6,8 @@
 
 **[TCP·UDP 이야기 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [스킬과 MCP 한눈에 보기](https://jhpark324.github.io/cache-me-if-you-can/guide-skills.html) · [휴대폰용 QR](showcase/media/intro-qr.png) · [기술 가이드](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
 
+졸업작품 발표 자료 · [AI와 공부한 기록, 면접 전날 다시 찾기 (PDF, 17장)](assets/cache-me-if-you-can-graduation-presentation.pdf)
+
 ![노트북용 캐시미 아티클 리더에서 TCP와 UDP를 비교한 표와 그 근거가 된 공부 기록을 나란히 읽는 화면](showcase/media/article-poster.jpg)
 
 ## 빠른 시작
