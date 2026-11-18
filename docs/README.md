@@ -99,9 +99,9 @@ $cache-me 그 기록에 직접 예제로 확인한 내용을 추가해줘.
 $cache-me-article 트랜잭션 격리 수준을 비교표와 예시로 정리해줘.
 ```
 
-아티클을 요청하면 저장한 기록과 필요한 원문 자료를 바탕으로 글을 작성하고 개인 서재에서 열 수 있는 링크를 줍니다. 두 스킬은 같은 `cache_me` MCP 연결을 사용합니다. 서버 표시 이름은 `Cache Me If You Can`이며 삭제는 사용자 재확인을 거칩니다.
+아티클을 요청하면 저장한 기록과 필요한 원문 자료를 바탕으로 글을 작성하고 **아티클**에서 열 수 있는 링크를 줍니다. 두 스킬은 같은 `cache_me` MCP 연결에서 기록을 `capture_create`, 아티클을 `article_create`로 각각 저장합니다. 일반 기록 목록·지식 검색·그래프는 원자료를 대상으로 합니다. 서버 표시 이름은 `Cache Me If You Can`이며 기록 삭제는 사용자 재확인을 거칩니다.
 
-설치된 현재 이름의 관리 설정·스킬을 갱신할 때는 `install-codex --replace`를 사용한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. Python 패키지는 `cache_me`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`입니다. 이전 제품 이름의 별칭이나 자동 이전은 제공하지 않습니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 변경](guides/local-development.md#포트-변경) · [백업과 데이터 배치](guides/local-development.md#백업과-새-환경의-데이터-배치) · [스킬 원본](skills/cache-me/SKILL.md)
+설치된 현재 이름의 관리 설정·스킬을 갱신할 때는 `install-codex --replace`를 사용한 뒤 Codex 연결을 다시 읽거나 새 대화를 엽니다. Python 패키지는 `cache_me`, 환경 변수는 `CACHE_ME_*`, 기본 데이터 디렉터리는 `CacheMe`입니다. 이전 제품 이름의 별칭이나 자동 이전은 제공하지 않습니다. [연결 설정](guides/local-development.md#codex-mcp) · [포트 변경](guides/local-development.md#포트-변경) · [백업과 데이터 배치](guides/local-development.md#백업과-새-환경의-데이터-배치) · [기록·아티클 스킬](skills/index.md)
 
 ## 동작 구조
 

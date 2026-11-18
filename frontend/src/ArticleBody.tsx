@@ -4,7 +4,7 @@ import { Text } from "@astryxdesign/core/Text";
 import { VStack } from "@astryxdesign/core/VStack";
 import { ArticleMarkdown } from "./ArticleMarkdown";
 import { ArticleSource } from "./ArticleSource";
-import { sourceKey, type Capture, type SourceView } from "./types";
+import { sourceKey, type ArticleDocument, type SourceView } from "./types";
 
 function reviewNote(status?: SourceView) {
   if (status?.availability === "unavailable")
@@ -17,7 +17,7 @@ function reviewNote(status?: SourceView) {
   return "인용한 내용의 재검토가 필요합니다.";
 }
 
-export function ArticleBody({ record }: { record: Capture }) {
+export function ArticleBody({ article }: { article: ArticleDocument }) {
   const body = useRef<HTMLElement>(null);
   const contents = useRef<HTMLDetailsElement>(null);
   const [headings, setHeadings] = useState<HTMLHeadingElement[]>([]);
@@ -30,7 +30,7 @@ export function ArticleBody({ record }: { record: Capture }) {
         ) ?? [],
       ),
     );
-  }, [record.body_markdown]);
+  }, [article.body_markdown]);
   const jumpTo = (heading: HTMLHeadingElement) => {
     if (contents.current) contents.current.open = false;
     heading.tabIndex = -1;
@@ -43,9 +43,7 @@ export function ArticleBody({ record }: { record: Capture }) {
     scroller: HTMLElement | null;
   } | null>(null);
   const open = (index: number, trigger: HTMLElement) => {
-    const scroller = trigger.closest<HTMLElement>(
-      ".article-workspace, .record-detail",
-    );
+    const scroller = trigger.closest<HTMLElement>(".article-workspace");
     opener.current = { trigger, scroller };
     setNumber(index);
   };
@@ -62,9 +60,9 @@ export function ArticleBody({ record }: { record: Capture }) {
     });
   }, []);
   const references = new Map(
-    record.sources?.map((entry) => [sourceKey(entry.source), entry]),
+    article.sources.map((entry) => [sourceKey(entry.source), entry]),
   );
-  const citations = record.article?.citations ?? [];
+  const citations = article.citations;
   const notes = citations.map((citation) =>
     citation.kind === "record"
       ? reviewNote(references.get(sourceKey(citation.source)))
@@ -107,7 +105,7 @@ export function ArticleBody({ record }: { record: Capture }) {
         </VStack>
       )}
       <ArticleMarkdown
-        body={record.body_markdown}
+        body={article.body_markdown}
         citations={{ count: citations.length, open }}
       />
       {citation && number !== null && (

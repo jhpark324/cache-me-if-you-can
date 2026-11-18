@@ -10,6 +10,9 @@ from fastapi import APIRouter, Depends, FastAPI, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from .article_contracts import (ArticleMutationResult, ArticleSummary, ArticleView,
+                                CreateArticleInput, UpdateArticleInput)
+from .articles import ArticleService
 from .records import DomainError, HumanConfirmation, RecordService
 from .outputs import (CaptureSummary, CaptureView, ConceptMutationView, ConceptView,
                       DeleteResult, DeletionPreview, MutationResult, NodeView,
@@ -53,6 +56,34 @@ def install_error_handlers(app: FastAPI):
         return JSONResponse(status_code=422, content={"schema_version": 1, "ok": False, "error": {"code": "VALIDATION_ERROR", "message": "요청 형식이나 범위가 올바르지 않습니다.", "retryable": False, "details": details}})
 
 
+def get_articles(records: Records) -> ArticleService:
+    return ArticleService(records)
+
+
+Articles = Annotated[ArticleService, Depends(get_articles)]
+
+
+@router.post("/articles", response_model=OutputEnvelope[ArticleMutationResult])
+def article_create(data: CreateArticleInput, articles: Articles):
+    return success(articles.create(data))
+
+
+@router.get("/articles", response_model=OutputEnvelope[Page[ArticleSummary]])
+def article_list(articles: Articles, query: str | None = None, limit: int = Query(20, ge=1, le=100), cursor: str | None = None):
+    return success(articles.list(query=query, limit=limit, cursor=cursor))
+
+
+@router.get("/articles/{article_id}", response_model=OutputEnvelope[ArticleView])
+def article_get(article_id: UUID, articles: Articles, revision_id: UUID | None = None):
+    return success(articles.get(article_id, revision_id))
+
+
+@router.patch("/articles/{article_id}", response_model=OutputEnvelope[ArticleMutationResult])
+def article_update(article_id: UUID, data: UpdateArticleInput, articles: Articles):
+    check_path(article_id, data.article_id)
+    return success(articles.update(data))
+
+
 @router.post("/captures", response_model=OutputEnvelope[MutationResult])
 def capture_create(data: CreateCaptureInput, records: Records):
     return success(records.create(data))
@@ -62,9 +93,9 @@ def capture_create(data: CreateCaptureInput, records: Records):
 def capture_list(records: Records, query: str | None = None, kinds: Annotated[RecordKinds | None, Query()] = None,
                  concept_ids: Annotated[list[UUID] | None, Query()] = None, limit: int = Query(20, ge=1, le=100), cursor: str | None = None,
                  created_from: str | None = None, created_before: str | None = None,
-                 sort: Literal["created_desc", "title_asc"] = "created_desc", articles_only: bool = False):
+                 sort: Literal["created_desc", "title_asc"] = "created_desc"):
     return success(records.list(query=query, kinds=kinds, concept_ids=concept_ids, limit=limit, cursor=cursor,
-                                created_from=created_from, created_before=created_before, sort=sort, articles_only=articles_only))
+                                created_from=created_from, created_before=created_before, sort=sort))
 
 
 @router.get("/captures/{capture_id}", response_model=OutputEnvelope[CaptureView])

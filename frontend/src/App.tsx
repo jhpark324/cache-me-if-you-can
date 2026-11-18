@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { api, post, streamQuestion, errorText, uid, ApiError } from "./api";
 import { Markdown } from "./Markdown";
-import { ArticleBody, ArticleWorkspace } from "./ArticleWorkspace";
+import { ArticleWorkspace } from "./ArticleWorkspace";
 import AnswerResponse, { buildAnswerDraft } from "./AnswerResponse";
 import SearchLoading from "./SearchLoading";
 import { RecordDates } from "./RecordDates";
@@ -174,13 +174,14 @@ export default function App() {
     [cursor, setCursor] = useState<string | null>(null),
     [listLoading, setListLoading] = useState(true),
     [listError, setListError] = useState("");
+  const [view, setView] = useState<View>(() => viewFromHash(location.hash));
+  const inArticleWorkspace = view === "articles";
   const {
     concepts,
     error: conceptError,
     loading: conceptsLoading,
     refresh: refreshConcepts,
-  } = useConceptCatalog();
-  const [view, setView] = useState<View>(() => viewFromHash(location.hash));
+  } = useConceptCatalog(!inArticleWorkspace);
   const [articleId, setArticleId] = useState(() =>
     articleIdFromHash(location.hash),
   );
@@ -266,6 +267,7 @@ export default function App() {
       !exampleMode &&
       !settingsOpen &&
       !editor,
+    !inArticleWorkspace,
   );
   const refreshHomeGraph = useCallback(() => {
     setExampleMode(false);
@@ -373,7 +375,6 @@ export default function App() {
     },
     [kind, concept, cursor, activeMonth, activeSort],
   );
-  const inArticleWorkspace = view === "articles";
   useEffect(() => {
     if (inArticleWorkspace) return;
     void loadRecords();
@@ -1403,19 +1404,7 @@ export default function App() {
                   저장한 기록의 주제를 연결하고 있어요.
                 </p>
               )}
-              {selected.article ? (
-                <>
-                  <Button
-                    label="아티클로 읽기"
-                    icon={<BookOpen />}
-                    variant="ghost"
-                    onClick={() => navigateView("articles", true, selected.id)}
-                  />
-                  <ArticleBody record={selected} />
-                </>
-              ) : (
-                <Markdown>{selected.body_markdown}</Markdown>
-              )}
+              <Markdown>{selected.body_markdown}</Markdown>
               <HStack className="management-actions">
                 <Button
                   onClick={() => setMergeOpen(true)}

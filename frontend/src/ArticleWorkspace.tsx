@@ -13,8 +13,7 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { ApiError, api, errorText } from "./api";
 import { ArticleBody } from "./ArticleBody";
-export { ArticleBody } from "./ArticleBody";
-import type { Capture, CaptureSummary, Page } from "./types";
+import type { ArticleDocument, ArticleSummary, Page } from "./types";
 import { ErrorMessage, Loading } from "./ui";
 
 interface ArticleWorkspaceProps {
@@ -55,7 +54,7 @@ function ArticleDate({ value }: { value: string }) {
 }
 
 function ArticleLibrary({ onOpen }: { onOpen: (id: string) => void }) {
-  const [rows, setRows] = useState<CaptureSummary[]>([]);
+  const [rows, setRows] = useState<ArticleSummary[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -70,13 +69,13 @@ function ArticleLibrary({ onOpen }: { onOpen: (id: string) => void }) {
       setNextCursor(null);
       setRows([]);
     }
-    const listPath = "/captures?articles_only=true";
+    const listPath = "/articles";
     try {
-      let page: Page<CaptureSummary>;
+      let page: Page<ArticleSummary>;
       try {
         page = await api(
           cursor
-            ? listPath + "&cursor=" + encodeURIComponent(cursor)
+            ? listPath + "?cursor=" + encodeURIComponent(cursor)
             : listPath,
           { signal: controller.signal },
         );
@@ -142,24 +141,22 @@ function ArticleLibrary({ onOpen }: { onOpen: (id: string) => void }) {
                       vAlign="center"
                     >
                       <ArticleDate value={row.created_at} />
-                      {Boolean(row.article_topics?.length) && (
+                      {row.topics.length > 0 && (
                         <Text
                           type="supporting"
                           color="secondary"
                           className="article-topics"
                         >
-                          {row.article_topics?.join(" · ")}
+                          {row.topics.join(" · ")}
                         </Text>
                       )}
                     </HStack>
                     <Heading level={2} id={"article-row-" + row.id}>
                       {row.title || "제목 없는 아티클"}
                     </Heading>
-                    {row.article_summary && (
-                      <Text as="p" color="secondary">
-                        {row.article_summary}
-                      </Text>
-                    )}
+                    <Text as="p" color="secondary">
+                      {row.summary}
+                    </Text>
                   </VStack>
                   <ArrowUpRight size="1.15em" aria-hidden="true" />
                 </a>
@@ -196,32 +193,34 @@ function ArticleReader({
   articleId: string;
   onBack: () => void;
 }) {
-  const [record, setRecord] = useState<Capture | null>(null);
+  const [article, setArticle] = useState<ArticleDocument | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const controller = new AbortController();
     setError("");
-    setRecord(null);
-    api<Capture>("/captures/" + encodeURIComponent(articleId), {
+    setArticle(null);
+    api<ArticleDocument>("/articles/" + encodeURIComponent(articleId), {
       signal: controller.signal,
     }).then(
       (item) => {
-        if (controller.signal.aborted) return;
-        if (!item.article)
-          setError("이 주소에서 등록된 아티클을 찾을 수 없습니다.");
-        else setRecord(item);
+        if (!controller.signal.aborted) setArticle(item);
       },
       (reason) => {
-        if (!controller.signal.aborted) setError(errorText(reason));
+        if (!controller.signal.aborted)
+          setError(
+            reason instanceof ApiError && reason.code === "NOT_FOUND"
+              ? "이 주소에서 등록된 아티클을 찾을 수 없습니다."
+              : errorText(reason),
+          );
       },
     );
     return () => controller.abort();
   }, [articleId, attempt]);
   useEffect(() => {
-    if (record || error) heading.current?.focus({ preventScroll: true });
-  }, [record, error]);
+    if (article || error) heading.current?.focus({ preventScroll: true });
+  }, [article, error]);
 
   return (
     <section className="article-workspace" aria-label="아티클 읽기">
@@ -233,10 +232,10 @@ function ArticleReader({
         >
           <ArrowLeft size="1em" aria-hidden="true" /> 아티클 목록으로
         </a>
-        {record?.article ? (
+        {article ? (
           <article aria-labelledby="article-title">
             <VStack className="article-intro" gap={3}>
-              <ArticleDate value={record.created_at} />
+              <ArticleDate value={article.created_at} />
               <Heading
                 level={1}
                 id="article-title"
@@ -244,13 +243,13 @@ function ArticleReader({
                 tabIndex={-1}
                 ref={heading}
               >
-                {record.title || "제목 없는 아티클"}
+                {article.title || "제목 없는 아티클"}
               </Heading>
               <Text as="p" className="article-summary" color="secondary">
-                {record.article.summary}
+                {article.summary}
               </Text>
             </VStack>
-            <ArticleBody record={record} />
+            <ArticleBody article={article} />
           </article>
         ) : error ? (
           <VStack gap={3}>

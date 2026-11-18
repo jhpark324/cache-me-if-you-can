@@ -1,5 +1,10 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
-import type { Capture, SourceRef } from "../src/types";
+import type {
+  ArticleDocument,
+  ArticleSummary,
+  Capture,
+  SourceRef,
+} from "../src/types";
 
 const articleId = "aa000001-1111-4111-8111-111111111111";
 const recordId = "bb000002-2222-4222-8222-222222222222";
@@ -48,13 +53,18 @@ const citedRecord: Capture = {
   sources: [],
   review_state: "valid",
 };
-const article: Capture = {
-  ...citedRecord,
+const listed: ArticleSummary = {
   id: articleId,
   title,
-  is_current: true,
+  summary,
+  topics: ["키워드 검색", "의미 검색"],
+  created_at: "2026-11-15T00:00:00Z",
+  updated_at: "2026-11-16T00:00:00Z",
+};
+const article: ArticleDocument = {
+  ...listed,
   revision_id: "dd000004-4444-4444-8444-444444444444",
-  kinds: ["artifact"],
+  revision_no: 1,
   body_markdown: [
     "## 검색 과정을 한눈에",
     "```article-flow\n질문 작성\n키워드 검색\n의미 검색\n결과 비교\n```",
@@ -64,7 +74,7 @@ const article: Capture = {
     "약어를 넣은 경우를 보자. [1](#cite-1) 원문에서도 비교 기준을 확인할 수 있다. [2](#cite-2)",
     paragraphs("적용 예시"),
   ].join("\n\n"),
-  article: { summary, citations: [{ kind: "record", source }, external] },
+  citations: [{ kind: "record", source }, external],
   sources: [
     {
       source,
@@ -76,8 +86,9 @@ const article: Capture = {
   review_state: "needs_review",
 };
 
-async function fixture(page: Page, record: Capture = article) {
-  const requests: SourceRef[] = [];
+async function fixture(page: Page, document: ArticleDocument = article) {
+  const resolved: SourceRef[] = [];
+  const dataRequests: string[] = [];
   await page.route("**/api/v1/**", (route) => {
     const url = new URL(route.request().url());
     const path = url.pathname.replace("/api/v1", "");
@@ -85,18 +96,12 @@ async function fixture(page: Page, record: Capture = article) {
       route.fulfill({ json: { schema_version: 1, ok: true, data } });
     if (path === "/session")
       return send({ csrf_token: "article-reading-token" });
-    if (path === "/captures") {
-      const listed = { ...record, article_summary: summary };
-      const items =
-        url.searchParams.get("articles_only") === "true"
-          ? [listed]
-          : [listed, citedRecord];
-      return send({ items, next_cursor: null });
-    }
-    if (path === "/captures/" + articleId) return send(record);
-    if (path === "/captures/" + recordId) return send(citedRecord);
+    dataRequests.push(route.request().method() + " " + path + url.search);
+    if (path === "/articles")
+      return send({ items: [listed], next_cursor: null });
+    if (path === "/articles/" + articleId) return send(document);
     if (path === "/sources/resolve") {
-      requests.push(route.request().postDataJSON());
+      resolved.push(route.request().postDataJSON());
       return send({
         source,
         is_current: false,
@@ -107,20 +112,12 @@ async function fixture(page: Page, record: Capture = article) {
         review_state: "valid",
       });
     }
-    if (path === "/concepts") return send({ items: [], next_cursor: null });
-    if (path === "/graph")
-      return send({ nodes: [], edges: [], truncated: false });
-    if (path === "/settings")
-      return send({
-        auth: { connected: false },
-        index: { ready: false, status: "pending", index_counts: {} },
-      });
     return route.fulfill({
       status: 404,
       json: { ok: false, error: { code: "NOT_FOUND", message: path } },
     });
   });
-  return requests;
+  return { resolved, dataRequests };
 }
 
 async function position(citation: Locator) {
@@ -139,7 +136,7 @@ for (const [device, width, height] of [
   }, testInfo) => {
     await page.setViewportSize({ width, height });
     await page.emulateMedia({ reducedMotion: "reduce" });
-    const resolved = await fixture(page);
+    const { resolved, dataRequests } = await fixture(page);
     await page.goto("/#article/" + articleId);
     const originalUrl = page.url();
     const reader = page.getByRole("article", { name: title });
@@ -157,6 +154,10 @@ for (const [device, width, height] of [
     await citation.focus();
     const before = await position(citation);
     expect(before.scroll).toBeGreaterThan(0);
+    expect(new Set(dataRequests)).toEqual(
+      new Set(["GET /articles/" + articleId]),
+    );
+    expect(resolved).toEqual([]);
     await page.keyboard.press("Enter");
     const panelRole = device === "모바일" ? "dialog" : "region";
     const panel = page.getByRole(panelRole, { name: "출처 1", exact: true });
@@ -212,13 +213,16 @@ for (const [device, width, height] of [
     await externalPanel.getByRole("button", { name: "출처 닫기" }).click();
     await expect(externalCitation).toBeFocused();
     expect(resolved).toEqual([source]);
+    expect(new Set(dataRequests)).toEqual(
+      new Set(["GET /articles/" + articleId, "POST /sources/resolve"]),
+    );
   });
 }
 
-test("서재 목록·직접 주소·새로고침과 브라우저 뒤로 가기가 같은 글을 가리킨다", async ({
+test("아티클 전용 목록·직접 주소·새로고침과 브라우저 뒤로 가기가 같은 글을 가리킨다", async ({
   page,
 }) => {
-  await fixture(page);
+  const { dataRequests } = await fixture(page);
   await page.goto("/#articles");
   await expect(
     page.getByRole("button", { name: "아티클", exact: true }),
@@ -228,6 +232,7 @@ test("서재 목록·직접 주소·새로고침과 브라우저 뒤로 가기�
   ).toBeVisible();
   const row = page.getByRole("link", { name: title, exact: true });
   await expect(row).toContainText(summary);
+  await expect(row).toContainText("키워드 검색 · 의미 검색");
   await expect(
     page.getByRole("heading", { name: citedRecord.title! }),
   ).toHaveCount(0);
@@ -247,12 +252,65 @@ test("서재 목록·직접 주소·새로고침과 브라우저 뒤로 가기�
   await expect(page.getByRole("alert")).toContainText(
     "등록된 아티클을 찾을 수 없습니다",
   );
+  await expect(page.getByRole("article")).toHaveCount(0);
+  expect(new Set(dataRequests)).toEqual(
+    new Set([
+      "GET /articles",
+      "GET /articles/" + articleId,
+      "GET /articles/" + recordId,
+    ]),
+  );
+});
+
+test("더 보기를 누른 사이 아티클 목록이 변경되면 첫 페이지부터 갱신한다", async ({
+  page,
+}) => {
+  await fixture(page);
+  const cursor = "page+/=";
+  let refreshed = false;
+  await page.route(
+    (url) => url.pathname === "/api/v1/articles",
+    (route) => {
+      const url = new URL(route.request().url());
+      if (url.searchParams.get("cursor") === cursor) {
+        refreshed = true;
+        return route.fulfill({
+          status: 409,
+          json: {
+            ok: false,
+            error: { code: "CURSOR_STALE", message: "목록 변경" },
+          },
+        });
+      }
+      return route.fulfill({
+        json: {
+          ok: true,
+          data: {
+            items: [refreshed ? { ...listed, title: "수정한 아티클" } : listed],
+            next_cursor: refreshed ? null : cursor,
+          },
+        },
+      });
+    },
+  );
+  await page.goto("/#articles");
+  await expect(
+    page.getByRole("link", { name: title, exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "아티클 더 보기" }).click();
+  await expect(page.getByRole("link", { name: "수정한 아티클" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: title, exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "아티클 더 보기" }),
+  ).toHaveCount(0);
 });
 
 test("삭제된 기록 출처를 선택하면 주소를 유지하고 내용 조회를 생략한다", async ({
   page,
 }) => {
-  const resolved = await fixture(page, {
+  const { resolved, dataRequests } = await fixture(page, {
     ...article,
     sources: [
       {
@@ -272,6 +330,9 @@ test("삭제된 기록 출처를 선택하면 주소를 유지하고 내용 조�
   );
   await expect(panel).not.toContainText(excerpt);
   expect(resolved).toEqual([]);
+  expect(new Set(dataRequests)).toEqual(
+    new Set(["GET /articles/" + articleId]),
+  );
   await panel.getByRole("button", { name: "출처 닫기" }).click();
   await expect(citation).toBeFocused();
   await expect(page).toHaveURL(new RegExp("#article/" + articleId + "$"));

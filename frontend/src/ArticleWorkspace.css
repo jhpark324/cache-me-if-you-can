@@ -368,12 +368,4 @@
     .article-reader {
     inline-size: min(48rem, 100%);
   }
-
-  .record-detail:has(.article-body) {
-    max-inline-size: calc(100% - var(--article-source-width));
-  }
-
-  .record-detail:has(.article-body[data-source-open="true"]) {
-    max-inline-size: 100%;
-  }
 }

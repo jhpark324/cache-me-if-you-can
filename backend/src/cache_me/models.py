@@ -44,7 +44,6 @@ class CaptureRevision(Base):
     revision_no: Mapped[int]
     title: Mapped[str | None]
     body_markdown: Mapped[str] = mapped_column(Text)
-    article: Mapped[dict | None] = mapped_column(JSON(none_as_null=True), nullable=True)
     concept_hints: Mapped[list] = mapped_column(JSON, default=list)
     completion_state: Mapped[str | None]
     event_time: Mapped[dict | None] = mapped_column(JSON, nullable=True)
@@ -62,6 +61,50 @@ class CaptureRevision(Base):
         CheckConstraint("change_kind IN ('create','edit','merge','completion_change','source_review','concept_enrichment')"),
         CheckConstraint("created_via IN ('web','mcp','import','system')"),
         CheckConstraint("change_kind != 'source_review' OR (review_reason IS NOT NULL AND length(trim(review_reason)) > 0)"),
+    )
+
+
+class Article(Base):
+    __tablename__ = "articles"
+    id: Mapped[str] = mapped_column(primary_key=True)
+    brain_id: Mapped[str] = mapped_column(ForeignKey("local_brain.id"), index=True)
+    current_revision_id: Mapped[str]
+    created_at: Mapped[str]
+    updated_at: Mapped[str]
+    deleted_at: Mapped[str | None]
+    __table_args__ = (
+        ForeignKeyConstraint(["current_revision_id", "id"], ["article_revisions.id", "article_revisions.article_id"],
+                             deferrable=True, initially="DEFERRED"),
+    )
+
+
+class ArticleRevision(Base):
+    __tablename__ = "article_revisions"
+    id: Mapped[str] = mapped_column(primary_key=True)
+    article_id: Mapped[str] = mapped_column(ForeignKey("articles.id"))
+    revision_no: Mapped[int]
+    title: Mapped[str]
+    summary: Mapped[str]
+    body_markdown: Mapped[str] = mapped_column(Text)
+    citations: Mapped[list] = mapped_column(JSON)
+    topics: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[str]
+    __table_args__ = (
+        UniqueConstraint("id", "article_id"), UniqueConstraint("article_id", "revision_no"),
+        CheckConstraint("revision_no >= 1"),
+    )
+
+
+class ArticleReceipt(Base):
+    __tablename__ = "article_receipts"
+    principal_scope: Mapped[str] = mapped_column(primary_key=True)
+    request_id: Mapped[str] = mapped_column(primary_key=True)
+    operation: Mapped[str]
+    request_fingerprint: Mapped[str]
+    article_id: Mapped[str] = mapped_column(ForeignKey("articles.id"))
+    committed_revision_id: Mapped[str]
+    __table_args__ = (
+        ForeignKeyConstraint(["committed_revision_id", "article_id"], ["article_revisions.id", "article_revisions.article_id"]),
     )
 
 

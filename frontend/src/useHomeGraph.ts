@@ -3,7 +3,7 @@ import { api, errorText } from "./api";
 import type { GraphData } from "./types";
 
 /** Keep the visible graph current without moving an unchanged layout. */
-export function useHomeGraph(active: boolean) {
+export function useHomeGraph(active: boolean, enabled: boolean) {
   const [data, setData] = useState<GraphData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -65,6 +65,7 @@ export function useHomeGraph(active: boolean) {
   }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     mounted.current = true;
     void load();
     return () => {
@@ -73,7 +74,7 @@ export function useHomeGraph(active: boolean) {
       pending.current?.controller.abort();
       pending.current = null;
     };
-  }, [load]);
+  }, [enabled, load]);
 
   useEffect(() => {
     if (!active) return;

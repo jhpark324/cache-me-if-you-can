@@ -538,7 +538,7 @@ def test_alembic_baseline_applies_idempotently(tmp_path):
         assert service.get(capture["id"])["body_markdown"] == "원본 지식"
         with database.engine.connect() as connection:
             assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []
-            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
+            assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0004"
     finally:
         database.close()
 
@@ -572,10 +572,10 @@ def test_migration_helper_adopts_only_matching_unversioned_schema(tmp_path):
                             state_version=1, created_at=utcnow(), updated_at=utcnow()))
     migrate_database(records.db.path)
     saved = records.get(capture_id)
-    assert saved["body_markdown"] == "마이그레이션 후 보존" and saved["article"] is None
-    assert records.list(articles_only=True)["items"] == []
+    assert saved["body_markdown"] == "마이그레이션 후 보존" and "article" not in saved
     with records.db.engine.connect() as connection:
-        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0003"
+        assert connection.exec_driver_sql("SELECT version_num FROM alembic_version").scalar() == "0004"
+        assert connection.exec_driver_sql("SELECT count(*) FROM articles").scalar() == 0
         assert connection.exec_driver_sql("SELECT count(*) FROM concepts").scalar() == 1
         assert connection.exec_driver_sql("SELECT count(*) FROM topic_backfill_jobs").scalar() == 0
         assert connection.exec_driver_sql("PRAGMA foreign_key_check").all() == []

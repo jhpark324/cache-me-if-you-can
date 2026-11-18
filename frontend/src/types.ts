@@ -26,9 +26,21 @@ export function sourceKey(source: SourceRef): string {
 export type ArticleCitation =
   | { kind: "record"; source: SourceRef }
   | { kind: "external"; title: string; url: string; note: string };
-export interface Article {
+export interface ArticleSummary {
+  id: string;
+  title: string;
   summary: string;
+  topics: string[];
+  created_at: string;
+  updated_at: string;
+}
+export interface ArticleDocument extends ArticleSummary {
+  revision_id: string;
+  revision_no: number;
+  body_markdown: string;
   citations: ArticleCitation[];
+  sources: SourceView[];
+  review_state: string;
 }
 export interface Concept {
   id: string;
@@ -60,7 +72,6 @@ export interface Capture {
   state_version: number;
   title?: string | null;
   body_markdown: string;
-  article?: Article | null;
   kinds: RecordKind[];
   visibility: "public" | "private";
   completion_state?: "incomplete" | "completed" | null;
@@ -102,8 +113,6 @@ export type CaptureSummary = Pick<
   | "index_state"
   | "review_state"
 > & {
-  article_summary?: string | null;
-  article_topics?: string[];
   excerpt?: string;
   body_excerpt?: string;
   preview?: string;

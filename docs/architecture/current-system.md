@@ -86,7 +86,7 @@ flowchart TB
 | 모델 연결·PII | [chat_model.py](../../backend/src/cache_me/chat_model.py), [auth.py](../../backend/src/cache_me/auth.py), [privacy.py](../../backend/src/cache_me/privacy.py) | OAuth, 메시지·function call 왕복, 완료 후 응답 반환, 내장 PII 탐지. 인증 비밀은 그래프 상태에 넣지 않음 |
 | 자동 분류 | [enrichment.py](../../backend/src/cache_me/enrichment.py) | LangGraph 분류·커밋 흐름. 본문 저장·로그인·임베딩과 독립 실패 가능 |
 | 주제 연결 보강 | [topic_backfill.py](../../backend/src/cache_me/topic_backfill.py), [topic_backfill_jobs.py](../../backend/src/cache_me/topic_backfill_jobs.py) | 새 주제·실제 정의 변경의 본문 후보 조회, 제한된 모델 판단, 영속 lease·호출 예산·판단 캐시와 추가 전용 커밋 |
-| 데이터 수명 | [db.py](../../backend/src/cache_me/db.py), [baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 0002](../../backend/alembic/versions/0002_topic_backfill.py), [아티클 0003](../../backend/alembic/versions/0003_article_metadata.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
+| 데이터 수명 | [db.py](../../backend/src/cache_me/db.py), [baseline 0001](../../backend/alembic/versions/0001_canonical_records.py), [주제 보강 0002](../../backend/alembic/versions/0002_topic_backfill.py), [이전 아티클 형식 0003](../../backend/alembic/versions/0003_article_metadata.py), [아티클 분리 0004](../../backend/alembic/versions/0004_independent_articles.py) | 짧은 `BEGIN IMMEDIATE`, WAL, 외래키, immutable trigger, 복원 금지 |
 | 웹 상호작용 | [App.tsx](../../frontend/src/App.tsx), [RecordEditor.tsx](../../frontend/src/RecordEditor.tsx), [RecordBrowser.tsx](../../frontend/src/RecordBrowser.tsx), [RecordConnections.tsx](../../frontend/src/RecordConnections.tsx) | 기록 라이브러리·타임라인, 단일턴 검색, 필터, 출처 drawer, 명시적 CRUD. 저장 여부와 로딩·실패 표시 |
 
 한 로컬 서버 프로세스에서 동작한다. 분산 큐·별도 벡터 서버·그래프 DB·LangSmith·영구 대화 체크포인터는 필수가 아니다. 두 DB의 작업을 하나의 원자적 트랜잭션으로 간주하지 않는다.
@@ -95,12 +95,15 @@ flowchart TB
 
 기본 포트는 `52761`이며 `CACHE_ME_PORT`로 변경한다. `manage.py run`은 포그라운드 실행, `start`는 준비 완료를 확인하는 명시적 백그라운드 시작이다. `doctor`는 런타임과 설치 상태를 읽기 전용으로 진단한다. 설치된 스킬의 `runtime.json`이 같은 Python·데이터 경로·포트의 진단·시작 명령을 제공하며 인증 토큰은 담지 않는다. MCP 헤더 helper는 인증 정보 제공만 담당하고 도구 탐색 중에 서버를 시작하지 않는다. 서버의 정상 응답과 현재 Codex 대화의 도구 목록은 별도로 확인한다.
 
-MCP 등록 키와 Python 패키지는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`, 스킬 이름과 실행 명령은 `cache-me`다. 설치기는 현재 이름의 설정만 관리하며 `install-codex --replace`로 해당 관리 설정·스킬을 갱신한다. 외부 작성 설정·잘못된 관리 구간은 보존하고 거부하며 다른 MCP 연결·스킬은 그대로 둔다. 이전 이름의 감지·자동 이전·별칭은 제공하지 않는다. 기본 데이터 디렉터리는 `CacheMe`이고 기록 스키마와 개별 MCP 도구의 의미는 유지한다. 설치·재연결 절차는 [로컬 실행 가이드](../guides/local-development.md#codex-mcp)를 따른다.
+MCP 등록 키와 Python 패키지는 `cache_me`, 서버 표시 이름은 `Cache Me If You Can`, 실행 명령은 `cache-me`다. 기록 관리에는 `cache-me` 스킬을, 아티클 작성·수정에는 `cache-me-article` 스킬을 사용한다. 설치기는 현재 이름의 설정만 관리하며 `install-codex --replace`로 해당 관리 설정·스킬을 갱신한다. 외부 작성 설정·잘못된 관리 구간은 보존하고 거부하며 다른 MCP 연결·스킬은 그대로 둔다. 이전 이름의 감지·자동 이전·별칭은 제공하지 않는다. 기본 데이터 디렉터리는 `CacheMe`이고 기록 스키마와 개별 MCP 도구의 의미는 유지한다. 설치·재연결 절차는 [로컬 실행 가이드](../guides/local-development.md#codex-mcp)를 따른다.
 
 ## 정본 데이터 관계
 
 ```mermaid
 erDiagram
+    LocalBrain ||--o{ Article : owns
+    Article ||--|{ ArticleRevision : editions
+    ArticleRevision ||--o{ ArticleReceipt : committed
     LocalBrain ||--o{ Capture : owns
     Capture ||--|{ CaptureRevision : history
     CaptureRevision ||--o{ RevisionKind : purpose
@@ -125,7 +128,7 @@ erDiagram
 
 ER 도식은 주요 연관을 압축했다. 정확한 FK·복합 키·제약은 [models.py](../../backend/src/cache_me/models.py)와 migration이 기준이다. 특히 `Relation`은 양 끝점과 근거, `ProvenanceLink`는 파생 revision과 원출처 revision/구간을 참조한다.
 
-`Capture`는 삭제·공개 범위·현재 revision 포인터를 가진다. 본문은 immutable `CaptureRevision`에만 보관한다. Node는 본문의 Unicode code point 반개구간을 가리키며 별도 원문이 아니다. Concept는 자유 주제와 별칭, RecordKind는 정리본의 재사용 목적, 청크는 모델 토큰 상한에 맞춘 파생 검색 단위다. 네 가지를 한 태그 필드로 합치지 않는다.
+`Article`의 제목·요약·본문·인용은 불변 `ArticleRevision`에 속한다. 기록을 인용하면 해당 기록 버전과 읽은 구간을 가리킨다. `Capture`는 삭제·공개 범위·현재 revision 포인터를 가진다. 기록 본문은 불변 `CaptureRevision`에 보관한다. Node는 본문의 Unicode code point 반개구간을 가리키며 별도 원문이 아니다. Concept는 자유 주제와 별칭, RecordKind는 정리본의 재사용 목적, 청크는 모델 토큰 상한에 맞춘 파생 검색 단위다. 네 가지를 한 태그 필드로 합치지 않는다.
 
 ## 배포 파일과 실행 데이터
 

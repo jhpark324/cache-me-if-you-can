@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, model_serializer, model_validator
 
-from .schemas import Article, Completion, EventTime, NodeInput, RecordKind, RelationType, SourceRef, Visibility
+from .schemas import Completion, EventTime, NodeInput, RecordKind, RelationType, SourceRef, Visibility
 
 T = TypeVar("T")
 
@@ -113,7 +113,6 @@ class CaptureView(OutputModel):
     state_version: int = Field(ge=1)
     title: str | None
     body_markdown: str
-    article: Article | None = None
     kinds: list[RecordKind]
     visibility: Visibility
     completion_state: Completion | None
@@ -140,8 +139,6 @@ class CaptureSummary(OutputModel):
     state_version: int = Field(ge=1)
     title: str | None
     excerpt: str
-    article_summary: str | None = None
-    article_topics: list[str] = Field(default_factory=list)
     kinds: list[RecordKind]
     visibility: Visibility
     completion_state: Completion | None

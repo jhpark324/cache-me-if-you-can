@@ -1,4 +1,4 @@
-"""Real Codex check on synthetic records; optional model turn uses existing login."""
+"""Real Codex check on isolated synthetic records and articles; optional model turn uses existing login."""
 import argparse
 import asyncio
 import json
@@ -149,7 +149,9 @@ async def run(args):
                           if entry.get('runtimeStatus') != 'disabled' and entry.get('tools')]
                 assert [entry.get('name') for entry in active] == [MCP_SERVER_KEY], 'Unexpected MCP servers in isolated session'
                 assert active[0].get('httpOrigin') == f'http://127.0.0.1:{args.port}', 'MCP endpoint is not the isolated application'
-                assert {'capture_create', 'capture_update', 'capture_get', 'capture_delete_prepare', 'capture_delete'} <= set(active[0]['tools']), 'Expected record tools were not discovered'
+                discovered_tools = set(active[0]['tools'])
+                assert {'capture_create', 'capture_list', 'capture_update', 'capture_get', 'capture_delete_prepare', 'capture_delete'} <= discovered_tools, 'Expected record tools were not discovered'
+                assert {'article_create', 'article_list', 'article_get', 'article_update'} <= discovered_tools, 'Expected article tools were not discovered'
                 skills = await codex.call('skills/list', {'cwds': [str(temp)], 'forceReload': True})
                 enabled_skills = {skill.get('name') for group in skills.get('data', [])
                                   for skill in group.get('skills', []) if skill.get('enabled') is True}
@@ -180,15 +182,34 @@ async def run(args):
                 record = updated['data']['capture']
                 fetched = await tool('capture_get', {'capture_id': record['id']})
                 assert fetched['ok'] and fetched['data']['body_markdown'] == record['body_markdown']
-                article = await tool('capture_create', {'input': {
+                article_input = {
                     'request_id': str(uuid4()), 'title': '기록을 어떻게 다시 읽을까?',
+                    'summary': '인용한 버전을 열어 당시 맥락을 확인한다.',
                     'body_markdown': '기록의 버전별로 당시 근거를 열어 볼 수 있다. [1](#cite-1)',
-                    'kinds': ['artifact'], 'article': {'summary': '인용한 버전을 열어 당시 맥락을 확인한다.',
-                        'citations': [{'kind': 'record', 'source': {
-                            'capture_id': record['id'], 'revision_id': record['revision_id']}}]}}})
-                assert article['ok']
-                shelf = await tool('capture_list', {'articles_only': True})
-                assert shelf['ok'] and [item['id'] for item in shelf['data']['items']] == [article['data']['capture']['id']]
+                    'citations': [{'kind': 'record', 'source': {
+                        'capture_id': record['id'], 'revision_id': record['revision_id']}}],
+                    'topics': ['복습']}
+                published = await tool('article_create', {'input': article_input})
+                assert published['ok'] and published['data']['request_id'] == article_input['request_id']
+                assert published['data']['replayed'] is False
+                article = published['data']['article']
+                assert article['title'] == article_input['title'] and article['summary'] == article_input['summary']
+                replay = await tool('article_create', {'input': article_input})
+                assert replay['ok'] and replay['data']['replayed'] and replay['data']['article']['id'] == article['id']
+                revision_input = {**article_input, 'request_id': str(uuid4()), 'article_id': article['id'],
+                    'expected_revision_id': article['revision_id'], 'summary': '인용 번호를 눌러 당시 맥락을 읽는다.'}
+                revision = await tool('article_update', {'input': revision_input})
+                assert revision['ok'] and revision['data']['article']['revision_id'] != article['revision_id']
+                shelf = await tool('article_list', {})
+                assert shelf['ok'] and [item['id'] for item in shelf['data']['items']] == [article['id']]
+                detail = await tool('article_get', {'article_id': article['id']})
+                assert detail['ok'] and detail['data']['revision_id'] == revision['data']['article']['revision_id']
+                assert detail['data']['summary'] == revision_input['summary']
+                assert detail['data']['citations'][0]['source']['revision_id'] == record['revision_id']
+                record_list = await tool('capture_list', {})
+                assert record_list['ok'] and [item['id'] for item in record_list['data']['items']] == [record['id']]
+                missing = await tool('capture_get', {'capture_id': article['id']})
+                assert not missing['ok'] and missing['error']['code'] == 'NOT_FOUND'
                 version = {'capture_id': record['id'], 'expected_revision_id': record['revision_id'],
                            'expected_state_version': record['state_version']}
                 preview = await tool('capture_delete_prepare', {'input': version})
@@ -221,6 +242,7 @@ async def run(args):
                     'skill_discovered': True, 'mcp_config_contains_credentials': False,
                     'article_skill_discovered': 'cache-me-article' in enabled_skills,
                     'article_registration_and_shelf': 'passed',
+                    'article_update_and_read': 'passed', 'article_excluded_from_records': True,
                     'create_update_read': 'passed', 'decline_preserves_record': True,
                     'delete': 'not_executed_decline_only' if args.decline_only else ('passed' if deleted['ok'] else 'human_declined'),
                     'confirmation_events': codex.confirmations,

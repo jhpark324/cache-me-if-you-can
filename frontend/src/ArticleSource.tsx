@@ -9,7 +9,6 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { useMediaQuery } from "@astryxdesign/core/hooks";
 import { ExternalLink, X } from "lucide-react";
 import { errorText, post } from "./api";
-import { ArticleMarkdown } from "./ArticleMarkdown";
 import { Markdown } from "./Markdown";
 import { ErrorMessage, Loading, Tool } from "./ui";
 import type { ArticleCitation, SourceDetail, SourceRef } from "./types";
@@ -46,12 +45,6 @@ function RecordExcerpt({ source, note }: { source: SourceRef; note: string }) {
   }
   if (!detail) return <Loading text="인용한 기록을 불러오는 중…" />;
   const excerpt = detail.text !== detail.capture.body_markdown;
-  const preview = (text: string) =>
-    detail.capture.article ? (
-      <ArticleMarkdown body={text} />
-    ) : (
-      <Markdown>{text}</Markdown>
-    );
   return (
     <VStack gap={4}>
       <VStack gap={1}>
@@ -67,11 +60,11 @@ function RecordExcerpt({ source, note }: { source: SourceRef; note: string }) {
         </Text>
       )}
       {excerpt && <Heading level={4}>참조한 부분</Heading>}
-      {preview(detail.text)}
+      <Markdown>{detail.text}</Markdown>
       {excerpt && (
         <details>
           <summary>기록 전체 보기</summary>
-          {preview(detail.capture.body_markdown)}
+          <Markdown>{detail.capture.body_markdown}</Markdown>
         </details>
       )}
     </VStack>

@@ -1,6 +1,6 @@
 {
   "name": "cache-me-web",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -23,10 +23,7 @@
     "react-dom": "19.2.0",
     "react-markdown": "10.1.0",
     "remark-gfm": "4.0.1",
-    "remark-parse": "11.0.0",
-    "three-spritetext": "1.10.0",
-    "unified": "11.0.5",
-    "unist-util-visit": "5.2.0"
+    "three-spritetext": "1.10.0"
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.7.16",

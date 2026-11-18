@@ -10,8 +10,6 @@ import { VStack } from "@astryxdesign/core/VStack";
 import { Check, FileText, Plus, Search, X } from "lucide-react";
 import { api, post, uid, errorText } from "./api";
 import { Markdown } from "./Markdown";
-import { ReferencePicker, type PickedReference } from "./RecordConnections";
-import { sourceKey } from "./types";
 import type {
   Capture,
   CaptureSummary,
@@ -39,27 +37,12 @@ export function SourceReview({
 }) {
   const [body, setBody] = useState(record.body_markdown),
     [reason, setReason] = useState(""),
-    [sources, setSources] = useState(() =>
-      record.sources.flatMap((s, i) => {
-        // A provenance entry can back multiple independently editable citations.
-        const numbers: (number | null)[] = (
-          record.article?.citations ?? []
-        ).flatMap((citation, index) =>
-          citation.kind === "record" &&
-          sourceKey(citation.source) === sourceKey(s.source)
-            ? [index + 1]
-            : [],
-        );
-        if (numbers.length === 0) numbers.push(null);
-        return numbers.map((citationNumber) => ({
-          ref: s.source,
-          title: `기존 출처 ${i + 1}`,
-          needsReview: s.review_state === "needs_review",
-          citationNumber,
-        }));
-      }),
+    [sources, setSources] = useState<{ ref: SourceRef; title: string }[]>(
+      record.sources.map((s, i) => ({
+        ref: s.source,
+        title: `기존 출처 ${i + 1}`,
+      })),
     ),
-    [replacingNumber, setReplacingNumber] = useState<number | null>(null),
     [query, setQuery] = useState(""),
     [matches, setMatches] = useState<CaptureSummary[]>([]),
     [candidate, setCandidate] = useState<Capture | null>(null),
@@ -131,62 +114,21 @@ export function SourceReview({
           s.ref.body_start == null,
       )
         ? prev
-        : [
-            ...prev,
-            {
-              ref,
-              title: candidate.title || "제목 없는 기록",
-              needsReview: false,
-              citationNumber: null,
-            },
-          ],
+        : [...prev, { ref, title: candidate.title || "제목 없는 기록" }],
     );
     setCandidate(null);
-  }
-  function replaceCitedSource(picked: PickedReference | null) {
-    if (!picked || replacingNumber === null) return;
-    setSources((prev) =>
-      prev.map((item) =>
-        item.citationNumber === replacingNumber
-          ? {
-              ...item,
-              ref: picked.source,
-              title: picked.capture.title || "제목 없는 기록",
-              needsReview: false,
-            }
-          : item,
-      ),
-    );
-    setReplacingNumber(null);
   }
   async function save(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError("");
-    const article = record.article && {
-      ...record.article,
-      citations: [...record.article.citations],
-    };
-    if (article) {
-      for (const item of sources) {
-        if (item.citationNumber !== null) {
-          article.citations[item.citationNumber - 1] = {
-            kind: "record",
-            source: item.ref,
-          };
-        }
-      }
-    }
     const payload = {
       capture_id: record.id,
       expected_revision_id: record.revision_id,
       expected_state_version: record.state_version,
-      replacement_sources: [
-        ...new Map(sources.map(({ ref }) => [sourceKey(ref), ref])).values(),
-      ],
+      replacement_sources: sources.map((s) => s.ref),
       review_reason: reason.trim(),
       body_markdown: body,
-      ...(article ? { article } : {}),
     };
     try {
       const result = await post<MutationResult>(
@@ -220,9 +162,8 @@ export function SourceReview({
           }
         />
         <Text as="p" type="supporting">
-          {record.article
-            ? "교체할 인용 번호를 고른 뒤 새 원문이나 구간을 선택하세요."
-            : "현재 본문과 근거를 확인하고, 필요한 출처를 교체하거나 목록에서 제외하세요."}
+          현재 본문과 근거를 확인하고, 필요한 출처를 교체하거나 목록에서
+          제외하세요.
         </Text>
         {error && (
           <p role="alert" className="error">
@@ -246,75 +187,36 @@ export function SourceReview({
           </p>
         )}
         <VStack className="review-source-list" gap={2}>
-          {sources.map((source, index) => {
-            const numberLabel =
-              source.citationNumber === null
-                ? ""
-                : `[${source.citationNumber}]`;
-            return (
-              <HStack
-                className="review-source-row"
-                key={numberLabel || sourceKey(source.ref)}
-                gap={2}
-                hAlign="between"
-                vAlign="center"
-              >
-                <Button
-                  label={
-                    numberLabel
-                      ? `${numberLabel} ${source.title}`
-                      : source.title
-                  }
-                  type="button"
-                  variant="ghost"
-                  className="text-button"
-                  icon={<FileText />}
-                  onClick={() => void viewSource(source.ref, source.title)}
-                />
-                {record.article && source.needsReview && (
-                  <Text type="supporting">교체 필요</Text>
-                )}
-                {numberLabel ? (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    label={`인용 ${numberLabel} 교체`}
-                    onClick={() => setReplacingNumber(source.citationNumber)}
-                  />
-                ) : (
-                  <IconButton
-                    className="app-icon-button"
-                    type="button"
-                    label={`${source.title} 제외`}
-                    tooltip={`${source.title} 제외`}
-                    icon={<X />}
-                    variant="ghost"
-                    onClick={() =>
-                      setSources((prev) => prev.filter((_, i) => i !== index))
-                    }
-                  />
-                )}
-              </HStack>
-            );
-          })}
+          {sources.map((source, index) => (
+            <HStack
+              className="review-source-row"
+              key={JSON.stringify(source.ref) + index}
+              gap={2}
+              hAlign="between"
+              vAlign="center"
+            >
+              <Button
+                label={source.title}
+                type="button"
+                variant="ghost"
+                className="text-button"
+                icon={<FileText />}
+                onClick={() => void viewSource(source.ref, source.title)}
+              />
+              <IconButton
+                className="app-icon-button"
+                type="button"
+                label={`${source.title} 제외`}
+                tooltip={`${source.title} 제외`}
+                icon={<X />}
+                variant="ghost"
+                onClick={() =>
+                  setSources((prev) => prev.filter((_, i) => i !== index))
+                }
+              />
+            </HStack>
+          ))}
         </VStack>
-        {replacingNumber !== null && (
-          <VStack gap={2}>
-            <ReferencePicker
-              key={replacingNumber}
-              label={`인용 [${replacingNumber}]에 사용할 기록`}
-              value={null}
-              onChange={replaceCitedSource}
-              excludeId={record.id}
-            />
-            <Button
-              type="button"
-              label="인용 교체 취소"
-              variant="secondary"
-              onClick={() => setReplacingNumber(null)}
-            />
-          </VStack>
-        )}
         {reference && (
           <VStack as="section" className="reference-preview" gap={3}>
             <Text className="part-label" type="supporting">
@@ -405,12 +307,7 @@ export function SourceReview({
             variant="primary"
             type="submit"
             isLoading={busy}
-            isDisabled={
-              busy ||
-              !reason.trim() ||
-              !body.trim() ||
-              Boolean(record.article && sources.some((s) => s.needsReview))
-            }
+            isDisabled={busy || !reason.trim() || !body.trim()}
           />
         </HStack>
       </VStack>

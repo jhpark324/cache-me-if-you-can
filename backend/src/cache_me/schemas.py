@@ -6,7 +6,7 @@ from datetime import date, datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, PrivateAttr, StrictInt, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, StrictInt, field_validator, model_validator
 
 from .record_kinds import LEGACY_KIND_ALIASES, RecordKind, RecordKinds, normalize_record_kinds
 NodeKind = Literal["explanation", "interpretation", "hypothesis", "question", "event", "emotion", "proposal", "decision", "action", "result"]
@@ -115,32 +115,6 @@ class SourceRef(InputModel):
         return self
 
 
-class RecordCitation(InputModel):
-    kind: Literal["record"]
-    source: SourceRef
-
-
-class ExternalCitation(InputModel):
-    kind: Literal["external"]
-    title: str
-    url: HttpUrl
-    note: str
-
-    _text = field_validator("title", "note")(nonblank)
-
-
-class Article(InputModel):
-    summary: str
-    citations: list[Annotated[RecordCitation | ExternalCitation, Field(discriminator="kind")]] = Field(default_factory=list)
-
-    @field_validator("summary")
-    @classmethod
-    def one_line_summary(cls, value):
-        if len(value.splitlines()) != 1:
-            raise ValueError("article summary must be one line")
-        return nonblank(value).strip()
-
-
 class NodeInput(InputModel):
     kind: NodeKind
     body_start: Annotated[StrictInt, Field(ge=0)]
@@ -173,7 +147,6 @@ class CreateCaptureInput(InputModel):
     nodes: Annotated[list[NodeInput], Field(max_length=200)] = Field(default_factory=list)
     concept_hints: Hints = Field(default_factory=list)
     sources: list[SourceRef] = Field(default_factory=list)
-    article: Article | None = None
 
     _body = field_validator("body_markdown")(validate_body)
     _hints = field_validator("concept_hints")(validate_hints)
@@ -196,13 +169,12 @@ class CaptureChanges(InputModel):
     nodes: Annotated[list[NodeInput], Field(max_length=200)] | None = None
     concept_hints: Hints | None = None
     sources: list[SourceRef] | None = None
-    article: Article | None = None
 
     @model_validator(mode="after")
     def validate_patch(self):
         if not self.model_fields_set:
             raise ValueError("changes must not be empty")
-        for field in ("body_markdown", "kinds", "visibility", "nodes", "concept_hints", "sources", "article"):
+        for field in ("body_markdown", "kinds", "visibility", "nodes", "concept_hints", "sources"):
             if field in self.model_fields_set and getattr(self, field) is None:
                 raise ValueError(f"{field} cannot be null")
         if self.body_markdown is not None:
@@ -257,7 +229,6 @@ class ReviewSourcesInput(ExpectedVersion):
     review_reason: str
     body_markdown: str | None = None
     nodes: Annotated[list[NodeInput], Field(max_length=200)] | None = None
-    article: Article | None = None
 
     _reason = field_validator("review_reason")(nonblank)
 
@@ -268,7 +239,7 @@ class ReviewSourcesInput(ExpectedVersion):
 
     @model_validator(mode="after")
     def validate_optional_values(self):
-        for field in ("body_markdown", "nodes", "article"):
+        for field in ("body_markdown", "nodes"):
             if field in self.model_fields_set and getattr(self, field) is None:
                 raise ValueError(f"{field} cannot be null")
         return self

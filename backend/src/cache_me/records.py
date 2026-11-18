@@ -10,7 +10,6 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from markdown_it import MarkdownIt
 from sqlalchemy import func, or_, select
 
 from .db import Database, new_id, utcnow
@@ -22,7 +21,7 @@ from .models import (Capture, CaptureIndexState, CaptureRevision, Concept, Conce
                      ConceptEnrichmentJob, DeletionConfirmation, IndexBuild, IndexJob,
                      KnowledgeNode, LocalBrain, MutationReceipt, NodeConcept,
                      ProvenanceLink, Relation, RevisionConcept, RevisionKind)
-from .schemas import (Article, CreateCaptureInput, CreateConceptInput, DeleteCaptureInput,
+from .schemas import (CreateCaptureInput, CreateConceptInput, DeleteCaptureInput,
                       MergeCapturesInput, PrepareDeletionInput, RelationInput,
                       RetractRelationInput, ReviewSourcesInput, SetConceptsInput,
                       RetryConceptsInput, SourceRef, UpdateCaptureInput, UpdateConceptInput)
@@ -51,36 +50,6 @@ def digest(value):
 
 def source_dict(value):
     return SourceRef.model_validate(value).model_dump(mode="json")
-
-
-def article_sources(article):
-    if not article:
-        return []
-    return [citation["source"] for citation in article["citations"] if citation["kind"] == "record"]
-
-
-def validate_article(article, title, body, sources):
-    if not (title or "").strip():
-        fail("VALIDATION_ERROR", "아티클에는 제목이 필요합니다.")
-    known_sources = {canonical(source) for source in sources}
-    if any(canonical(source) not in known_sources for source in article_sources(article)):
-        fail("INVALID_SOURCE_REF", "새 출처 집합과 아티클의 인용 기록이 일치해야 합니다.")
-
-    # Validate actual links, including links in tables. Example syntax inside
-    # inline code or fenced blocks is literal text and has no citation target.
-    numbers = {str(i) for i in range(1, len(article["citations"]) + 1)}
-    parser = MarkdownIt("commonmark", {"html": False}).enable("table")
-    for block in parser.parse(body):
-        inline = block.children or []
-        for index, token in enumerate(inline):
-            href = token.attrGet("href") or ""
-            if token.type != "link_open" or not href.startswith("#cite-"):
-                continue
-            number = href.removeprefix("#cite-")
-            label = inline[index + 1:index + 3]
-            if (number not in numbers or len(label) != 2 or label[0].type != "text"
-                    or label[0].content != number or label[1].type != "link_close"):
-                fail("VALIDATION_ERROR", "아티클 본문의 인용 번호와 출처 번호가 일치해야 합니다.")
 
 
 def created_boundary(value, name):
@@ -201,7 +170,7 @@ class RecordService:
         review = session.scalar(select(CaptureRevision.id).where(CaptureRevision.capture_id == old.capture_id, CaptureRevision.revision_no > lo, CaptureRevision.revision_no <= hi, CaptureRevision.change_kind == "source_review").limit(1))
         if review:
             return False
-        if any(getattr(old, field) != getattr(current, field) for field in ("title", "body_markdown", "article", "completion_state", "event_time", "node_status")):
+        if any(getattr(old, field) != getattr(current, field) for field in ("title", "body_markdown", "completion_state", "event_time", "node_status")):
             return False
         fields = ("ordinal", "kind", "body_start", "body_end", "label", "origin", "verification_state", "verification_note")
         if [tuple(getattr(n, field) for field in fields) for n in self._nodes(session, old.id)] != [tuple(getattr(n, field) for field in fields) for n in self._nodes(session, current.id)]:
@@ -322,8 +291,7 @@ class RecordService:
         sources = [self._source_status(session, source, {capture.id}, _memo=memo) for source in self._sources(session, revision.id)]
         review = "needs_review" if any(source["review_state"] != "valid" for source in sources) else "valid"
         return {"id": capture.id, "revision_id": revision.id, "revision_no": revision.revision_no, "is_current": revision.id == capture.current_revision_id,
-                "state_version": capture.state_version, "title": revision.title, "body_markdown": revision.body_markdown, "article": revision.article,
-                "kinds": self._kinds(session, revision.id), "visibility": capture.visibility,
+                "state_version": capture.state_version, "title": revision.title, "body_markdown": revision.body_markdown, "kinds": self._kinds(session, revision.id), "visibility": capture.visibility,
                 "completion_state": revision.completion_state, "event_time": revision.event_time, "deleted_at": None,
                 "created_at": capture.created_at, "updated_at": capture.updated_at, "revision_created_at": revision.created_at,
                 "index_state": self._index_state(session, capture), "node_status": revision.node_status,
@@ -360,6 +328,11 @@ class RecordService:
         """Validate current/equivalent evidence without exposing unavailable text."""
         with self.db.read() as session:
             return self._source_status(session, source)
+
+    def source_statuses(self, session, sources):
+        """Resolve pinned record references within the caller's transaction."""
+        memo = {}
+        return [self._source_status(session, source, _memo=memo) for source in sources]
 
     def eligible_capture(self, capture_id):
         view = self.get(capture_id)
@@ -556,7 +529,7 @@ class RecordService:
         return {"items": [key(item) for item in selected], "next_cursor": next_cursor}
 
     def list(self, *, query=None, kinds=None, concept_ids=None, limit=20, cursor=None,
-             created_from=None, created_before=None, sort="created_desc", articles_only=False):
+             created_from=None, created_before=None, sort="created_desc"):
         start, end = created_boundary(created_from, "created_from"), created_boundary(created_before, "created_before")
         if start is not None and end is not None and start >= end:
             fail("VALIDATION_ERROR", "저장일 범위의 시작은 끝보다 앞서야 합니다.")
@@ -571,14 +544,10 @@ class RecordService:
             filters["created_before"] = end.isoformat()
         if sort != "created_desc":
             filters["sort"] = sort
-        if articles_only:
-            filters["articles_only"] = True
         with self.db.read() as session:
             captures = list(session.scalars(select(Capture).where(Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None)).order_by(Capture.created_at.desc(), Capture.id.desc())))
             snapshot = digest([(c.id, c.state_version) for c in captures])
             predicates = record_filter_predicates(kinds=kinds, concept_ids=concept_ids)
-            if articles_only:
-                predicates.append(CaptureRevision.article.is_not(None))
             matching_revisions = set(session.scalars(select(CaptureRevision.id).join(
                 Capture, Capture.current_revision_id == CaptureRevision.id).where(
                 Capture.brain_id == self.brain_id, Capture.deleted_at.is_(None), *predicates))) if predicates else None
@@ -599,9 +568,7 @@ class RecordService:
             def summary(item):
                 capture, revision = item
                 view = self._view(session, capture, revision)
-                return {field: view[field] for field in ("id", "revision_id", "revision_no", "state_version", "title", "kinds", "visibility", "completion_state", "event_time", "created_at", "updated_at", "index_state", "node_status", "concept_state", "review_state")} | {
-                    "excerpt": revision.body_markdown[:240], "article_summary": revision.article["summary"] if revision.article else None,
-                    "article_topics": [concept["name"] for concept in view["concepts"]] if revision.article else []}
+                return {field: view[field] for field in ("id", "revision_id", "revision_no", "state_version", "title", "kinds", "visibility", "completion_state", "event_time", "created_at", "updated_at", "index_state", "node_status", "concept_state", "review_state")} | {"excerpt": revision.body_markdown[:240]}
             return self._page(values, limit, cursor, filters, snapshot, summary)
 
     def _receipt(self, session, operation, data):
@@ -655,13 +622,11 @@ class RecordService:
         from .topic_backfill_jobs import enqueue_topic
         enqueue_topic(self, session, concept)
 
-    def _insert_revision(self, session, capture, *, title, body_markdown, article, kinds, completion_state, event_time, concept_hints, nodes, sources, node_status, change_kind, revision_no, review_reason=None, concept_ids=None, node_concepts=None, created_via=None):
-        if article is not None:
-            validate_article(article, title, body_markdown, sources)
+    def _insert_revision(self, session, capture, *, title, body_markdown, kinds, completion_state, event_time, concept_hints, nodes, sources, node_status, change_kind, revision_no, review_reason=None, concept_ids=None, node_concepts=None, created_via=None):
         for node in nodes:
             if node["body_start"] < 0 or node["body_end"] > len(body_markdown) or node["body_end"] <= node["body_start"]:
                 fail("VALIDATION_ERROR", "Node 범위가 본문을 벗어납니다.")
-        revision = CaptureRevision(id=capture.current_revision_id, brain_id=self.brain_id, capture_id=capture.id, revision_no=revision_no, title=title, body_markdown=body_markdown, article=article,
+        revision = CaptureRevision(id=capture.current_revision_id, brain_id=self.brain_id, capture_id=capture.id, revision_no=revision_no, title=title, body_markdown=body_markdown,
                                    concept_hints=concept_hints, completion_state=completion_state, event_time=event_time, node_status=node_status, change_kind=change_kind, review_reason=review_reason, created_via=created_via or self.created_via, created_at=utcnow())
         session.add(revision)
         session.flush()
@@ -688,13 +653,13 @@ class RecordService:
             receipt, fingerprint = self._receipt(session, "capture_create", data)
             if receipt:
                 return self._mutation_result(session, receipt, True)
-            values = data.model_dump(mode="json")
-            sources = self._validate_sources(session, [*data.sources, *article_sources(values["article"])])
+            sources = self._validate_sources(session, data.sources)
             now = utcnow()
             capture = Capture(id=new_id(), brain_id=self.brain_id, current_revision_id=new_id(), visibility=data.visibility, state_version=1, index_generation=1, created_at=now, updated_at=now)
             session.add(capture)
             session.flush()
-            self._insert_revision(session, capture, **{key: values[key] for key in ("title", "body_markdown", "article", "kinds", "completion_state", "event_time", "concept_hints", "nodes")}, sources=sources, node_status="current" if data.nodes else "absent", change_kind="create", revision_no=1)
+            values = data.model_dump(mode="json")
+            self._insert_revision(session, capture, **{key: values[key] for key in ("title", "body_markdown", "kinds", "completion_state", "event_time", "concept_hints", "nodes")}, sources=sources, node_status="current" if data.nodes else "absent", change_kind="create", revision_no=1)
             self._outbox(session, capture)
             self._queue_concepts(session, capture)
             receipt = self._remember(session, "capture_create", data, fingerprint, capture=capture)
@@ -709,15 +674,10 @@ class RecordService:
         body = changes.get("body_markdown", old.body_markdown)
         body_changed = body != old.body_markdown
         sources = self._sources(session, old.id)
-        article = old.article
-        supplied_sources = changes.get("sources", [])
-        if "article" in changes:
-            article = Article.model_validate(changes["article"]).model_dump(mode="json")
-            supplied_sources = [*supplied_sources, *article_sources(article)]
         if replacement_sources is not None:
             sources = replacement_sources
-        elif supplied_sources:
-            supplied = self._validate_sources(session, supplied_sources, capture.id)
+        elif "sources" in changes:
+            supplied = self._validate_sources(session, changes["sources"], capture.id)
             sources = list({canonical(s): s for s in sources + supplied}.values())
         if "nodes" in changes:
             nodes = changes["nodes"]
@@ -742,7 +702,7 @@ class RecordService:
         if set(changes) != {"visibility"} or change_kind or concept_ids is not None:
             capture.current_revision_id = new_id()
             selected_kind = change_kind or ("completion_change" if set(changes) <= {"completion_state", "visibility"} else "edit")
-            self._insert_revision(session, capture, **values, body_markdown=body, article=article, kinds=kinds, nodes=nodes, sources=sources, node_status=node_status, change_kind=selected_kind, revision_no=old.revision_no + 1,
+            self._insert_revision(session, capture, **values, body_markdown=body, kinds=kinds, nodes=nodes, sources=sources, node_status=node_status, change_kind=selected_kind, revision_no=old.revision_no + 1,
                                   review_reason=review_reason, concept_ids=self._concept_ids(session, old.id) if concept_ids is None else concept_ids,
                                   node_concepts=carried_node_concepts if node_concepts is None else node_concepts, created_via=created_via)
         self._outbox(session, capture)
@@ -808,7 +768,7 @@ class RecordService:
             removed_captures = {s["capture_id"] for s in old_sources} - {s["capture_id"] for s in replacement}
             if removed_captures and (data.body_markdown is None or data.body_markdown == old.body_markdown):
                 fail("SOURCE_REVIEW_REQUIRED", "알려진 출처 의존성을 제거하려면 본문을 재작성해야 합니다.")
-            changes = {key: value for key, value in data.model_dump(mode="json", exclude_unset=True).items() if key in ("body_markdown", "nodes", "article") and value is not None}
+            changes = {key: value for key, value in data.model_dump(mode="json", exclude_unset=True).items() if key in ("body_markdown", "nodes") and value is not None}
             self._apply_update(session, capture, changes, change_kind="source_review", replacement_sources=replacement, review_reason=data.review_reason)
             return self._mutation_result(session, self._remember(session, "capture_review_sources", data, fingerprint, capture=capture))
 
