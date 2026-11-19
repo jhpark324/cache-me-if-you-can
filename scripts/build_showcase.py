@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "showcase"
 FRONTEND = ROOT / "frontend"
 REPOSITORY = "https://github.com/jhpark324/cache-me-if-you-can"
-PRESENTATION = "cache-me-if-you-can-graduation-presentation"
+PRESENTATION = ROOT / "docs" / "assets" / "cache-me-if-you-can-graduation-presentation.html"
 
 
 class ShowcasePage(HTMLParser):
@@ -84,9 +84,7 @@ class ShowcasePage(HTMLParser):
 def assemble(site):
     presentation = site / "presentation"
     presentation.mkdir()
-    for extension in (".html", ".pdf"):
-        source = ROOT / "docs" / "assets" / (PRESENTATION + extension)
-        shutil.copyfile(source, presentation / source.name)
+    shutil.copyfile(PRESENTATION, presentation / PRESENTATION.name)
 
     subprocess.run(
         ["node", "scripts/render-showcase-reference.mjs", SOURCE, site],
