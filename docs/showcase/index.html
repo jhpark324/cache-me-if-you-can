@@ -20,7 +20,7 @@
   <header class="masthead">
     <div data-ax="Stack" data-ax-props='{"direction":"horizontal","vAlign":"center","gap":6}' class="masthead-inner wrap">
       <a class="brand" href="#story" aria-label="Cache Me If You Can 처음으로"><span class="brand-icon" aria-hidden="true"><i></i><b></b></span><span>Cache Me <small>If You Can</small></span></a>
-      <nav data-ax="Stack" data-ax-props='{"direction":"horizontal","gap":6}' class="section-nav" aria-label="프로젝트 소개"><a href="#story">따라보기</a><a href="#demo">상세 시연</a><a href="guide-skills.html">스킬·MCP</a><a href="guide.html">설계 문서</a></nav>
+      <nav data-ax="Stack" data-ax-props='{"direction":"horizontal","gap":6}' class="section-nav" aria-label="프로젝트 소개"><a href="#story">따라보기</a><a href="#demo">상세 시연</a><a href="#presentation">발표 자료</a><a href="guide-skills.html">스킬·MCP</a><a href="guide.html">설계 문서</a></nav>
       <a data-ax="Button" data-ax-icon="externalLink" data-ax-props='{"variant":"secondary","size":"md"}' class="github" href="https://github.com/jhpark324/cache-me-if-you-can" target="_blank" rel="noopener noreferrer" aria-label="GitHub 저장소, 새 탭에서 열기">GitHub</a>
     </div>
   </header>
@@ -141,6 +141,18 @@
         <div class="film-copy" id="demo-article"><h3 data-ax="Heading" id="article-title">비교 글에서 출처 열기</h3><p data-ax="Text">아티클을 열어 두 방식의 차이를 읽고, 본문 옆에서 인용한 기록을 확인합니다.</p></div>
         <figure class="film-screen"><video controls muted playsinline preload="none" poster="media/article-poster.jpg" width="1440" height="810" aria-label="TCP·UDP 아티클과 인용 출처를 확인하는 시연"><source src="media/article.mp4" type="video/mp4"><track kind="captions" srclang="ko" label="한국어" src="media/article.ko.vtt" default>이 브라우저는 영상을 재생할 수 없습니다.</video><figcaption><span>11초 · 아티클과 두 출처</span><button class="film-expand js-only" type="button">전체 화면</button></figcaption></figure>
       </article>
+    </section>
+    <section id="presentation" class="presentation" aria-labelledby="presentation-title">
+      <div class="book-heading presentation-heading">
+        <h2 data-ax="Heading" id="presentation-title">AI와 공부한 기록, <em>면접 전날 다시 찾기</em></h2>
+        <div class="presentation-links">
+          <a data-ax="Button" data-ax-icon="externalLink" data-ax-props='{"variant":"secondary","size":"md"}' href="presentation/cache-me-if-you-can-graduation-presentation.pdf" target="_blank" rel="noopener" aria-label="PDF 열기 (새 탭)">PDF 열기</a>
+          <a class="pdf-download" href="presentation/cache-me-if-you-can-graduation-presentation.pdf" download="cache-me-if-you-can-graduation-presentation.pdf">PDF 다운로드 <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+      <div class="presentation-reader js-only">
+        <template><iframe title="Cache Me If You Can 졸업 작품 발표 슬라이드" src="presentation/cache-me-if-you-can-graduation-presentation.html?viewer" allowfullscreen></iframe></template>
+      </div>
     </section>
     <nav class="legacy-links" aria-label="설계 문서 바로가기"><a id="architecture" href="guide-system.html#overview">시스템 구조</a><a id="questions" href="guide.html">아키텍처 개요</a><a id="skills" href="guide-skills.html">두 스킬의 역할</a></nav>
   </main>

@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'docs/showcase/**'
+      - 'docs/assets/cache-me-if-you-can-graduation-presentation.*'
       - 'docs/architecture/**'
       - 'docs/specs/**'
       - 'docs/decisions/**'
@@ -19,6 +20,7 @@ on:
     branches: [main]
     paths:
       - 'docs/showcase/**'
+      - 'docs/assets/cache-me-if-you-can-graduation-presentation.*'
       - 'docs/architecture/**'
       - 'docs/specs/**'
       - 'docs/decisions/**'

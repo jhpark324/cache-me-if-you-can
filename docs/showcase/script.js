@@ -1,6 +1,7 @@
 // HTML anchors and still images also work without the story player.
 const story = document.querySelector(".story");
 const demos = document.getElementById("demo");
+const presentation = document.getElementById("presentation");
 const chapters = [...story.querySelectorAll(".chapter")];
 const films = [...demos.querySelectorAll(".film-panel")];
 const rail = [...story.querySelectorAll(".story-rail a")];
@@ -44,14 +45,19 @@ function refreshPictures() {
   }
 }
 
-function select(chapter, film) {
-  const showingStory = film < 0;
+function select(sectionId, chapter = 0, film = -1) {
+  const showingStory = sectionId === "story";
   const direction = chapterIndex > chapter ? "arrive-back" : "arrive";
   const transition = !story.hidden && chapterIndex >= 0 && chapterIndex !== chapter;
   story.hidden = !showingStory;
-  demos.hidden = showingStory;
+  demos.hidden = sectionId !== "demo";
+  presentation.hidden = sectionId !== "presentation";
+  if (!presentation.hidden) {
+    const template = presentation.querySelector("template");
+    if (template) template.replaceWith(template.content.cloneNode(true));
+  }
   for (const link of sections) {
-    const current = link.hash === (showingStory ? "#story" : "#demo");
+    const current = link.hash === "#" + sectionId;
     if (current) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   }
@@ -89,7 +95,7 @@ function renderAddress() {
     return;
   }
   if (hash === "share" && typeof qrViewer.showModal === "function") {
-    if (chapterIndex < 0) select(0, -1);
+    if (chapterIndex < 0) select("story");
     if (!qrViewer.open) qrViewer.showModal();
     refreshPictures();
     return;
@@ -103,7 +109,8 @@ function renderAddress() {
   const filmId = hash.startsWith("demo-") ? hash.slice(5) : hash;
   const film = hash === "demo" ? 0 : hash === "recall" ? films.length - 1 : films.findIndex(panel => panel.id === filmId);
   const chapter = chapters.findIndex(panel => panel.id === hash);
-  select(chapter < 0 ? 0 : chapter, film);
+  const sectionId = hash === "presentation" ? "presentation" : film < 0 ? "story" : "demo";
+  select(sectionId, Math.max(0, chapter), film);
 }
 
 function navigate(hash) {

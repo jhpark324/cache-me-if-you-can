@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "showcase"
 FRONTEND = ROOT / "frontend"
 REPOSITORY = "https://github.com/jhpark324/cache-me-if-you-can"
+PRESENTATION = "cache-me-if-you-can-graduation-presentation"
 
 
 class ShowcasePage(HTMLParser):
@@ -81,6 +82,12 @@ class ShowcasePage(HTMLParser):
 
 
 def assemble(site):
+    presentation = site / "presentation"
+    presentation.mkdir()
+    for extension in (".html", ".pdf"):
+        source = ROOT / "docs" / "assets" / (PRESENTATION + extension)
+        shutil.copyfile(source, presentation / source.name)
+
     subprocess.run(
         ["node", "scripts/render-showcase-reference.mjs", SOURCE, site],
         cwd=FRONTEND, check=True,
@@ -114,7 +121,7 @@ def assemble(site):
     )
     for relative in referenced - pages.keys() - {stylesheet}:
         if (site / relative).is_file():
-            continue  # Diagram copied alongside its rendered reference document.
+            continue  # Already packaged with the presentation or rendered reference documents.
         asset = SOURCE / relative
         if not asset.resolve().is_relative_to(SOURCE) or not asset.is_file() or not asset.stat().st_size:
             raise ValueError(f"Missing or invalid showcase asset: {relative}")
