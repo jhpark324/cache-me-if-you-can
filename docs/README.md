@@ -4,7 +4,7 @@
 
 **“TCP에 대해 알려줘.”** AI와 TCP·UDP의 차이를 공부하고 “지금까지 배운 걸 cache-me로 정리해줘”라고 말하면 내 컴퓨터에 두 기록이 남습니다. 그래프에서 한 문단을 열거나, 기억나는 말로 검색하거나, 두 기록을 비교 아티클로 엮을 수 있습니다.
 
-**[TCP·UDP 이야기 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [스킬과 MCP 한눈에 보기](https://jhpark324.github.io/cache-me-if-you-can/guide-skills.html) · [휴대폰용 QR](showcase/media/intro-qr.png) · [기술 가이드](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
+**[TCP·UDP 이야기 따라보기](https://jhpark324.github.io/cache-me-if-you-can/)** · [스킬과 MCP 한눈에 보기](https://jhpark324.github.io/cache-me-if-you-can/guide-skills.html) · [휴대폰용 QR](showcase/media/intro-qr.png) · [아키텍처와 설계 문서](https://jhpark324.github.io/cache-me-if-you-can/guide.html) · [빠른 시작](#빠른-시작)
 
 졸업작품 발표 자료 · [AI와 공부한 기록, 면접 전날 다시 찾기 (PDF, 17장)](assets/cache-me-if-you-can-graduation-presentation.pdf)
 

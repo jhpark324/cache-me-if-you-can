@@ -1,15 +1,21 @@
-.system-map, .sys-screen { margin: 1rem 0; }
-.system-map { display: grid; grid-template-columns: minmax(0, 29rem) minmax(0, 18rem); align-items: center; gap: clamp(1rem, 3vw, 3rem); }
-.system-map img, .sys-screen img { display: block; width: 100%; height: auto; border: 1px solid var(--g-line); border-radius: .75rem; }
-.system-map figcaption, .sys-screen figcaption { color: var(--g-muted); font-size: .9375rem; }
+.system-map, .retrieval-map, .sys-screen { margin: 1rem 0; }
+.system-map, .retrieval-map { display: grid; grid-template-columns: minmax(0, 28rem) minmax(0, 30rem); align-items: center; gap: clamp(1rem, 3vw, 3rem); }
+.system-map img, .retrieval-map img, .sys-screen img { display: block; width: 100%; height: auto; border: 1px solid var(--g-line); border-radius: .75rem; }
+.system-map figcaption, .retrieval-map figcaption, .sys-screen figcaption { color: var(--g-muted); font-size: .9375rem; }
 .sys-screen figcaption { margin-top: .5rem; }
-.system-map a, .sys-routes a { display: inline-flex; align-items: center; min-height: 44px; }
-.system-map a { display: flex; width: fit-content; }
+.system-map a, .retrieval-map a, .sys-routes a { display: inline-flex; align-items: center; min-height: 44px; }
+.system-map a, .retrieval-map a { display: flex; width: fit-content; }
 .sys-routes { margin: 0; }
 .sys-routes div { display: grid; grid-template-columns: minmax(4rem, .15fr) 1fr; gap: .65rem; padding-block: .55rem; }
 .sys-routes dt { font-weight: 650; }
 .sys-routes dd { margin: 0; color: var(--g-muted); }
 @media (max-width: 38rem) {
-  .system-map { grid-template-columns: 1fr; gap: .65rem; }
+  .system-map, .retrieval-map { grid-template-columns: 1fr; gap: .65rem; }
 }
 .tool-list { margin: 1rem 0; }.tool-list dt { margin-top: .85rem; }.tool-list dd { margin: .25rem 0 0; }
+
+.system-map figcaption > strong, .retrieval-map figcaption > strong { display: block; margin-bottom: .65rem; color: var(--g-ink); font-size: 1.1rem; }
+.sys-map-key { margin: 0; }
+.sys-map-key > div { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); gap: .6rem; padding-block: .65rem; border-top: 1px solid var(--g-line); }
+.sys-map-key dt { color: var(--g-accent); font-weight: 650; }
+.sys-map-key dd { margin: 0; }

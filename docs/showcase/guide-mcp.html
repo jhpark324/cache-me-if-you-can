@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko" data-astryx-theme="cache-me" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000"><meta name="description" content="로컬 MCP의 전송, 등록 도구의 입력과 반환 형식, 오류 처리, 기록과 아티클 실제 호출 예시.">
+  <title>MCP 도구 명세 · Cache Me If You Can 설계 문서</title>
+  <link rel="stylesheet" href="astryx.css"><link rel="stylesheet" href="guide.css"><link rel="stylesheet" href="mcp.css">
+  <script src="mcp-guide.js" defer></script>
+</head>
+<body>
+<a class="g-skip" href="#main">본문으로 건너뛰기</a>
+<header class="g-header"></header>
+<main id="main" class="g-wrap g-main">
+  <header class="g-intro"><h1 data-ax="Heading">MCP 도구 명세</h1><p class="g-lead">Codex는 MCP를 통해 사용자의 로컬 서재를 읽고 씁니다. 도구마다 제출할 필드와 돌려받는 값이 정해져 있습니다.</p></header>
+  <nav class="g-jumps" aria-label="MCP 명세 목차"><a href="#transport">전송과 인증</a><a href="#examples">호출 예시</a><a href="#tools">도구별 계약</a><a href="#errors">결과와 오류</a><a href="#mutations">재시도와 삭제 확인</a></nav>
+  <section class="g-section" id="transport"><h2 data-ax="Heading">전송과 인증</h2>
+    <ol class="g-flow"><li><strong>Codex 클라이언트</strong><span>설치한 <code>cache_me</code> 연결이 <code>tools/list</code>로 사용 가능한 도구를 확인합니다.</span></li><li><strong>로컬 MCP 서버</strong><span>기본 주소 <code>http://127.0.0.1:52761/mcp/</code>에서 Streamable HTTP로 JSON-RPC 요청을 받습니다.</span></li><li><strong>서재 서비스</strong><span><code>tools/call</code>의 <code>params.name</code>과 <code>params.arguments</code>를 검사하고 기록·아티클·검색 서비스를 호출합니다.</span></li></ol>
+    <p>설치기가 등록한 헤더 도우미가 로컬 앱의 Bearer 인증을 제공합니다. 서버가 포트를 다르게 사용하면 설치한 연결의 주소를 따릅니다. 서버는 로컬 Host와 요청에 포함된 Origin을 검사합니다. 웹 브라우저는 세션 쿠키와 변경 요청의 CSRF 토큰을 사용합니다. 외부 답변 모델 연결에는 별도의 ChatGPT OAuth 로그인이 쓰입니다.</p>
+  </section>
+  <section class="g-section" id="examples"><h2 data-ax="Heading">기록 저장부터 인용 발행까지</h2>
+    <p>아래 세 호출은 합성 UDP 자료와 빈 메모리 서재를 사용해 실제 등록 도구로 차례로 실행했습니다. 첫 호출이 돌려준 두 식별자가 다음 호출의 원문과 인용 대상을 결정합니다. 다른 서재에서 실행할 때는 그 서재가 반환한 식별자를 사용합니다.</p>
+    <div data-mcp-examples></div>
+  </section>
+  <section class="g-section" id="tools"><h2 data-ax="Heading">도구별 입력과 반환</h2>
+    <p>도구를 펼치면 등록된 입력의 필수 여부, 허용 타입, 기본값과 중첩 객체를 읽을 수 있습니다. 입력의 객체 이름은 <code>arguments</code> 아래의 실제 키입니다. 각 도구 끝에 SDK가 제공하는 전체 입력·출력 JSON Schema가 있습니다.</p>
+    <form role="search" class="mcp-search" hidden><label for="mcp-query">도구 찾기</label><input type="search" id="mcp-query" placeholder="도구 이름이나 작업명" autocomplete="off"></form>
+    <p class="mcp-count" role="status" aria-live="polite"></p>
+    <div data-mcp-tools></div>
+  </section>
+  <section class="g-section" id="errors"><h2 data-ax="Heading">결과와 오류</h2>
+    <p>성공하면 MCP 결과의 <code>structuredContent</code>에 <code>schema_version: 1</code>, <code>ok: true</code>, <code>data</code>가 들어갑니다. 서재 서비스가 요청을 거절하면 <code>isError</code>가 참이고 <code>structuredContent</code>는 <code>ok: false</code>와 <code>error</code>를 담습니다. 도구가 돌려주는 <code>content</code>의 텍스트는 같은 객체를 직렬화한 값입니다.</p>
+    <div class="g-table"><table><thead><tr><th scope="col">구분</th><th scope="col">원인과 처리</th></tr></thead><tbody>
+      <tr><th scope="row"><code>UNAUTHORIZED</code></th><td>로컬 MCP 인증이 없거나 올바르지 않으면 HTTP 401을 받습니다. 연결 설정과 헤더 도우미를 확인합니다.</td></tr>
+      <tr><th scope="row">MCP 입력 검사</th><td>알 수 없는 도구, 누락된 필수 인자, 잘못된 UUID와 같은 입력은 SDK가 서비스 실행 전에 거절할 수 있습니다. 이때 클라이언트는 MCP 오류도 별도로 처리해야 합니다.</td></tr>
+      <tr><th scope="row"><code>NOT_FOUND</code> · <code>INVALID_SOURCE_REF</code></th><td>대상 기록이나 버전을 열 수 없거나 구간·세부 항목이 원문에 속하지 않습니다. 저장 결과의 정확한 참조를 확인합니다.</td></tr>
+      <tr><th scope="row"><code>VERSION_CONFLICT</code> · <code>IDEMPOTENCY_CONFLICT</code></th><td>기대 버전이 바뀌었거나 이미 사용한 요청 ID에 다른 내용을 보냈습니다. 현재본과 원래 요청을 대조합니다.</td></tr>
+      <tr><th scope="row"><code>INDEX_NOT_READY</code> · <code>QUERY_TOO_LONG</code></th><td>검색 색인을 준비하거나 모델의 질의 예산 안으로 입력을 나누어 다시 요청합니다.</td></tr>
+    </tbody></table></div><p>도메인 오류에는 <code>code</code>, <code>message</code>, <code>retryable</code>이 있고 필요한 경우 <code>details</code>가 붙습니다. 위 표는 자주 만나는 오류를 정리했습니다.</p>
+  </section>
+  <section class="g-section" id="mutations"><h2 data-ax="Heading">재시도와 삭제 확인</h2>
+    <ul><li><strong>같은 쓰기 요청 재전송.</strong> <code>request_id</code>를 받는 쓰기 도구는 같은 호출자의 같은 요청을 다시 받으면 기존 처리 결과를 확인합니다. 연결이 끊겼다면 같은 ID와 같은 내용을 보냅니다. 정상 재처리 영수증에는 <code>replayed: true</code>가 표시됩니다.</li>
+    <li><strong>수정 충돌.</strong> 기록은 기대 기록 버전과 상태 버전, 아티클 개정은 기대 아티클 버전을 확인합니다. 충돌이 생기면 현재본을 다시 읽고 수정 내용을 결정합니다.</li>
+    <li><strong>삭제.</strong> <code>capture_delete_prepare</code>로 미리보기와 5분 동안 유효한 확인 토큰을 받습니다. <code>capture_delete</code>는 대상·버전·토큰을 검사하고, MCP 클라이언트가 사용자에게 확인 폼을 표시합니다. 승인된 삭제만 새로 커밋합니다. 거절·취소·확인 기능 미지원 시 기록은 보존됩니다. 모델 입력에는 사용자 승인 필드가 없습니다.</li></ul>
+    <p><a href="guide-system.html#tools">시스템 문서의 작업별 도구 목록</a> · <a href="ref-service-contracts.html">MCP·웹 서비스 계약 원문</a></p>
+  </section>
+</main>
+</body>
+</html>

@@ -1,4 +1,6 @@
-.ref-library .g-intro { padding-bottom: 1.6rem; }
+.ref-page, .ref-library { container-type: inline-size; container-name: reference; min-width: 0; }
+.ref-library .g-intro { padding-bottom: .65rem; }
+.ref-library .g-intro .g-lead { max-width: 44rem; }
 .ref-search { max-width: 45rem; margin: .25rem 0 1rem; }
 .ref-search label { display: block; font-weight: 650; margin-bottom: .45rem; }
 .ref-search div { display: flex; align-items: stretch; gap: .5rem; }
@@ -8,12 +10,27 @@
 .ref-search button, .ref-more { color: var(--g-ink); background: var(--g-card); padding: .65rem 1rem; cursor: pointer; }
 #ref-count { margin: .8rem 0 1rem; color: var(--g-muted); font-size: .95rem; }
 #ref-count:empty { display: none; }
-.ref-group { margin-block: 1.6rem 2.5rem; }
+#ref-catalog { display: grid; grid-template-columns: minmax(10rem, .29fr) minmax(0, 1fr); gap: clamp(1.3rem, 4vw, 3rem); align-items: start; margin-top: 1.8rem; }
+#ref-catalog[hidden], .ref-group[hidden] { display: none; }
+.ref-fields { position: sticky; top: calc(var(--g-header-height, 3.5rem) + 1rem); }
+.ref-fields details { padding: 0; }
+.ref-fields summary, .ref-toc summary { cursor: pointer; font-weight: 650; }
+.ref-fields summary { padding-block: .55rem; }
+.ref-field-name { display: none; color: var(--g-muted); font-weight: 500; }
+.ref-fields ul { list-style: none; padding: 0; margin: .35rem 0 0; }
+.ref-fields a { display: flex; justify-content: space-between; align-items: center; gap: .6rem; min-height: 2.75rem; padding: .45rem .65rem; border-inline-start: 2px solid var(--g-line); color: var(--g-muted); text-decoration: none; }
+.ref-fields small { flex: none; font-variant-numeric: tabular-nums; }
+.ref-fields a:hover, .ref-fields [aria-current] { color: var(--g-ink); background: var(--g-surface); }
+.ref-fields [aria-current] { border-color: var(--g-accent); }
+.ref-group { margin-bottom: 2.5rem; scroll-margin-top: calc(var(--g-header-height, 3.5rem) + 1rem); }
+.ref-group-title { margin-bottom: 1rem; }
+.ref-group-title p { margin: .25rem 0 0; color: var(--g-muted); }
 .ref-group h2 { margin: 0 0 .4rem; font-size: 1.55rem; letter-spacing: -.045em; }
 .ref-list, .ref-results ol { list-style: none; padding: 0; margin: 0; }
 .ref-list li, .ref-results li { border-top: 1px solid var(--g-line); }
-.ref-list a, .ref-results li a { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr) auto; align-items: baseline; gap: .5rem 1.6rem; padding: .9rem 0; color: inherit; text-decoration: none; }
-.ref-list a::after, .ref-results li a::after { content: '→'; color: var(--g-accent); }
+.ref-list a, .ref-results li a { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: .18rem .8rem; padding: .9rem 0; color: inherit; text-decoration: none; }
+.ref-list a::after, .ref-results li a::after { content: '→'; grid-column: 2; grid-row: 1 / 3; color: var(--g-accent); }
+.ref-list a span { grid-column: 1; }
 .ref-list a:hover strong, .ref-results li a:hover strong { color: var(--g-accent); text-decoration: underline; }
 .ref-list strong, .ref-results strong { font-weight: 670; }
 .ref-list span, .ref-results small, .ref-results .ref-excerpt { color: var(--g-muted); font-size: .92rem; }
@@ -26,9 +43,14 @@
 .ref-crumb { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; color: var(--g-muted); font-size: .9rem; padding-block: .75rem; }
 .ref-crumb a { color: inherit; text-decoration: none; }
 .ref-crumb a:hover { color: var(--g-accent); text-decoration: underline; }
-.ref-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(12.5rem, 17rem); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; }
+.ref-dochead { max-width: 51rem; margin: .65rem 0 1.5rem; }
+.ref-document :is(p, td, th, li, blockquote) a, .ref-dochead p a { text-decoration: underline; text-underline-offset: .16em; }
+.ref-document pre:focus-visible { outline: 2px solid var(--g-accent); outline-offset: 2px; }
+.ref-dochead p { margin: .8rem 0; color: var(--g-muted); line-height: 1.75; }
+.ref-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(11rem, 24%); gap: clamp(1.25rem, 3vw, 2.75rem); align-items: start; }
+.ref-document { grid-column: 1; grid-row: 1; }
 .ref-document { min-width: 0; line-height: 1.82; }
-.ref-document h1 { color: var(--g-ink); font-size: clamp(1.58rem, 3vw, 2.45rem); letter-spacing: -.06em; line-height: 1.2; margin: 0 0 1.55rem; }
+.ref-dochead h1 { color: var(--g-ink); font-size: clamp(1.58rem, 3vw, 2.45rem); letter-spacing: -.06em; line-height: 1.2; margin: 0; }
 .ref-document h2, .ref-document h3, .ref-document h4 { color: var(--g-ink); line-height: 1.35; letter-spacing: -.035em; margin: 2.2rem 0 .65rem; }
 .ref-document h2 { font-size: clamp(1.25rem, 2.6vw, 1.65rem); border-top: 1px solid var(--g-line); padding-top: 1.4rem; }
 .ref-document h3 { font-size: 1.23rem; }
@@ -44,32 +66,62 @@
 .ref-document :not(pre) > code { color: var(--g-ink); overflow-wrap: anywhere; }
 .ref-document pre { max-width: 100%; overflow-x: auto; border: 1px solid var(--g-line); padding: .9rem; margin: .95rem 0; border-radius: .6rem; background: var(--g-surface); white-space: pre; }
 .ref-document blockquote { margin: 1rem 0; border-left: 2px solid var(--g-accent); padding-inline-start: .85rem; }
+.ref-document > :first-child:is(h2,h3) { margin-top: 0; }
+.ref-document [id] { scroll-margin-top: calc(var(--g-header-height, 3.5rem) + 1rem); }
 .ref-document figure { margin: 1.15rem 0; }
-.ref-document figure img { display: block; max-width: 100%; max-height: 34rem; margin-inline: auto; background: white; }
-.ref-document .ref-diagram { border: 1px solid var(--g-line); padding: .6rem; border-radius: .5rem; background: white; }
+.ref-zoom > summary { display: block; list-style: none; }
+.ref-zoom > summary::-webkit-details-marker { display: none; }
+.ref-zoom > summary:hover .ref-zoom-label { text-decoration: underline; }
+.ref-zoom-label { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--g-accent); }
+.ref-zoom:not([open]) .ref-to-fit, .ref-zoom[open] .ref-to-zoom, .ref-document .ref-zoom[open] .ref-diagram { display: none; }
+.ref-document .ref-zoom[open] .ref-zoom-label::before { content: "−"; margin-right: .45rem; }
+.ref-document .ref-zoom:not([open]) .ref-zoom-label::before { content: "+"; margin-right: .45rem; }
+.ref-document details summary { cursor: pointer; }
+.ref-document figure img { display: block; height: auto; max-width: 100%; max-height: 34rem; margin-inline: auto; background: white; }
+.ref-document .ref-diagram { display: block; border: 1px solid var(--g-line); padding: .6rem; border-radius: .5rem; background: white; }
 .ref-document figure details { margin-top: .45rem; }
-.ref-zoom > div { overflow: auto; max-height: min(70vh, 34rem); margin-block: .5rem; border: 1px solid var(--g-line); background: white; }
-.ref-document .ref-zoom img { max-width: none; max-height: none; height: auto; margin: 0; }
+.ref-zoom > div { overscroll-behavior: contain; overflow: auto; max-height: min(70vh, 34rem); margin-block: .5rem; border: 1px solid var(--g-line); background: white; }
+.ref-document .ref-zoom > div img { max-width: none; max-height: none; height: auto; margin: 0; }
 .ref-zoom > div:focus-visible, .ref-document .g-table:focus-visible { outline: 2px solid var(--g-accent); }
-.ref-document .g-table { border: 1px solid var(--g-line); border-radius: .55rem; }
-.ref-document .g-table table { width: 100%; font-size: .95rem; }
+.ref-document .g-table { border: 1px solid var(--g-line); border-radius: .55rem; overscroll-behavior-inline: contain; }
+.ref-document .g-table table { width: 100%; font-size: .95rem; border-collapse: separate; border-spacing: 0; }
+.ref-document .g-table :is(th, td) { min-width: 7.5rem; vertical-align: top; }
+.ref-document .g-table th { color: var(--g-ink); background: var(--g-card); }
+.ref-document .g-table tr:nth-child(even) td { background: var(--g-surface); }
 .ref-document .g-table tr:last-child td { border-bottom: 0; }
-.ref-toc { grid-column: 2; grid-row: 1; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; padding: .8rem 1rem; border-left: 1px solid var(--g-line); }
-.ref-toc ol { list-style: none; padding: 0; }
-.ref-toc li.ref-sub { padding-inline-start: .8rem; }
-.ref-toc a { display: block; color: var(--g-muted); font-size: .88rem; text-decoration: none; padding-block: .24rem; }
-.ref-toc a:hover, .ref-toc summary { color: var(--g-accent); }
-.ref-toc summary, .ref-document summary { cursor: pointer; font-weight: 650; }
-.ref-footer { margin-block: 2rem; padding-top: 1rem; border-top: 1px solid var(--g-line); }
-.ref-footer code { color: var(--g-muted); }
-.ref-footer a { display: inline-flex; margin-right: 1rem; padding-block: .5rem; }
-@media (max-width: 47rem) {
-  .ref-layout { display: flex; flex-direction: column; gap: 1.25rem; }
-  .ref-toc { position: static; width: 100%; max-height: 13rem; border: 1px solid var(--g-line); border-radius: .55rem; }
+.ref-document .ref-table-hint { font-size: .85rem; margin: .7rem 0 .25rem; color: var(--g-muted); }
+.ref-table-hint + .g-table { margin-top: .35rem; }
+.ref-toc { grid-column: 2; grid-row: 1; position: sticky; top: calc(var(--g-header-height, 3.5rem) + 1rem); padding: 0 .85rem; border-left: 1px solid var(--g-line); }
+.ref-toc ol { list-style: none; padding: .15rem .35rem; margin: .35rem 0; max-height: calc(100dvh - var(--g-header-height, 3.5rem) - 6rem); overflow-y: auto; overscroll-behavior: contain; }
+.ref-toc li.ref-sub { padding-inline-start: .7rem; }
+.ref-toc a { display: block; color: var(--g-muted); font-size: .9rem; text-decoration: none; padding: .35rem .45rem; border-left: 2px solid transparent; }
+.ref-toc a:hover, .ref-toc a[aria-current] { color: var(--g-accent); }
+.ref-toc a[aria-current] { border-color: var(--g-accent); background: var(--g-surface); }
+.ref-location { display: none; }
+.ref-footer { margin: 2.75rem 0 1rem; border-top: 1px solid var(--g-line); }
+.ref-neighbors { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; padding-block: 1rem; }
+.ref-neighbors a { display: flex; flex-direction: column; justify-content: center; text-decoration: none; min-height: 3rem; color: var(--g-ink); }
+.ref-neighbors small { color: var(--g-muted); }
+.ref-neighbors a:hover strong { text-decoration: underline; color: var(--g-accent); }
+.ref-next { grid-column: 2; text-align: right; }
+.ref-credit { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; align-items: center; border-top: 1px solid var(--g-line); padding-block: .6rem; }
+.ref-credit a { padding-block: .45rem; }
+.ref-credit code { color: var(--g-muted); overflow-wrap: anywhere; }
+@container reference (width < 768px) {
+  #ref-catalog { display: block; margin-top: .9rem; }
+  .ref-fields { position: static; margin: .75rem 0 1.1rem; }
+  .ref-fields details, .ref-toc details { background: var(--g-surface); border: 1px solid var(--g-line); border-radius: .45rem; padding-inline: .7rem; }
+  .ref-fields summary, .ref-toc summary { min-height: 2.75rem; line-height: 1.4; padding-block: .65rem; }
+  .ref-field-name { display: inline; margin-inline-start: .7rem; }
+  .ref-fields [open] .ref-field-name { display: none; }
+  .ref-fields ul { margin-block: 0 .55rem; }
+  .ref-layout { display: block; }
+  .ref-toc { z-index: 2; top: var(--g-header-height, 3rem); padding: .25rem 0; margin-bottom: .8rem; background: var(--g-bg); border: 0; }
+  .ref-toc details { min-width: 0; }
+  .ref-toc ol { max-height: min(49dvh, 21rem); }
+  .ref-toc a { display: flex; align-items: center; min-height: 2.65rem; }
+  .ref-toc details:not([open]) .ref-location { display: inline-block; max-width: calc(100% - 8.5rem); vertical-align: bottom; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: var(--g-muted); margin-left: .5rem; font-weight: 400; }
+  .ref-document [id] { scroll-margin-top: calc(var(--g-header-height, 3rem) + 4.5rem); }
+  .ref-dochead { margin-bottom: 1rem; }
   .ref-document { width: 100%; }
-}
-@media (max-width: 38rem) {
-  .ref-list a { grid-template-columns: minmax(0, 1fr) auto; gap: .18rem .5rem; }
-  .ref-list span { grid-column: 1; }
-  .ref-list a::after { grid-column: 2; grid-row: 1 / 3; }
 }

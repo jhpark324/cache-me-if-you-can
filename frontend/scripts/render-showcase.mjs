@@ -1,3 +1,6 @@
+import { renderMcpGuide } from "./render-showcase-mcp.mjs";
+import { basename } from "node:path";
+import { mountGuideNavigation } from "./showcase-navigation.mjs";
 import { readFile, writeFile } from "node:fs/promises";
 import { Button, Grid, Heading, Icon, Stack, Text } from "@astryxdesign/core";
 import { parseHTML } from "linkedom";
@@ -11,6 +14,8 @@ if (!input || !output) {
 
 // Author the tour in semantic HTML. Only marked regions need React at build time.
 const { document } = parseHTML(await readFile(input, "utf8"));
+await renderMcpGuide(document, input);
+mountGuideNavigation(document, basename(input));
 const components = { Button, Grid, Heading, Stack, Text };
 
 function renderNode(node) {

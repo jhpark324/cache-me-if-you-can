@@ -1,45 +1,82 @@
 <!doctype html>
 <html lang="ko" data-astryx-theme="cache-me" data-theme="dark">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Cache Me If You Can의 기록 관리, 출처가 있는 답변, 검색 엔진과 로컬 시스템을 관심 있는 주제부터 살펴보세요.">
-  <title>심화 가이드 · Cache Me If You Can</title>
-  <link rel="stylesheet" href="astryx.css">
-  <link rel="stylesheet" href="guide.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="캐시미의 시스템 구성, Codex 스킬과 MCP 도구, 검색에서 답변 인용까지의 경로를 설계도와 명세로 읽습니다.">
+  <title>아키텍처 개요 · 캐시미 설계 문서</title>
+  <link rel="stylesheet" href="astryx.css"><link rel="stylesheet" href="guide.css"><link rel="stylesheet" href="architecture.css">
 </head>
 <body>
   <a class="g-skip" href="#main">본문으로 건너뛰기</a>
-  <header class="g-header"><nav class="g-wrap g-nav" aria-label="심화 가이드">
-    <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
-    <a class="g-map-link" href="guide.html#map">가이드 목차 <span aria-hidden="true">☰</span></a><div class="g-navlinks"><a href="guide.html" aria-current="page">가이드 지도</a><a href="guide-skills.html">스킬·MCP</a><a href="guide-features.html">기능</a><a href="guide-engine.html">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
-  </nav></header>
+  <header class="g-header"></header>
   <main id="main" class="g-wrap g-main">
-    <header class="g-intro">
-      <h1 data-ax="Heading">서재의 작동 원리</h1>
-      <p class="g-lead">대화에서 남긴 TCP·UDP 기록 두 개. 어디서 찾고, 그 안에서는 무슨 일이 일어날까요?</p>
-    </header>
-    <div class="g-atlas" id="map">
-      <section class="g-section" id="questions">
-        <h2 data-ax="Heading">서재 써 보기</h2>
-        <ul class="g-paths">
-          <li><a href="guide-skills.html"><strong>Codex에 뭐라고 말할까?</strong><span>두 스킬과 MCP · 요청에서 결과까지</span></a></li>
-          <li><a href="guide-features.html#graph"><strong>그래프의 점을 누르면?</strong><span>주제와 기록, 연결된 본문 구간</span></a></li>
-          <li><a href="guide-features.html#answers"><strong>제목을 잊어버렸다면?</strong><span>지식 공간에서 질문하고 검색 근거 열기</span></a></li>
-          <li><a href="guide-features.html"><strong>기록부터 아티클까지</strong><span>목록 · 타임라인 · 수정 · 인용</span></a></li>
-        </ul>
-      </section>
-      <section class="g-section">
-        <h2 data-ax="Heading">구조 들여다보기</h2>
-        <ul class="g-paths">
-          <li><a href="guide-system.html"><strong>내 기록은 어디에 남을까?</strong><span>연결 지도 · 로컬 서버 · 도구 목록</span></a></li>
-          <li><a href="guide-engine.html#rrf"><strong>왜 이 기록이 먼저 나올까?</strong><span>검색 순위를 바꿔 보는 RRF 계산기</span></a></li>
-          <li><a href="guide-engine.html"><strong>한 문장이 검색되기까지</strong><span>원문 · 색인 · 근거 검증 · 백업</span></a></li>
-          <li><a href="guide-library.html"><strong>명세와 설계 원문 찾기</strong><span>기능 명세와 기술 결정을 분야별로 읽기</span></a></li>
-        </ul>
-      </section>
-    </div>
-    <a href="index.html#story">학습 이야기로 돌아가기</a>
+    <header class="g-intro"><h1 data-ax="Heading">아키텍처 개요</h1><p class="g-lead">Codex와 웹은 같은 로컬 서버를 사용합니다. 원문은 SQLite에, 검색 색인은 LanceDB에 보관합니다.</p></header>
+
+    <section class="architecture-view" aria-label="Excalidraw 아키텍처 도식">
+      <fieldset class="drawing-picker">
+        <legend>Excalidraw 설계도</legend>
+        <label><input name="drawing" id="drawing-system" type="radio" checked aria-controls="sheet-system"><span>시스템 구성</span></label>
+        <label><input name="drawing" id="drawing-skills" type="radio" aria-controls="sheet-skills"><span>스킬 실행</span></label>
+        <label><input name="drawing" id="drawing-search" type="radio" aria-controls="sheet-search"><span>검색·인용</span></label>
+      </fieldset>
+
+      <figure class="drawing-sheet" id="sheet-system">
+        <div class="drawing-canvas"><img src="media/diagrams/system-routes.svg" width="484" height="660" alt="Codex의 MCP와 웹 브라우저의 API가 공통 로컬 서버에 연결된다. SQLite가 기록 원본을 보관하고 LanceDB가 검색 색인을 보관한다."></div>
+        <figcaption>
+          <h2 data-ax="Heading">두 입구, 하나의 로컬 서재</h2>
+          <p>Codex에서 저장한 기록을 웹에서 곧바로 열 수 있는 것은 두 경로가 같은 기록 서비스를 사용하기 때문입니다.</p>
+          <dl class="drawing-key">
+            <div><dt>진입점</dt><dd>Codex는 MCP 도구를 호출하고, 웹 브라우저는 웹 API에 요청합니다.</dd></div>
+            <div><dt>원본</dt><dd>SQLite에 기록과 아티클, 각 버전과 출처가 남습니다.</dd></div>
+            <div><dt>검색 색인</dt><dd>LanceDB는 원문에서 만든 검색용 구간을 보관합니다.</dd></div>
+          </dl>
+          <a class="drawing-next" href="guide-system.html">구성 요소와 운영 읽기 <span aria-hidden="true">→</span></a>
+          <a class="drawing-source" href="media/diagrams/system-routes.excalidraw" download>Excalidraw 원본 내려받기</a>
+        </figcaption>
+      </figure>
+
+      <figure class="drawing-sheet" id="sheet-skills">
+        <div class="drawing-canvas"><img src="media/diagrams/skill-to-library.svg" width="484" height="526" loading="lazy" alt="Codex가 기록 요청에는 cache-me, 글 요청에는 cache-me-article을 읽는다. MCP를 통해 capture_create와 article_create를 호출해 각각 기록과 아티클을 만든다."></div>
+        <figcaption>
+          <h2 data-ax="Heading">스킬에서 저장 도구까지</h2>
+          <p>“배운 걸 정리해줘”와 “이 기록들로 글 써줘”는 서로 다른 결과를 만듭니다. 스킬은 Codex가 따르는 작업 지침이고, MCP는 서버의 도구를 호출하는 규약입니다.</p>
+          <dl class="drawing-key">
+            <div><dt>기록 저장</dt><dd><code>cache-me</code>로 대화를 정리하고 <code>capture_create</code>로 본문을 저장합니다.</dd></div>
+            <div><dt>글 발행</dt><dd><code>cache-me-article</code>로 근거를 읽고 <code>article_create</code>로 인용을 갖춘 별도 글을 발행합니다.</dd></div>
+          </dl>
+          <a class="drawing-next" href="guide-skills.html">스킬 동작 명세 읽기 <span aria-hidden="true">→</span></a>
+          <a class="drawing-source" href="media/diagrams/skill-to-library.excalidraw" download>Excalidraw 원본 내려받기</a>
+        </figcaption>
+      </figure>
+
+      <figure class="drawing-sheet" id="sheet-search">
+        <div class="drawing-canvas"><img src="media/diagrams/retrieval-evidence.svg" width="472" height="658" loading="lazy" alt="키워드와 벡터 검색의 구간 순위를 합쳐 기록별로 묶는다. 주제 후보가 있으면 기록 순위를 다시 합친다. 원문에서 확인한 근거가 답변의 출처로 연결된다."></div>
+        <figcaption>
+          <h2 data-ax="Heading">검색 후보에서 답변 근거까지</h2>
+          <p>질문과 가까운 구간을 찾은 뒤, 서버가 실제로 읽은 저장본의 문장을 답변과 연결합니다.</p>
+          <dl class="drawing-key">
+            <div><dt>검색</dt><dd>단어와 의미로 찾은 본문 조각의 순위를 RRF로 합쳐 기록별로 묶습니다.</dd></div>
+            <div><dt>주제 연결</dt><dd>일치하는 주제 후보가 있으면 기록 단위에서 순위를 한 번 더 합칩니다.</dd></div>
+            <div><dt>인용</dt><dd>읽은 기록의 버전과 구간을 확인해 답변의 출처 번호에서 열 수 있게 합니다.</dd></div>
+          </dl>
+          <a class="drawing-next" href="guide-engine.html#rrf">RRF 계산 과정 보기 <span aria-hidden="true">→</span></a>
+          <a class="drawing-source" href="media/diagrams/retrieval-evidence.excalidraw" download>Excalidraw 원본 내려받기</a>
+        </figcaption>
+      </figure>
+    </section>
+
+    <section class="g-section doc-index" id="map">
+      <h2 data-ax="Heading" id="questions">설계 문서 목차</h2>
+      <ul class="g-paths">
+        <li><a href="guide-system.html"><strong>시스템 구성과 운영</strong><span>웹·MCP의 경계, 공통 서비스, 저장·변경·백업</span></a></li>
+        <li><a href="guide-skills.html"><strong>Codex 스킬 명세</strong><span>호출 조건, 처리 절차, 저장 결과, 근거와 출처</span></a></li>
+        <li><a href="guide-mcp.html"><strong>MCP 도구 명세</strong><span>전송과 인증, 도구별 입력·반환·오류, 호출 예시</span></a></li>
+        <li><a href="guide-engine.html"><strong>저장·검색 엔진</strong><span>원문 분할, 검색 후보, RRF 순위 결합, 근거 검증</span></a></li>
+        <li><a href="guide-features.html"><strong>지식 공간과 아티클</strong><span>기록 탐색, 그래프 선택, 검색 근거와 인용 패널</span></a></li>
+        <li><a href="guide-library.html"><strong>원문 자료집</strong><span>기능 수용 기준, 세부 설계, 기술 결정 기록</span></a></li>
+      </ul>
+    </section>
   </main>
 </body>
 </html>
