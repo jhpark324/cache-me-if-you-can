@@ -16,7 +16,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; font-size: 1rem; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
 a { color: var(--g-accent); text-underline-offset: .2em; }
-a:hover { text-decoration: underline; }
+.g-main :is(p, dd) a, a:hover { text-decoration: underline; }
 a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--g-accent); outline-offset: 3px; }
 [id] { scroll-margin-top: calc(var(--g-header-height) + .75rem); }
 .g-wrap { width: min(70rem, calc(100% - 3rem)); margin-inline: auto; }
