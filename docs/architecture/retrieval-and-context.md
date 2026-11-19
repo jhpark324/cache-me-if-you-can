@@ -128,17 +128,19 @@ context_notes는 응답의 맥락 단서이며 원본 사실 필드가 아니다
 
 `ContextResult`는 `items: ContextItem[]`, `conflicts[{sources[], reason}]`, `relations: RelationView[]`(확인한 1홉 관계의 방향·범위·근거), `evidence_status: found | insufficient | none`, `limitations[]`, `truncated: bool`이다. evidence_status=found는 관련 근거를 찾았다는 뜻이며 정답 완전성·외부 사실 검증을 보장하지 않는다. ContextInput.limit는 기본/최대 10개 기록이며 구간은 위 최대 20개 예산을 공유한다. knowledge_search와 knowledge_context는 답변 모델 로그인·연결을 요구하지 않는다. 웹 답변의 의미 해석·생성에만 선택한 모델 어댑터를 사용하며 그 연결 실패가 기록 CRUD와 검색 도구를 막지 않는다.
 
+MCP의 `knowledge_context`는 `query`, `kinds`, `concept_ids`, `limit`을 받는다. 웹 API `POST /api/v1/context`의 `ContextInput`은 사건 날짜 필터 `event_time`도 받는다. 이 API에서 `subject_hint`, `situation_hint`, `as_of`를 보내면 근거에서 적용 범위를 확인하라는 안내를 `limitations`에 넣고, 검색 후보를 좁힐 때는 실제 필터만 적용한다.
+
 ## 답변과 스트리밍
 
 각 요청은 독립된 request_id를 갖고 서버는 실행 중 상태만 유지한다. 질문·답변 원문을 DB·영구 체크포인트·본문 로그에 자동 저장하지 않는다. 서버 인증 토큰이나 내부 디버그 상태를 스트림에 넣지 않는다.
 
 이벤트는 모두 request_id를 포함하고 한 요청에서 다음 순서를 따른다.
 
-1. `started` → `progress`(searching/gathering/answering 등): 요청 수락과 진행만 표시한다.
-2. 모델은 공급자 스트림으로 생성할 수 있지만 앱은 답변 구간을 내부에서 모은다. 저장 사실과 일반 설명을 나누고 해당 구간의 의미상 근거와 현재 revision·삭제·출처 상태를 검사한 뒤 `answer_part`로 전달한다. 미검사 토큰을 확정된 저장 사실처럼 바로 게시하지 않는다.
-3. 이미 전달한 answer_part를 포함한 전체 SourceRef와 상태 세대를 마지막으로 재검사한다. 모두 유지되면 `completed`와 최종 AnswerResult를 보낸다.
-4. 첫 answer_part 전 근거가 변경됐으면 예산 안에서 한 번 다시 조회·생성할 수 있다. 이미 전달한 근거가 수정·삭제·무효화됐으면 `invalidated`(영향받은 part ID와 사유)를 보내고 **completed를 보내지 않는다**. 화면은 해당 답변을 현재 유효한 답으로 표시하지 않고 새 검색 재시도를 제공한다.
-5. 취소는 `cancelled`, 실행 실패는 `error`로 종료한다. 실패한 일부 결과를 completed로 바꾸지 않는다. 일시적 오류 재시도와 상태 변경 재시도는 전체 시간·호출 예산을 공유한다.
+1. 서버는 `started`와 `progress`(단계 `searching`)를 보내고 질문 작업을 시작한다. 기다리는 동안 연결을 유지하는 주석을 보낼 수 있다.
+2. 에이전트가 읽은 근거로 답변을 작성하고 별도 검토 호출에서 통과한 문단을 모은다. 첫 검사에서 인용이 이미 바뀌었으면 `error`로 끝난다. 검색·생성·검토에는 총 90초 한도가 적용된다.
+3. 서버는 각 `answer_part` 직전과 마지막 `completed` 직전에 인용한 구간 및 사용한 관계의 유효성을 다시 검사한다. 이 단계에서 검사에 실패하면 모든 답변 문단 ID와 사유를 담은 `invalidated`로 끝난다. 사용자는 새 검색을 시작할 수 있다.
+4. 두 기록 중 UDP만 인용한 경우, 검증 중 TCP 기록만 바뀌면 읽은 구간 그래프에서 해당 TCP 조각을 제외하고 `retrieval.truncated`를 표시한다. UDP 인용과 답변은 유지할 수 있다. 최종 검사까지 통과하면 `completed`의 답변과 출처를 화면에 함께 표시한다.
+5. 실행 실패는 `error`, 작업 자체의 취소는 `cancelled`로 알린다. 브라우저가 연결을 먼저 끊으면 서버는 해당 작업을 취소하고 스트림을 닫는다.
 
 형식·참조 검증과 모델의 근거 해석은 다른 검사다. 근거 없는 개인 경험을 만들어 내지 않고 부족하면 insufficient/none으로 답한다. 일반 설명은 내부에서 별도 Part로 분류하고 개인 기록처럼 인용하지 않는다. 화면에서는 반복된 유형 제목 대신 문장 자체로 일반 설명임을 밝힌 하나의 글로 이어 보여준다. source 변경을 기다리면서 긴 SQLite 트랜잭션을 유지하지 않는다.
 

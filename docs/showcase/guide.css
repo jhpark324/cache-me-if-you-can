@@ -16,7 +16,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; font-size: 1rem; line-height: 1.6; word-break: keep-all; overflow-wrap: anywhere; }
 a { color: var(--g-accent); text-underline-offset: .2em; }
-a:hover { text-decoration: underline; }
+.g-main :is(p, dd) a, a:hover { text-decoration: underline; }
 a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--g-accent); outline-offset: 3px; }
 [id] { scroll-margin-top: calc(var(--g-header-height) + .75rem); }
 .g-wrap { width: min(70rem, calc(100% - 3rem)); margin-inline: auto; }
@@ -132,6 +132,11 @@ a:focus-visible, summary:focus-visible, button:focus-visible, input:focus-visibl
 @media (max-width: 38rem) {
   .g-shell, .g-bar { width: calc(100% - 2rem); }
   .g-doc-home { display: none; }
+  .g-brand-row { flex: none; white-space: nowrap; }
+  .g-mobile-menu { min-width: 0; }
+  .g-mobile-menu > summary { white-space: nowrap; }
+  .g-mobile-menu > summary span { overflow: hidden; text-overflow: ellipsis; }
+  .g-mobile-menu > summary::after { flex: none; }
 }
 @media (max-width: 46rem) {
   .g-pair { grid-template-columns: 1fr; gap: .9rem; }

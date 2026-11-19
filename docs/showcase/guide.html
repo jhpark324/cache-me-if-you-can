@@ -42,7 +42,7 @@
           <h2 data-ax="Heading">스킬에서 저장 도구까지</h2>
           <p>“배운 걸 정리해줘”와 “이 기록들로 글 써줘”는 서로 다른 결과를 만듭니다. 스킬은 Codex가 따르는 작업 지침이고, MCP는 서버의 도구를 호출하는 규약입니다.</p>
           <dl class="drawing-key">
-            <div><dt>기록 저장</dt><dd><code>cache-me</code>로 대화를 정리하고 <code>capture_create</code>로 본문을 저장합니다.</dd></div>
+            <div><dt>기록 저장</dt><dd><code>cache-me</code>가 본문과 주제 힌트를 보내면 서버가 본문을 먼저 저장합니다. 기존 주제 재사용과 새 주제 등록은 이어지는 <a href="guide-topics.html">주제 분류 단계</a>에서 결정합니다.</dd></div>
             <div><dt>글 발행</dt><dd><code>cache-me-article</code>로 근거를 읽고 <code>article_create</code>로 인용을 갖춘 별도 글을 발행합니다.</dd></div>
           </dl>
           <a class="drawing-next" href="guide-skills.html">스킬 동작 명세 읽기 <span aria-hidden="true">→</span></a>
@@ -72,6 +72,7 @@
         <li><a href="guide-system.html"><strong>시스템 구성과 운영</strong><span>웹·MCP의 경계, 공통 서비스, 저장·변경·백업</span></a></li>
         <li><a href="guide-skills.html"><strong>Codex 스킬 명세</strong><span>호출 조건, 처리 절차, 저장 결과, 근거와 출처</span></a></li>
         <li><a href="guide-mcp.html"><strong>MCP 도구 명세</strong><span>전송과 인증, 도구별 입력·반환·오류, 호출 예시</span></a></li>
+        <li><a href="guide-topics.html"><strong>주제 매칭과 등록</strong><span>저장 요청의 힌트, 기존 주제 재사용, 신규 등록과 보류</span></a></li>
         <li><a href="guide-engine.html"><strong>저장·검색 엔진</strong><span>원문 분할, 검색 후보, RRF 순위 결합, 근거 검증</span></a></li>
         <li><a href="guide-features.html"><strong>지식 공간과 아티클</strong><span>기록 탐색, 그래프 선택, 검색 근거와 인용 패널</span></a></li>
         <li><a href="guide-library.html"><strong>원문 자료집</strong><span>기능 수용 기준, 세부 설계, 기술 결정 기록</span></a></li>

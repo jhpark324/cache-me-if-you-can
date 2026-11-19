@@ -20,6 +20,7 @@
   <section class="g-section" id="examples"><h2 data-ax="Heading">기록 저장부터 인용 발행까지</h2>
     <p>아래 세 호출은 합성 UDP 자료와 빈 메모리 서재를 사용해 실제 등록 도구로 차례로 실행했습니다. 첫 호출이 돌려준 두 식별자가 다음 호출의 원문과 인용 대상을 결정합니다. 다른 서재에서 실행할 때는 그 서재가 반환한 식별자를 사용합니다.</p>
     <div data-mcp-examples></div>
+    <p>첫 응답에서 주제 상태가 <code>pending</code>이면 본문 저장은 끝났고 분류 작업이 남았습니다. 서버가 힌트와 본문으로 주제를 고르는 과정은 <a href="guide-topics.html">주제 매칭과 등록</a>에서 볼 수 있습니다.</p>
   </section>
   <section class="g-section" id="tools"><h2 data-ax="Heading">도구별 입력과 반환</h2>
     <p>도구를 펼치면 등록된 입력의 필수 여부, 허용 타입, 기본값과 중첩 객체를 읽을 수 있습니다. 입력의 객체 이름은 <code>arguments</code> 아래의 실제 키입니다. 각 도구 끝에 SDK가 제공하는 전체 입력·출력 JSON Schema가 있습니다.</p>

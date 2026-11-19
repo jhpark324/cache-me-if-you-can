@@ -15,12 +15,13 @@
 
 ## 설계 문서
 
-[아키텍처 개요](guide.html)에서 도식을 고르면 해설과 해당 명세가 함께 표시된다. 그림은 편집 가능한 Excalidraw 장면에서 내보낸 SVG로 게재한다.
+[아키텍처 개요](guide.html)에서 시스템 지도를 보고, 각 장에서 해당 알고리즘과 사례를 확인한다. 그림은 편집 가능한 Excalidraw 장면에서 내보낸 SVG로 게재한다.
 
 | 설계 주제 | 해설 | Excalidraw 원본 |
 | --- | --- | --- |
 | 웹·MCP 진입점, 공통 서비스와 저장소 경계 | [시스템 아키텍처](guide-system.html) | [시스템 구성](media/diagrams/system-routes.excalidraw) |
 | 기록과 아티클의 작성·저장 책임 | [Codex 스킬 동작 명세](guide-skills.html) · [MCP 도구 명세](guide-mcp.html) | [스킬 실행](media/diagrams/skill-to-library.excalidraw) |
+| 주제 후보 선별, 기존 주제 재사용·신규 생성·보류 | [주제 매칭과 등록](guide-topics.html) | [저장 후 주제 연결](media/diagrams/topic-assignment.excalidraw) |
 | 키워드·벡터·주제 검색과 출처 검증 | [저장·검색 엔진과 RRF](guide-engine.html) | [검색과 인용](media/diagrams/retrieval-evidence.excalidraw) |
 
 [제품 기능](guide-features.html)에서는 그래프의 세부 항목과 답변의 근거를 따라가 볼 수 있다. [원문 자료집](guide-library.html)은 기능 명세, 시스템 설계, 기술 결정을 분야별로 모은다. [자료집 생성기](../../frontend/scripts/render-showcase-reference.mjs)가 저장소의 Markdown에서 원문과 검색 색인을 만들고, [문서 탐색 생성기](../../frontend/scripts/showcase-navigation.mjs)가 각 문서에 같은 목차와 현재 위치를 표시한다.
