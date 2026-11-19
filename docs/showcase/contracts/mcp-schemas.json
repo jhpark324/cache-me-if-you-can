@@ -1,0 +1,5920 @@
+{
+  "definitions": {
+    "ArticleMutationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "article": {
+          "$ref": "#/$defs/ArticleView"
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "article",
+        "request_id",
+        "replayed"
+      ],
+      "title": "ArticleMutationResult",
+      "type": "object"
+    },
+    "ArticleSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Topics",
+          "type": "array"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "topics",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "ArticleSummary",
+      "type": "object"
+    },
+    "ArticleView": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "title": "Body Markdown",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "external": "#/$defs/ExternalCitation",
+                "record": "#/$defs/RecordCitation"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/RecordCitation"
+              },
+              {
+                "$ref": "#/$defs/ExternalCitation"
+              }
+            ]
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "revision_no": {
+          "minimum": 1,
+          "title": "Revision No",
+          "type": "integer"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceView"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Topics",
+          "type": "array"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "topics",
+        "created_at",
+        "updated_at",
+        "revision_id",
+        "revision_no",
+        "body_markdown",
+        "citations",
+        "sources",
+        "review_state"
+      ],
+      "title": "ArticleView",
+      "type": "object"
+    },
+    "CaptureChanges": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Markdown"
+        },
+        "completion_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "incomplete",
+                "completed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completion State"
+        },
+        "concept_hints": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concept Hints"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EventTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kinds": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "knowledge",
+                  "episode",
+                  "context",
+                  "idea",
+                  "decision",
+                  "artifact"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kinds"
+        },
+        "nodes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NodeInput"
+              },
+              "maxItems": 200,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodes"
+        },
+        "sources": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/SourceRef"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sources"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "visibility": {
+          "anyOf": [
+            {
+              "enum": [
+                "public",
+                "private"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Visibility"
+        }
+      },
+      "title": "CaptureChanges",
+      "type": "object"
+    },
+    "CaptureSummary": {
+      "additionalProperties": false,
+      "properties": {
+        "completion_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "incomplete",
+                "completed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Completion State"
+        },
+        "concept_state": {
+          "$ref": "#/$defs/ConceptState"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EventTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "index_state": {
+          "$ref": "#/$defs/IndexState"
+        },
+        "kinds": {
+          "items": {
+            "enum": [
+              "knowledge",
+              "episode",
+              "context",
+              "idea",
+              "decision",
+              "artifact"
+            ],
+            "type": "string"
+          },
+          "title": "Kinds",
+          "type": "array"
+        },
+        "node_status": {
+          "enum": [
+            "absent",
+            "current",
+            "stale"
+          ],
+          "title": "Node Status",
+          "type": "string"
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "revision_no": {
+          "minimum": 1,
+          "title": "Revision No",
+          "type": "integer"
+        },
+        "state_version": {
+          "minimum": 1,
+          "title": "State Version",
+          "type": "integer"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        },
+        "visibility": {
+          "enum": [
+            "public",
+            "private"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision_id",
+        "revision_no",
+        "state_version",
+        "title",
+        "excerpt",
+        "kinds",
+        "visibility",
+        "completion_state",
+        "event_time",
+        "created_at",
+        "updated_at",
+        "index_state",
+        "node_status",
+        "concept_state",
+        "review_state"
+      ],
+      "title": "CaptureSummary",
+      "type": "object"
+    },
+    "CaptureView": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "title": "Body Markdown",
+          "type": "string"
+        },
+        "completion_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "incomplete",
+                "completed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Completion State"
+        },
+        "concept_hints": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Concept Hints",
+          "type": "array"
+        },
+        "concept_state": {
+          "$ref": "#/$defs/ConceptState"
+        },
+        "concepts": {
+          "items": {
+            "$ref": "#/$defs/ConceptView"
+          },
+          "title": "Concepts",
+          "type": "array"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "deleted_at": {
+          "title": "Deleted At",
+          "type": "null"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EventTime"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "index_state": {
+          "$ref": "#/$defs/IndexState"
+        },
+        "is_current": {
+          "title": "Is Current",
+          "type": "boolean"
+        },
+        "kinds": {
+          "items": {
+            "enum": [
+              "knowledge",
+              "episode",
+              "context",
+              "idea",
+              "decision",
+              "artifact"
+            ],
+            "type": "string"
+          },
+          "title": "Kinds",
+          "type": "array"
+        },
+        "node_status": {
+          "enum": [
+            "absent",
+            "current",
+            "stale"
+          ],
+          "title": "Node Status",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/NodeView"
+          },
+          "title": "Nodes",
+          "type": "array"
+        },
+        "review_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Review Reason"
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "revision_created_at": {
+          "title": "Revision Created At",
+          "type": "string"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "revision_no": {
+          "minimum": 1,
+          "title": "Revision No",
+          "type": "integer"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceView"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "state_version": {
+          "minimum": 1,
+          "title": "State Version",
+          "type": "integer"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        },
+        "visibility": {
+          "enum": [
+            "public",
+            "private"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision_id",
+        "revision_no",
+        "is_current",
+        "state_version",
+        "title",
+        "body_markdown",
+        "kinds",
+        "visibility",
+        "completion_state",
+        "event_time",
+        "deleted_at",
+        "created_at",
+        "updated_at",
+        "revision_created_at",
+        "index_state",
+        "node_status",
+        "nodes",
+        "concept_hints",
+        "concept_state",
+        "concepts",
+        "sources",
+        "review_state",
+        "review_reason"
+      ],
+      "title": "CaptureView",
+      "type": "object"
+    },
+    "ConceptChanges": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aliases"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        }
+      },
+      "title": "ConceptChanges",
+      "type": "object"
+    },
+    "ConceptMutationView": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "state_version": {
+          "minimum": 1,
+          "title": "State Version",
+          "type": "integer"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "aliases",
+        "state_version",
+        "created_at",
+        "updated_at",
+        "request_id",
+        "replayed"
+      ],
+      "title": "ConceptMutationView",
+      "type": "object"
+    },
+    "ConceptState": {
+      "additionalProperties": false,
+      "properties": {
+        "applied_revision_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Applied Revision Id"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "job_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Job Id"
+        },
+        "requested_revision_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requested Revision Id"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "running",
+            "ready",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "unresolved_hints": {
+          "description": "Compatibility field; deferred candidates remain in internal job history.",
+          "items": {
+            "type": "string"
+          },
+          "title": "Unresolved Hints",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ConceptState",
+      "type": "object"
+    },
+    "ConceptView": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Description"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "state_version": {
+          "minimum": 1,
+          "title": "State Version",
+          "type": "integer"
+        },
+        "updated_at": {
+          "title": "Updated At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "aliases",
+        "state_version",
+        "created_at",
+        "updated_at"
+      ],
+      "title": "ConceptView",
+      "type": "object"
+    },
+    "CreateArticleInput": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "title": "Body Markdown",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "external": "#/$defs/ExternalCitation",
+                "record": "#/$defs/RecordCitation"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/RecordCitation"
+              },
+              {
+                "$ref": "#/$defs/ExternalCitation"
+              }
+            ]
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Topics",
+          "type": "array"
+        }
+      },
+      "required": [
+        "request_id",
+        "title",
+        "summary",
+        "body_markdown",
+        "citations"
+      ],
+      "title": "CreateArticleInput",
+      "type": "object"
+    },
+    "CreateCaptureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "title": "Body Markdown",
+          "type": "string"
+        },
+        "completion_state": {
+          "anyOf": [
+            {
+              "enum": [
+                "incomplete",
+                "completed"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Completion State"
+        },
+        "concept_hints": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Concept Hints",
+          "type": "array"
+        },
+        "event_time": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EventTime"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "kinds": {
+          "items": {
+            "enum": [
+              "knowledge",
+              "episode",
+              "context",
+              "idea",
+              "decision",
+              "artifact"
+            ],
+            "type": "string"
+          },
+          "title": "Kinds",
+          "type": "array"
+        },
+        "nodes": {
+          "items": {
+            "$ref": "#/$defs/NodeInput"
+          },
+          "maxItems": 200,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Sources",
+          "type": "array"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        },
+        "visibility": {
+          "default": "public",
+          "enum": [
+            "public",
+            "private"
+          ],
+          "title": "Visibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "body_markdown"
+      ],
+      "title": "CreateCaptureInput",
+      "type": "object"
+    },
+    "CreateConceptInput": {
+      "additionalProperties": false,
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Aliases",
+          "type": "array"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "name"
+      ],
+      "title": "CreateConceptInput",
+      "type": "object"
+    },
+    "DeleteCaptureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "confirmation_token": {
+          "maxLength": 200,
+          "minLength": 20,
+          "title": "Confirmation Token",
+          "type": "string"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "capture_id",
+        "confirmation_token"
+      ],
+      "title": "DeleteCaptureInput",
+      "type": "object"
+    },
+    "DeleteResult": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "deleted_at": {
+          "title": "Deleted At",
+          "type": "string"
+        },
+        "index_state": {
+          "$ref": "#/$defs/ExcludedIndexState"
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "state_version": {
+          "minimum": 1,
+          "title": "State Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "request_id",
+        "capture_id",
+        "revision_id",
+        "state_version",
+        "deleted_at",
+        "index_state",
+        "replayed"
+      ],
+      "title": "DeleteResult",
+      "type": "object"
+    },
+    "DeletionPreview": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "confirmation_token": {
+          "title": "Confirmation Token",
+          "type": "string"
+        },
+        "excerpt": {
+          "title": "Excerpt",
+          "type": "string"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "expires_at": {
+          "title": "Expires At",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Title"
+        }
+      },
+      "required": [
+        "confirmation_token",
+        "capture_id",
+        "expected_revision_id",
+        "expected_state_version",
+        "title",
+        "excerpt",
+        "expires_at"
+      ],
+      "title": "DeletionPreview",
+      "type": "object"
+    },
+    "DomainErrorView": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Details"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable": {
+          "title": "Retryable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable"
+      ],
+      "title": "DomainErrorView",
+      "type": "object"
+    },
+    "EventTime": {
+      "additionalProperties": false,
+      "properties": {
+        "expression": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expression"
+        },
+        "precision": {
+          "enum": [
+            "unknown",
+            "year",
+            "month",
+            "day",
+            "instant"
+          ],
+          "title": "Precision",
+          "type": "string"
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timezone"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "precision"
+      ],
+      "title": "EventTime",
+      "type": "object"
+    },
+    "ExcludedIndexState": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "excluded",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ExcludedIndexState",
+      "type": "object"
+    },
+    "ExternalCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "external",
+          "title": "Kind",
+          "type": "string"
+        },
+        "note": {
+          "title": "Note",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "title",
+        "url",
+        "note"
+      ],
+      "title": "ExternalCitation",
+      "type": "object"
+    },
+    "IndexState": {
+      "additionalProperties": false,
+      "properties": {
+        "build_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Build Id"
+        },
+        "error_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Code"
+        },
+        "index_generation": {
+          "minimum": 1,
+          "title": "Index Generation",
+          "type": "integer"
+        },
+        "profile_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Profile Id"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "ready",
+            "failed",
+            "excluded"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "profile_id",
+        "build_id",
+        "index_generation"
+      ],
+      "title": "IndexState",
+      "type": "object"
+    },
+    "MergeCapturesInput": {
+      "additionalProperties": false,
+      "properties": {
+        "concept_hints": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Concept Hints"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "kinds": {
+          "anyOf": [
+            {
+              "items": {
+                "enum": [
+                  "knowledge",
+                  "episode",
+                  "context",
+                  "idea",
+                  "decision",
+                  "artifact"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Kinds"
+        },
+        "merged_body_markdown": {
+          "title": "Merged Body Markdown",
+          "type": "string"
+        },
+        "nodes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NodeInput"
+              },
+              "maxItems": 200,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodes"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "sources": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array"
+        },
+        "target_capture_id": {
+          "format": "uuid",
+          "title": "Target Capture Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "target_capture_id",
+        "sources",
+        "merged_body_markdown"
+      ],
+      "title": "MergeCapturesInput",
+      "type": "object"
+    },
+    "MutationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CaptureView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "committed_ref": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "result_state": {
+          "enum": [
+            "available",
+            "unavailable"
+          ],
+          "title": "Result State",
+          "type": "string"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Warnings",
+          "type": "array"
+        }
+      },
+      "required": [
+        "capture",
+        "committed_ref",
+        "request_id",
+        "replayed",
+        "result_state",
+        "warnings"
+      ],
+      "title": "MutationResult",
+      "type": "object"
+    },
+    "NodeConceptInput": {
+      "additionalProperties": false,
+      "properties": {
+        "concept_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Concept Ids",
+          "type": "array"
+        },
+        "node_id": {
+          "format": "uuid",
+          "title": "Node Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "node_id",
+        "concept_ids"
+      ],
+      "title": "NodeConceptInput",
+      "type": "object"
+    },
+    "NodeInput": {
+      "additionalProperties": false,
+      "properties": {
+        "body_end": {
+          "minimum": 1,
+          "title": "Body End",
+          "type": "integer"
+        },
+        "body_start": {
+          "minimum": 0,
+          "title": "Body Start",
+          "type": "integer"
+        },
+        "concept_hints": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Concept Hints",
+          "type": "array"
+        },
+        "kind": {
+          "enum": [
+            "explanation",
+            "interpretation",
+            "hypothesis",
+            "question",
+            "event",
+            "emotion",
+            "proposal",
+            "decision",
+            "action",
+            "result"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "origin": {
+          "default": "unspecified",
+          "enum": [
+            "user_report",
+            "user_interpretation",
+            "ai_explanation",
+            "unspecified"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "verification_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verification Note"
+        },
+        "verification_state": {
+          "default": "unknown",
+          "enum": [
+            "unknown",
+            "unverified",
+            "verified"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "body_start",
+        "body_end"
+      ],
+      "title": "NodeInput",
+      "type": "object"
+    },
+    "NodeView": {
+      "additionalProperties": false,
+      "properties": {
+        "body_end": {
+          "minimum": 1,
+          "title": "Body End",
+          "type": "integer"
+        },
+        "body_start": {
+          "minimum": 0,
+          "title": "Body Start",
+          "type": "integer"
+        },
+        "concept_hints": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Concept Hints",
+          "type": "array"
+        },
+        "concepts": {
+          "items": {
+            "$ref": "#/$defs/ConceptView"
+          },
+          "title": "Concepts",
+          "type": "array"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "explanation",
+            "interpretation",
+            "hypothesis",
+            "question",
+            "event",
+            "emotion",
+            "proposal",
+            "decision",
+            "action",
+            "result"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Label"
+        },
+        "ordinal": {
+          "minimum": 0,
+          "title": "Ordinal",
+          "type": "integer"
+        },
+        "origin": {
+          "default": "unspecified",
+          "enum": [
+            "user_report",
+            "user_interpretation",
+            "ai_explanation",
+            "unspecified"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        },
+        "verification_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verification Note"
+        },
+        "verification_state": {
+          "default": "unknown",
+          "enum": [
+            "unknown",
+            "unverified",
+            "verified"
+          ],
+          "title": "Verification State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "body_start",
+        "body_end",
+        "id",
+        "revision_id",
+        "ordinal",
+        "text",
+        "concepts",
+        "source",
+        "review_state"
+      ],
+      "title": "NodeView",
+      "type": "object"
+    },
+    "Page_ArticleSummary_": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ArticleSummary"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        }
+      },
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "title": "Page[ArticleSummary]",
+      "type": "object"
+    },
+    "Page_CaptureSummary_": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/CaptureSummary"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        }
+      },
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "title": "Page[CaptureSummary]",
+      "type": "object"
+    },
+    "Page_ConceptView_": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ConceptView"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        }
+      },
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "title": "Page[ConceptView]",
+      "type": "object"
+    },
+    "Page_RelationView_": {
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RelationView"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Next Cursor"
+        }
+      },
+      "required": [
+        "items",
+        "next_cursor"
+      ],
+      "title": "Page[RelationView]",
+      "type": "object"
+    },
+    "PrepareDeletionInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "capture_id"
+      ],
+      "title": "PrepareDeletionInput",
+      "type": "object"
+    },
+    "RecordCitation": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "record",
+          "title": "Kind",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "kind",
+        "source"
+      ],
+      "title": "RecordCitation",
+      "type": "object"
+    },
+    "RelationInput": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "evidence_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Evidence Note"
+        },
+        "relation_type": {
+          "enum": [
+            "related_to",
+            "clarifies",
+            "corrects",
+            "supports",
+            "contradicts",
+            "merged_from",
+            "supersedes"
+          ],
+          "title": "Relation Type",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "scope_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Note"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "target": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "request_id",
+        "relation_type",
+        "source",
+        "target",
+        "evidence"
+      ],
+      "title": "RelationInput",
+      "type": "object"
+    },
+    "RelationMutationView": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "evidence_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evidence Note"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "relation_type": {
+          "enum": [
+            "related_to",
+            "clarifies",
+            "corrects",
+            "supports",
+            "contradicts",
+            "merged_from",
+            "supersedes"
+          ],
+          "title": "Relation Type",
+          "type": "string"
+        },
+        "replayed": {
+          "title": "Replayed",
+          "type": "boolean"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "scope_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scope Note"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "target": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "withdrawal_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Withdrawal Reason"
+        },
+        "withdrawn_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Withdrawn At"
+        }
+      },
+      "required": [
+        "id",
+        "relation_type",
+        "source",
+        "target",
+        "evidence",
+        "scope_note",
+        "evidence_note",
+        "created_at",
+        "withdrawn_at",
+        "withdrawal_reason",
+        "request_id",
+        "replayed"
+      ],
+      "title": "RelationMutationView",
+      "type": "object"
+    },
+    "RelationView": {
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "evidence": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "evidence_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Evidence Note"
+        },
+        "id": {
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "relation_type": {
+          "enum": [
+            "related_to",
+            "clarifies",
+            "corrects",
+            "supports",
+            "contradicts",
+            "merged_from",
+            "supersedes"
+          ],
+          "title": "Relation Type",
+          "type": "string"
+        },
+        "scope_note": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Scope Note"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "target": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "withdrawal_reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Withdrawal Reason"
+        },
+        "withdrawn_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Withdrawn At"
+        }
+      },
+      "required": [
+        "id",
+        "relation_type",
+        "source",
+        "target",
+        "evidence",
+        "scope_note",
+        "evidence_note",
+        "created_at",
+        "withdrawn_at",
+        "withdrawal_reason"
+      ],
+      "title": "RelationView",
+      "type": "object"
+    },
+    "RetractRelationInput": {
+      "additionalProperties": false,
+      "properties": {
+        "relation_id": {
+          "format": "uuid",
+          "title": "Relation Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "withdrawal_reason": {
+          "title": "Withdrawal Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "relation_id",
+        "withdrawal_reason"
+      ],
+      "title": "RetractRelationInput",
+      "type": "object"
+    },
+    "RetryConceptsInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "job_id": {
+          "format": "uuid",
+          "title": "Job Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "capture_id",
+        "job_id"
+      ],
+      "title": "RetryConceptsInput",
+      "type": "object"
+    },
+    "ReviewSourcesInput": {
+      "additionalProperties": false,
+      "properties": {
+        "body_markdown": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Markdown"
+        },
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "nodes": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NodeInput"
+              },
+              "maxItems": 200,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Nodes"
+        },
+        "replacement_sources": {
+          "items": {
+            "$ref": "#/$defs/SourceRef"
+          },
+          "title": "Replacement Sources",
+          "type": "array"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "review_reason": {
+          "title": "Review Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "capture_id",
+        "replacement_sources",
+        "review_reason"
+      ],
+      "title": "ReviewSourcesInput",
+      "type": "object"
+    },
+    "SetConceptsInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "concept_ids": {
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "title": "Concept Ids",
+          "type": "array"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "node_concepts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/NodeConceptInput"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node Concepts"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "capture_id",
+        "concept_ids"
+      ],
+      "title": "SetConceptsInput",
+      "type": "object"
+    },
+    "SourceDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "capture": {
+          "$ref": "#/$defs/CaptureView"
+        },
+        "current_revision_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Current Revision Id"
+        },
+        "is_current": {
+          "title": "Is Current",
+          "type": "boolean"
+        },
+        "node": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/NodeView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "is_current",
+        "current_revision_id",
+        "text",
+        "capture",
+        "node",
+        "review_state"
+      ],
+      "title": "SourceDetail",
+      "type": "object"
+    },
+    "SourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "body_end": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body End"
+        },
+        "body_start": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Start"
+        },
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "node_id": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Node Id"
+        },
+        "revision_id": {
+          "format": "uuid",
+          "title": "Revision Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "capture_id",
+        "revision_id"
+      ],
+      "title": "SourceRef",
+      "type": "object"
+    },
+    "SourceView": {
+      "additionalProperties": false,
+      "properties": {
+        "availability": {
+          "enum": [
+            "available",
+            "unavailable"
+          ],
+          "title": "Availability",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "enum": [
+                "source_changed",
+                "source_deleted",
+                "upstream_invalid"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "resolved_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "review_state": {
+          "enum": [
+            "valid",
+            "needs_review"
+          ],
+          "title": "Review State",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/SourceRef"
+        }
+      },
+      "required": [
+        "source",
+        "resolved_source",
+        "availability",
+        "review_state",
+        "reason"
+      ],
+      "title": "SourceView",
+      "type": "object"
+    },
+    "UpdateArticleInput": {
+      "additionalProperties": false,
+      "properties": {
+        "article_id": {
+          "format": "uuid",
+          "title": "Article Id",
+          "type": "string"
+        },
+        "body_markdown": {
+          "title": "Body Markdown",
+          "type": "string"
+        },
+        "citations": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "external": "#/$defs/ExternalCitation",
+                "record": "#/$defs/RecordCitation"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/RecordCitation"
+              },
+              {
+                "$ref": "#/$defs/ExternalCitation"
+              }
+            ]
+          },
+          "title": "Citations",
+          "type": "array"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "topics": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Topics",
+          "type": "array"
+        }
+      },
+      "required": [
+        "request_id",
+        "title",
+        "summary",
+        "body_markdown",
+        "citations",
+        "topics",
+        "article_id",
+        "expected_revision_id"
+      ],
+      "title": "UpdateArticleInput",
+      "type": "object"
+    },
+    "UpdateCaptureInput": {
+      "additionalProperties": false,
+      "properties": {
+        "capture_id": {
+          "format": "uuid",
+          "title": "Capture Id",
+          "type": "string"
+        },
+        "changes": {
+          "$ref": "#/$defs/CaptureChanges"
+        },
+        "expected_revision_id": {
+          "format": "uuid",
+          "title": "Expected Revision Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "expected_revision_id",
+        "expected_state_version",
+        "request_id",
+        "capture_id",
+        "changes"
+      ],
+      "title": "UpdateCaptureInput",
+      "type": "object"
+    },
+    "UpdateConceptInput": {
+      "additionalProperties": false,
+      "properties": {
+        "changes": {
+          "$ref": "#/$defs/ConceptChanges"
+        },
+        "concept_id": {
+          "format": "uuid",
+          "title": "Concept Id",
+          "type": "string"
+        },
+        "expected_state_version": {
+          "minimum": 1,
+          "title": "Expected State Version",
+          "type": "integer"
+        },
+        "request_id": {
+          "format": "uuid",
+          "title": "Request Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "request_id",
+        "concept_id",
+        "expected_state_version",
+        "changes"
+      ],
+      "title": "UpdateConceptInput",
+      "type": "object"
+    }
+  },
+  "tools": {
+    "article_create": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/CreateArticleInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "article_createArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "CreateArticleInput",
+        "ExternalCitation",
+        "RecordCitation",
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArticleMutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ArticleMutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ArticleMutationResult",
+        "ArticleView",
+        "DomainErrorView",
+        "ExternalCitation",
+        "RecordCitation",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "article_get": {
+      "input": {
+        "properties": {
+          "article_id": {
+            "format": "uuid",
+            "title": "Article Id",
+            "type": "string"
+          },
+          "revision_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Revision Id"
+          }
+        },
+        "required": [
+          "article_id"
+        ],
+        "title": "article_getArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArticleView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ArticleView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ArticleView",
+        "DomainErrorView",
+        "ExternalCitation",
+        "RecordCitation",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "article_list": {
+      "input": {
+        "properties": {
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          }
+        },
+        "title": "article_listArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Page_ArticleSummary_"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[Page[ArticleSummary]]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ArticleSummary",
+        "DomainErrorView",
+        "Page_ArticleSummary_"
+      ]
+    },
+    "article_update": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/UpdateArticleInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "article_updateArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "ExternalCitation",
+        "RecordCitation",
+        "SourceRef",
+        "UpdateArticleInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArticleMutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ArticleMutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ArticleMutationResult",
+        "ArticleView",
+        "DomainErrorView",
+        "ExternalCitation",
+        "RecordCitation",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_create": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/CreateCaptureInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_createArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "CreateCaptureInput",
+        "EventTime",
+        "NodeInput",
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_delete": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/DeleteCaptureInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_deleteArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "DeleteCaptureInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeleteResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[DeleteResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DeleteResult",
+        "DomainErrorView",
+        "ExcludedIndexState"
+      ]
+    },
+    "capture_delete_prepare": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/PrepareDeletionInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_delete_prepareArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "PrepareDeletionInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DeletionPreview"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[DeletionPreview]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DeletionPreview",
+        "DomainErrorView"
+      ]
+    },
+    "capture_get": {
+      "input": {
+        "properties": {
+          "capture_id": {
+            "format": "uuid",
+            "title": "Capture Id",
+            "type": "string"
+          },
+          "revision_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Revision Id"
+          }
+        },
+        "required": [
+          "capture_id"
+        ],
+        "title": "capture_getArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CaptureView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[CaptureView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_list": {
+      "input": {
+        "properties": {
+          "concept_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concept Ids"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "knowledge",
+                    "episode",
+                    "context",
+                    "idea",
+                    "decision",
+                    "artifact"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kinds"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          }
+        },
+        "title": "capture_listArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Page_CaptureSummary_"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[Page[CaptureSummary]]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureSummary",
+        "ConceptState",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "Page_CaptureSummary_"
+      ]
+    },
+    "capture_merge": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/MergeCapturesInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_mergeArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "MergeCapturesInput",
+        "NodeInput",
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_retry_concepts": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/RetryConceptsInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_retry_conceptsArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "RetryConceptsInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_review_sources": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/ReviewSourcesInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_review_sourcesArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "NodeInput",
+        "ReviewSourcesInput",
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_set_concepts": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/SetConceptsInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_set_conceptsArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "NodeConceptInput",
+        "SetConceptsInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "capture_update": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/UpdateCaptureInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "capture_updateArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "CaptureChanges",
+        "EventTime",
+        "NodeInput",
+        "SourceRef",
+        "UpdateCaptureInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MutationResult"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[MutationResult]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "MutationResult",
+        "NodeView",
+        "SourceRef",
+        "SourceView"
+      ]
+    },
+    "concept_create": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/CreateConceptInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "concept_createArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "CreateConceptInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ConceptMutationView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ConceptMutationView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ConceptMutationView",
+        "DomainErrorView"
+      ]
+    },
+    "concept_get": {
+      "input": {
+        "properties": {
+          "concept_id": {
+            "format": "uuid",
+            "title": "Concept Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "concept_id"
+        ],
+        "title": "concept_getArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ConceptView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ConceptView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ConceptView",
+        "DomainErrorView"
+      ]
+    },
+    "concept_list": {
+      "input": {
+        "properties": {
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          }
+        },
+        "title": "concept_listArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Page_ConceptView_"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[Page[ConceptView]]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ConceptView",
+        "DomainErrorView",
+        "Page_ConceptView_"
+      ]
+    },
+    "concept_update": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/UpdateConceptInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "concept_updateArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "ConceptChanges",
+        "UpdateConceptInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ConceptMutationView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[ConceptMutationView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ConceptMutationView",
+        "DomainErrorView"
+      ]
+    },
+    "knowledge_context": {
+      "input": {
+        "properties": {
+          "concept_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concept Ids"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "knowledge",
+                    "episode",
+                    "context",
+                    "idea",
+                    "decision",
+                    "artifact"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kinds"
+          },
+          "limit": {
+            "default": 10,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "knowledge_contextArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[dict]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView"
+      ]
+    },
+    "knowledge_neighbors": {
+      "input": {
+        "properties": {
+          "capture_id": {
+            "format": "uuid",
+            "title": "Capture Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capture_id"
+        ],
+        "title": "knowledge_neighborsArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[dict]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView"
+      ]
+    },
+    "knowledge_search": {
+      "input": {
+        "properties": {
+          "concept_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concept Ids"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "kinds": {
+            "anyOf": [
+              {
+                "items": {
+                  "enum": [
+                    "knowledge",
+                    "episode",
+                    "context",
+                    "idea",
+                    "decision",
+                    "artifact"
+                  ],
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Kinds"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "knowledge_searchArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Data"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[dict]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView"
+      ]
+    },
+    "node_get": {
+      "input": {
+        "properties": {
+          "node_id": {
+            "format": "uuid",
+            "title": "Node Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "node_id"
+        ],
+        "title": "node_getArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/NodeView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[NodeView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "ConceptView",
+        "DomainErrorView",
+        "NodeView",
+        "SourceRef"
+      ]
+    },
+    "relation_create": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/RelationInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "relation_createArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "RelationInput",
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RelationMutationView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[RelationMutationView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView",
+        "RelationMutationView",
+        "SourceRef"
+      ]
+    },
+    "relation_list": {
+      "input": {
+        "properties": {
+          "capture_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Capture Id"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cursor"
+          },
+          "direction": {
+            "default": "both",
+            "title": "Direction",
+            "type": "string"
+          },
+          "limit": {
+            "default": 20,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "node_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Node Id"
+          },
+          "relation_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "related_to",
+                  "clarifies",
+                  "corrects",
+                  "supports",
+                  "contradicts",
+                  "merged_from",
+                  "supersedes"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Relation Type"
+          }
+        },
+        "title": "relation_listArguments",
+        "type": "object"
+      },
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Page_RelationView_"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[Page[RelationView]]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView",
+        "Page_RelationView_",
+        "RelationView",
+        "SourceRef"
+      ]
+    },
+    "relation_retract": {
+      "input": {
+        "properties": {
+          "input": {
+            "$ref": "#/$defs/RetractRelationInput"
+          }
+        },
+        "required": [
+          "input"
+        ],
+        "title": "relation_retractArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "RetractRelationInput"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RelationMutationView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[RelationMutationView]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "DomainErrorView",
+        "RelationMutationView",
+        "SourceRef"
+      ]
+    },
+    "source_get": {
+      "input": {
+        "properties": {
+          "source": {
+            "$ref": "#/$defs/SourceRef"
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "title": "source_getArguments",
+        "type": "object"
+      },
+      "inputDefinitions": [
+        "SourceRef"
+      ],
+      "output": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "not": {
+              "required": [
+                "error"
+              ]
+            },
+            "properties": {
+              "data": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": true
+              }
+            },
+            "required": [
+              "data"
+            ]
+          },
+          {
+            "not": {
+              "required": [
+                "data"
+              ]
+            },
+            "properties": {
+              "error": {
+                "not": {
+                  "type": "null"
+                }
+              },
+              "ok": {
+                "const": false
+              }
+            },
+            "required": [
+              "error"
+            ]
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SourceDetail"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DomainErrorView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OutputEnvelope[SourceDetail]",
+        "type": "object"
+      },
+      "outputDefinitions": [
+        "CaptureView",
+        "ConceptState",
+        "ConceptView",
+        "DomainErrorView",
+        "EventTime",
+        "IndexState",
+        "NodeView",
+        "SourceDetail",
+        "SourceRef",
+        "SourceView"
+      ]
+    }
+  }
+}

@@ -1,3 +1,4 @@
+import { mountGuideNavigation } from "./showcase-navigation.mjs";
 import { copyFile, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { Heading } from "@astryxdesign/core";
@@ -15,7 +16,11 @@ const diagramDir = path.join(docs, "architecture/diagrams");
 const diagrams = new Set(await readdir(diagramDir));
 const html = renderToStaticMarkup;
 const markdown = (text) => html(h(Markdown, { remarkPlugins: [remarkGfm], skipHtml: true }, text));
-const page = () => parseHTML(template).document;
+function page(filename) {
+  const { document } = parseHTML(template);
+  mountGuideNavigation(document, filename);
+  return document;
+}
 
 async function chapters(dir) {
   return (await readdir(path.join(docs, dir))).filter((name) => name.endsWith(".md") && name !== "index.md").sort();
@@ -24,12 +29,12 @@ async function chapters(dir) {
 // Publishing is opt-in by directory or document. Build from the canonical Markdown,
 // including the distinction each source makes between current behavior and proposals.
 const groups = [
-  { id: "specs", label: "기능 명세", files: ["records.md", "runtime.md", "workspace.md", "articles.md", "cache-me.md"] },
-  { id: "architecture", label: "시스템 설계", files: await chapters("architecture") },
-  { id: "decisions", label: "기술 결정 기록", files: await chapters("decisions") },
-  { id: "skills", label: "Codex 스킬", files: ["cache-me/SKILL.md", "cache-me-article/SKILL.md"] },
-  { id: "guides", label: "설치와 검증", files: ["local-development.md", "testing.md"] },
-  { id: "project", label: "제품 범위와 용어", files: ["product-brief.md", "mvp-scope.md", "domain-language.md", "record-types.md", "record-and-visibility.md"] },
+  { id: "architecture", label: "시스템 설계", role: "구성요소, 데이터 구조와 실행 흐름", files: await chapters("architecture") },
+  { id: "specs", label: "기능 명세", role: "기능별 동작과 수용 기준", files: ["records.md", "runtime.md", "workspace.md", "articles.md", "cache-me.md"] },
+  { id: "decisions", label: "기술 결정 기록 (ADR)", role: "선택한 기술과 대안, 채택 이유", files: await chapters("decisions") },
+  { id: "skills", label: "Codex 스킬", role: "호출 조건과 작성 절차", files: ["cache-me/SKILL.md", "cache-me-article/SKILL.md"] },
+  { id: "guides", label: "설치와 검증", role: "로컬 실행과 검사 방법", files: ["local-development.md", "testing.md"] },
+  { id: "project", label: "제품 범위와 용어", role: "지원 범위와 핵심 개념", files: ["product-brief.md", "mvp-scope.md", "domain-language.md", "record-types.md", "record-and-visibility.md"] },
 ];
 const entries = new Map();
 const searchIndex = [];
@@ -50,7 +55,10 @@ for (const group of groups) {
       if (description) descriptions.set(link.getAttribute("href"), description);
     }
   }
-  for (const file of group.files) {
+  const files = group.id === "architecture"
+    ? [...new Set([...descriptions.keys(), ...group.files])].filter((file) => group.files.includes(file))
+    : group.files;
+  for (const file of files) {
     const canonical = path.posix.join(group.id, file);
     const sourceText = await readFile(path.join(docs, canonical), "utf8");
     const front = sourceText.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
@@ -101,6 +109,13 @@ function destination(from, href) {
   return index ? "guide-library.html#" + index.id : null;
 }
 
+function sectionTitle(block, fallback) {
+  for (let node = block; node; node = node.previousElementSibling) {
+    if (node.matches(headingSelector)) return node.textContent.trim();
+  }
+  return fallback;
+}
+
 async function prepareBody(entry) {
   const { body, stem } = entry;
   for (const link of body.querySelectorAll("a[href]")) {
@@ -113,7 +128,8 @@ async function prepareBody(entry) {
     wrapper.className = "g-table";
     wrapper.tabIndex = 0;
     wrapper.setAttribute("role", "region");
-    wrapper.setAttribute("aria-label", "표 가로로 읽기");
+    wrapper.setAttribute("aria-label", sectionTitle(table, entry.title) + " 표");
+    for (const cell of table.querySelectorAll("thead th")) cell.setAttribute("scope", "col");
     table.replaceWith(wrapper);
     wrapper.append(table);
   }
@@ -125,19 +141,21 @@ async function prepareBody(entry) {
     const svg = await readFile(path.join(diagramDir, filename), "utf8");
     const viewBox = svg.match(/\bviewBox="([^"]+)"/)?.[1].trim().split(/[\s,]+/).map(Number);
     if (!viewBox || !(viewBox[2] > 0)) throw new Error("Missing diagram dimensions: " + filename);
-    const before = [...body.children].slice(0, [...body.children].indexOf(original));
-    const topic = before.reverse().find((node) => node.matches(headingSelector))?.textContent || entry.title;
+    const topic = sectionTitle(original, entry.title);
     const url = "diagrams/" + filename;
     const figure = body.ownerDocument.createElement("figure");
     original.replaceWith(figure);
-    figure.innerHTML = html(h("div", { className: "ref-diagram" },
-      h("img", { src: url, loading: "lazy", alt: topic + " 도식" }))) +
-      html(h("details", { className: "ref-zoom" }, h("summary", null, "도식 원본 크기로 보기"),
+    figure.innerHTML = html(h("details", { className: "ref-zoom" },
+        h("summary", null,
+          h("span", { className: "ref-zoom-label" },
+            h("span", { className: "ref-to-zoom" }, "도식 원본 크기로 보기"), h("span", { className: "ref-to-fit" }, "도식 전체 보기")),
+          h("span", { className: "ref-diagram" }, h("img", { src: url, loading: "lazy", alt: topic + " 도식" }))),
         h("div", { tabIndex: 0, role: "region", "aria-label": topic + " 확대 도식 스크롤" },
           h("img", { src: url, loading: "lazy", alt: topic + " 확대 도식", width: Math.ceil(viewBox[2]) })))) +
       html(h("details", null, h("summary", null, "도식 텍스트로 읽기")));
     figure.lastElementChild.append(original);
   }
+  for (const code of body.querySelectorAll("pre")) code.tabIndex = 0;
   // Markdown headings preserve their actual levels and fragment targets in the rendered theme.
   for (const node of body.querySelectorAll(headingSelector)) {
     const level = Number(node.localName[1]);
@@ -145,20 +163,37 @@ async function prepareBody(entry) {
   }
 }
 
+function members(group) {
+  return [...entries.values()].filter((doc) => doc.group === group);
+}
+
 function catalog(group) {
-  const members = [...entries.values()].filter((doc) => doc.group === group);
-  return h("section", { className: "ref-group", id: group.id, key: group.id },
-    h(Heading, { level: 2, color: "inherit" }, group.label),
-    h("ul", { className: "ref-list" }, members.map((doc) => h("li", { key: doc.filename },
+  return h("section", { className: "ref-group", id: group.id, key: group.id, tabIndex: -1 },
+    h("header", { className: "ref-group-title" },
+      h(Heading, { level: 2, color: "inherit" }, group.label),
+      h("p", null, group.role)),
+    h("ul", { className: "ref-list" }, members(group).map((doc) => h("li", { key: doc.filename },
       h("a", { href: doc.filename }, h("strong", null, doc.title), h("span", null, doc.description))))));
+}
+
+function groupReader(entry) {
+  const docs = members(entry.group);
+  const index = docs.indexOf(entry);
+  const jump = (doc, label, direction) => doc && h("a", { href: doc.filename, className: direction },
+    h("small", null, label), h("strong", null, doc.title));
+  return h("footer", { className: "ref-footer" },
+    h("nav", { className: "ref-neighbors", "aria-label": entry.group.label + " 안에서 이어 읽기" },
+      jump(docs[index - 1], "← 이전 문서", "ref-prev"), jump(docs[index + 1], "다음 문서 →", "ref-next")),
+    h("div", { className: "ref-credit" },
+      h("a", { href: "guide-library.html#" + entry.group.id }, entry.group.label + " 전체 문서"),
+      h("code", null, "docs/" + entry.canonical)));
 }
 
 for (const entry of entries.values()) {
   await prepareBody(entry);
-  const document = page();
+  const document = page(entry.filename);
   document.title = entry.title + " · 기술 자료집";
   document.querySelector('meta[name="description"]').setAttribute("content", entry.description);
-  document.querySelector('.g-navlinks [aria-current]').setAttribute("aria-current", "location");
   const main = document.querySelector("main");
   main.className = "g-wrap g-main ref-page";
   const sections = entry.headings.slice(1);
@@ -166,17 +201,23 @@ for (const entry of entries.values()) {
     h("a", { href: "guide-library.html" }, "기술 자료집"), h("span", { "aria-hidden": true }, "/"),
     h("a", { href: "guide-library.html#" + entry.group.id }, entry.group.label));
   const toc = sections.length ? h("nav", { className: "ref-toc", "aria-label": "이 문서의 목차" },
-    h("details", null, h("summary", null, "이 문서의 목차"),
+    h("details", null, h("summary", null, "이 문서의 목차", h("small", { className: "ref-location", "aria-hidden": true })),
       h("ol", null, sections.map((section) => h("li", { key: section.id, className: section.level > 2 ? "ref-sub" : undefined },
         h("a", { href: "#" + encodeURIComponent(section.id) }, section.label)))))) : null;
-  const footer = h("footer", { className: "ref-footer" }, h("a", { href: "guide-library.html#" + entry.group.id }, entry.group.label + " 목록"),
-    h("code", null, "docs/" + entry.canonical));
-  main.innerHTML = html(crumb) + html(h("div", { className: "ref-layout" }, toc, h("article", { className: "ref-document" })));
+  const title = entry.body.querySelector("h1");
+  const intro = title.nextElementSibling;
+  const lead = intro?.matches("p") && intro.textContent.length <= 280 ? intro : null;
+  const heading = title.outerHTML + (lead?.outerHTML || "");
+  title.remove();
+  lead?.remove();
+  main.innerHTML = html(crumb) + html(h("header", { className: "ref-dochead" })) +
+    html(h("div", { className: "ref-layout" }, toc, h("article", { className: "ref-document", "aria-labelledby": title.id })));
+  main.querySelector(".ref-dochead").innerHTML = heading;
   const article = main.querySelector("article");
   article.innerHTML = entry.body.innerHTML;
   if (entry.frontMatter) article.insertAdjacentHTML("beforeend", html(h("details", null,
-    h("summary", null, "스킬 호출 정보"), h("pre", null, h("code", null, entry.frontMatter)))));
-  article.insertAdjacentHTML("beforeend", html(footer));
+    h("summary", null, "스킬 호출 정보"), h("pre", { tabIndex: 0 }, h("code", null, entry.frontMatter)))));
+  article.insertAdjacentHTML("beforeend", html(groupReader(entry)));
   for (const section of entry.headings) {
     searchIndex.push({
       title: entry.title, group: entry.group.label, heading: section.label,
@@ -186,11 +227,16 @@ for (const entry of entries.values()) {
   await writeFile(path.join(site, entry.filename), document.toString());
 }
 
-const library = page();
+const library = page("guide-library.html");
 const title = library.querySelector("h1");
 title.outerHTML = html(h(Heading, { level: 1, color: "inherit" }, title.textContent));
-library.querySelector("#ref-catalog").innerHTML = html(h("nav", { className: "g-jumps", "aria-label": "자료 분야" },
-  groups.map((group) => h("a", { key: group.id, href: "#" + group.id }, group.label)))) + groups.map((group) => html(catalog(group))).join("");
+library.querySelector("#ref-catalog").innerHTML = html(h("nav", { className: "ref-fields", "aria-label": "자료 분야" },
+  h("details", { open: true },
+    h("summary", null, "문서 분야", h("span", { className: "ref-field-name" })),
+    h("ul", null, groups.map((group) => h("li", { key: group.id },
+      h("a", { href: "#" + group.id }, group.label, h("small", null, members(group).length + "편")))))))) +
+  html(h("div", { className: "ref-volumes" }, groups.map(catalog)));
+
 const data = library.createElement("script");
 data.type = "application/json";
 data.id = "ref-index";

@@ -4,65 +4,70 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="캐시미가 원문을 보관하고 한국어 키워드·의미·주제 검색을 합치는 과정. RRF 계산기를 조작하고, 출처 검증과 백업까지 살펴보세요.">
-  <title>검색 엔진과 저장 구조 · Cache Me If You Can</title>
+  <meta name="description" content="SQLite 원문과 LanceDB 색인, KURE-v2 의미 검색과 BM25, 두 단계 RRF 순위 결합, 인용 근거 검증의 설계를 설명합니다.">
+  <title>저장·검색 엔진 · 캐시미 설계 문서</title>
   <link rel="stylesheet" href="astryx.css">
   <link rel="stylesheet" href="guide.css">
+  <link rel="stylesheet" href="system.css">
   <script src="rrf.js" defer></script>
 </head>
 <body>
   <a class="g-skip" href="#main">본문으로</a>
-  <header class="g-header">
-    <nav class="g-wrap g-nav" aria-label="심화 가이드">
-      <a class="g-brand" href="index.html">Cache Me <small>If You Can</small></a>
-      <a class="g-map-link" href="guide.html#map">가이드 목차 <span aria-hidden="true">☰</span></a><div class="g-navlinks"><a href="guide.html">가이드 지도</a><a href="guide-skills.html">스킬·MCP</a><a href="guide-features.html">기능</a><a href="guide-engine.html" aria-current="page">검색 엔진</a><a href="guide-system.html">시스템</a><a href="guide-library.html">자료집</a></div>
-    </nav>
-  </header>
+  <header class="g-header"></header>
   <main id="main" class="g-wrap g-main">
     <header class="g-intro">
-      <p class="g-kicker">심화 가이드 / 검색 엔진</p>
-      <h1 data-ax="Heading">검색 엔진과 저장 구조</h1>
-      <p class="g-lead">본문을 작은 구간으로 나누고, 질문에 맞는 구간을 찾아 순위를 합칩니다.</p>
+      <p class="g-kicker">설계 문서 / 검색 엔진</p>
+      <h1 data-ax="Heading">저장·검색 엔진</h1>
+      <p class="g-lead">SQLite에 보관한 원문에서 검색 후보를 만들고, 순위를 결합한 뒤, 질문에 쓸 구간을 원문과 다시 대조합니다.</p>
     </header>
-    <nav class="g-jumps" aria-label="이 페이지 목차"><a href="#storage">원문과 색인</a><a href="#retrieval">세 가지 검색 단서</a><a href="#rrf">RRF 계산기</a><a href="#evidence">근거 검토</a><a href="#runtime">실행과 권한</a><a href="#backup">백업과 복구</a></nav>
+    <nav class="g-jumps" aria-label="장 목차"><a href="#pipeline">검색 처리 흐름</a><a href="#storage">원문 저장과 검색 색인</a><a href="#retrieval">키워드·의미·주제 검색</a><a href="#rrf">RRF 순위 결합</a><a href="#evidence">근거 검토와 인용</a><a href="#runtime">실행 위치와 접근 권한</a><a href="#backup">백업과 복구</a></nav>
+
+    <section class="g-section" id="pipeline">
+      <h2 data-ax="Heading">검색 처리 흐름</h2>
+      <p>검색 결과에는 기록 ID와 버전, 본문 구간이 함께 들어갑니다. 이 주소를 이용해 답변을 작성하기 전에 SQLite에서 근거를 다시 읽고, 사용자가 나중에 같은 문장을 열 수 있도록 인용에 연결합니다.</p>
+      <figure class="retrieval-map">
+        <img src="media/diagrams/retrieval-evidence.svg" width="472" height="658" alt="질문에서 낱말·의미와 주제 후보를 모으고 순위를 결합한 뒤, SQLite 원문에서 확인한 구간을 답변 출처로 연결하는 흐름">
+        <figcaption><strong>검색 후보에서 인용까지</strong><p>앞단은 무엇을 먼저 읽을지 정합니다. 뒷단은 이번 질문에서 실제로 읽은 문장과 그 저장 버전을 확인합니다. 검색 그래프는 읽은 구간 중 답에 쓰인 구간을 ‘답변 출처’로 표시합니다.</p><a href="media/diagrams/retrieval-evidence.excalidraw" download>편집용 Excalidraw 파일</a></figcaption>
+      </figure>
+    </section>
 
     <section class="g-section" id="storage">
-      <h2 data-ax="Heading">저장 버튼을 누르면 무엇이 남을까?</h2>
+      <h2 data-ax="Heading">원문 저장과 검색 색인</h2>
       <p>기록의 본문과 수정 이력은 SQLite에 남습니다. 검색용 데이터는 저장이 끝난 뒤 원문에서 다시 만들어집니다.</p>
       <ol class="g-flow">
         <li><strong>SQLite에 기록</strong><span>“TCP는 누락된 데이터를 재전송한다”는 본문, 기록 ID, 현재 버전, 색인 작업을 함께 저장합니다.</span></li>
         <li><strong>Markdown 분할</strong><span>짧은 글은 한 구간으로 둡니다. 긴 글은 제목·절, 블록, 문장 경계를 따라 나누고 각 구간의 원문 시작·끝 위치를 기억합니다.</span></li>
         <li><strong>LanceDB에 색인</strong><span>청크마다 제목·절과 본문을 합친 검색용 텍스트, 벡터, 원문 버전·위치·색인 세대를 씁니다. 준비된 기록이 검색 후보가 됩니다.</span></li>
       </ol>
-      <details class="g-details"><summary>본문이 바뀌거나 색인이 중단되면?</summary>
+      <details class="g-details"><summary>버전 변경과 색인 작업 복구</summary>
       <div class="g-grid">
-        <article class="g-card"><h3>본문을 고치면</h3><p>수정본이 새로운 현재 버전이 됩니다. 검색은 SQLite의 버전·세대가 일치하는 준비 완료 구간만 채택합니다. 새 색인을 만드는 중에는 예전 구간이 최신 답변의 근거로 나오지 않습니다.</p></article>
-        <article class="g-card"><h3>색인 도중 앱이 꺼지면</h3><p>SQLite에 남은 작업을 다시 읽습니다. 실행 중인 작업의 임대 시간이 지나면 다시 가져올 수 있습니다. 이미 더 새 버전이 생긴 작업은 건너뜁니다. 실패한 최신 작업은 다시 시도할 수 있습니다.</p></article>
+        <article class="g-card"><h3>현재 버전 전환</h3><p>수정본이 새로운 현재 버전이 됩니다. 검색은 SQLite의 버전·세대가 일치하는 준비 완료 구간만 채택합니다. 새 색인을 만드는 중에는 예전 구간이 최신 답변의 근거로 나오지 않습니다.</p></article>
+        <article class="g-card"><h3>중단된 색인 작업 재개</h3><p>SQLite에 남은 작업을 다시 읽습니다. 실행 중인 작업의 임대 시간이 지나면 다시 가져올 수 있습니다. 이미 더 새 버전이 생긴 작업은 건너뜁니다. 실패한 최신 작업은 다시 시도할 수 있습니다.</p></article>
       </div>
       </details>
-      <details class="g-details"><summary>원문 위치와 토큰 예산 펼치기</summary><p>한 청크의 모델 입력은 제목·헤더·특수 토큰을 포함해 최대 512토큰입니다. 제목과 헤더 맥락은 최대 64토큰이며 큰 블록을 강제로 나눌 때만 최대 64토큰을 겹칩니다. 원문 위치는 유니코드 문자 기준 <code>[시작, 끝)</code>입니다. 검색용으로 덧붙인 제목은 인용할 본문 범위에서 빠집니다.</p></details>
+      <details class="g-details"><summary>원문 위치와 토큰 예산</summary><p>한 청크의 모델 입력은 제목·헤더·특수 토큰을 포함해 최대 512토큰입니다. 제목과 헤더 맥락은 최대 64토큰이며 큰 블록을 강제로 나눌 때만 최대 64토큰을 겹칩니다. 원문 위치는 유니코드 문자 기준 <code>[시작, 끝)</code>입니다. 검색용으로 덧붙인 제목은 인용할 본문 범위에서 빠집니다.</p></details>
     </section>
 
     <section class="g-section" id="retrieval">
-      <h2 data-ax="Heading">어떤 단서로 후보를 찾을까?</h2>
-      <p>‘전송 계층’이라는 말, ‘빠진 데이터’의 뜻, 공부할 때 연결한 주제가 각각 다른 기록을 찾아냅니다. 서버는 하나의 질문 임베딩을 만들고 본문 검색과 주제 탐색을 병렬로 진행합니다.</p>
+      <h2 data-ax="Heading">키워드·의미·주제 검색</h2>
+      <p>하나의 질문에서 본문과 주제 두 경로를 병렬로 탐색합니다. 본문 경로는 낱말과 의미가 가까운 청크를 모으고, 주제 경로는 질문에 명확히 일치하는 주제의 연결 기록에서 근거 구간을 고릅니다.</p>
       <div class="g-grid">
-        <article class="g-card"><h3>낱말이 겹치는 구간</h3><p><strong>ICU 전문 검색 · BM25</strong></p><p>LanceDB가 텍스트를 낱말로 나눠 질문과 겹치는 청크를 찾습니다. 예를 들어 “재전송”이라는 낱말이 어느 구간에 나오는지가 단서입니다. 상위 40개 구간을 가져옵니다.</p></article>
-        <article class="g-card"><h3>뜻이 가까운 구간</h3><p><strong>KURE-v2 · MaxSim</strong></p><p>CPU에서 질문과 청크를 토큰별 128차원 벡터로 만듭니다. 질문 토큰마다 가장 가까운 청크 토큰과의 코사인 유사도를 찾아 합칩니다. ‘빠진 데이터’와 ‘누락된 패킷’처럼 다른 표현도 후보가 됩니다. 상위 40개 구간을 가져옵니다.</p></article>
-        <article class="g-card"><h3>이름이 맞는 주제</h3><p><strong>SQLite 연결 · 본문 구간 확인</strong></p><p>질문 속 ‘전송 계층’이 저장된 주제 이름이나 별칭과 맞으면 그 주제에 연결된 기록도 탐색합니다. 주제는 최대 3개, 주제마다 최근 갱신된 유효 기록 최대 5개를 살피고 기록별로 질문에 가장 가까운 청크를 찾습니다.</p></article>
+        <article class="g-card"><h3>키워드 검색</h3><p><strong>ICU 전문 검색 · BM25</strong></p><p>LanceDB가 텍스트를 낱말로 나눠 질문과 겹치는 청크를 찾습니다. 예를 들어 “재전송”이라는 낱말이 어느 구간에 나오는지가 단서입니다. 상위 40개 구간을 가져옵니다.</p></article>
+        <article class="g-card"><h3>의미 검색</h3><p><strong>KURE-v2 · MaxSim</strong></p><p>CPU에서 질문과 청크를 토큰별 128차원 벡터로 만듭니다. 질문 토큰마다 가장 가까운 청크 토큰과의 코사인 유사도를 찾아 합칩니다. ‘빠진 데이터’와 ‘누락된 패킷’처럼 다른 표현도 후보가 됩니다. 상위 40개 구간을 가져옵니다.</p></article>
+        <article class="g-card"><h3>주제 이름·별칭 검색</h3><p><strong>SQLite 연결 · 본문 구간 확인</strong></p><p>질문 속 ‘전송 계층’이 저장된 주제 이름이나 별칭과 맞으면 그 주제에 연결된 기록도 탐색합니다. 주제는 최대 3개, 주제마다 최근 갱신된 유효 기록 최대 5개를 살피고 기록별로 질문에 가장 가까운 청크를 찾습니다.</p></article>
       </div>
       <details class="g-details"><summary>필터, 한국어 처리, 현재 검색의 범위</summary><p>유형·주제·사건 날짜 조건은 세 경로에 공통으로 적용합니다. 주제 이름과 별칭의 앞뒤 경계, 한국어 조사를 확인하며 여러 주제가 공유하는 모호한 별칭은 건너뜁니다. 특정 본문 구간에만 붙은 주제라면 해당 범위와 겹치는 부분에서 근거를 고릅니다.</p><p>본문 키워드 경로는 LanceDB의 ICU 토크나이저를 쓰며 어간 변환·불용어 제거·ASCII 접기는 끕니다. 의미 경로는 벡터 인덱스를 우회해 필터를 통과한 후보에서 정확 검색합니다. 짧은 식별자나 한국어 표현 차이 때문에 두 경로가 모두 놓치는 기록도 있습니다.</p></details>
     </section>
 
     <section class="g-section" id="rrf">
-      <h2 data-ax="Heading">서로 다른 검색 순위를 어떻게 합칠까?</h2>
+      <h2 data-ax="Heading">RRF 순위 결합</h2>
       <p>낱말 검색의 BM25 점수와 의미 검색의 코사인 유사도는 척도가 다릅니다. 캐시미는 각 목록에서 몇 번째로 등장했는지를 사용합니다. 이 방식이 <strong>Reciprocal Rank Fusion(RRF)</strong>입니다.</p>
       <p class="g-note"><strong>각 경로의 기여 = 1 ÷ (60 + 순위)</strong><br>1위는 1/61, 2위는 1/62입니다. 한 경로에 없으면 기여는 0입니다. 같은 후보의 기여를 모두 더한 뒤 큰 값부터 읽습니다.</p>
       <ol class="g-flow">
         <li><strong>구간 순위 합치기</strong><span>낱말 목록과 의미 목록에서 같은 청크 ID의 기여를 더합니다. 같은 기록의 여러 청크는 기록 한 건으로 묶고, 가장 먼저 나온 구간 점수와 일치한 모든 범위를 보관합니다.</span></li>
         <li><strong>기록 순위 합치기</strong><span>주제 후보가 있으면 본문 기록 순위와 주제 기록 순위를 같은 공식으로 다시 합칩니다. 이때 입력은 두 목록의 순위입니다. 주제 후보가 없으면 첫 단계에서 얻은 기록 순위를 그대로 반환합니다.</span></li>
       </ol>
-      <h3>직접 계산해 보기</h3>
+      <h3>예제 순위 계산기</h3>
       <p>세 기록에서 구간 하나씩을 찾았다고 가정합니다. A는 ‘TCP 재전송’, B는 ‘UDP 손실 실험’, C는 ‘전송 계층 비교’입니다. 예시 순위를 바꿔 같은 기록이 두 경로에 나타날 때 결과가 어떻게 달라지는지 확인하세요.</p>
       <section data-rrf-demo aria-label="검색 순위 계산기">
         <div data-rrf-controls class="g-grid" hidden>
@@ -88,27 +93,30 @@
         </table></div>
         <p class="g-note" data-rrf-explanation aria-live="polite" aria-atomic="true">본문 1위 A의 점수는 의미 2위와 낱말 1위에서 온 1/62 + 1/61 = 0.032522입니다. 최종 1위 B의 점수는 본문 3위와 주제 1위에서 온 1/63 + 1/61 = 0.032266입니다.</p>
       </section>
-      <details class="g-details"><summary>본문에서 놓친 기록도 나타날까?</summary><p>의미 순위를 ‘A → B’, 낱말 순위를 ‘후보 없음’, 주제 순위를 ‘C → A’로 골라 보세요. C는 본문 단계 점수가 비어 있어도 주제 1위의 기여로 최종 목록에 들어옵니다. 실제 검색에서도 의미·낱말의 상위 40개 목록에서 모두 빠진 기록을 연결된 주제에서 다시 발견할 수 있습니다.</p></details>
-      <details class="g-details"><summary>점수와 동점을 읽는 법</summary><p>0.032266은 이 질문에서 기록을 읽을 순서를 정하는 값입니다. 답변의 정확도나 확률로 환산할 수 없습니다. 합산값이 같으면 본문 결합에서는 청크 ID, 최종 결합에서는 기록 ID를 오름차순으로 정렬합니다. 예시는 양쪽 모두 A, B, C 순서의 ID를 사용합니다. 표는 소수점 여섯 자리까지 표시하고 순위는 반올림하기 전 값으로 정합니다.</p><p>이 계산기는 순위 목록을 입력받아 실제 결합식을 재현합니다. 예시 기록의 순위는 설명용으로 설정했습니다. 제품은 RRF 다음에 별도의 교차 인코더나 언어 모델로 후보 순위를 다시 매기지 않습니다. 답변을 작성할 때는 별도로 근거를 검토합니다.</p></details>
+      <details class="g-details"><summary>예제 · 주제 경로에서만 발견한 기록</summary><p>의미 순위를 ‘A → B’, 낱말 순위를 ‘후보 없음’, 주제 순위를 ‘C → A’로 골라 보세요. C는 본문 단계 점수가 비어 있어도 주제 1위의 기여로 최종 목록에 들어옵니다. 실제 검색에서도 의미·낱말의 상위 40개 목록에서 모두 빠진 기록을 연결된 주제에서 다시 발견할 수 있습니다.</p></details>
+      <details class="g-details"><summary>점수 해석과 동점 처리</summary><p>0.032266은 이 질문에서 기록을 읽을 순서를 정하는 값입니다. 답변의 정확도나 확률로 환산할 수 없습니다. 합산값이 같으면 본문 결합에서는 청크 ID, 최종 결합에서는 기록 ID를 오름차순으로 정렬합니다. 예시는 양쪽 모두 A, B, C 순서의 ID를 사용합니다. 표는 소수점 여섯 자리까지 표시하고 순위는 반올림하기 전 값으로 정합니다.</p><p>이 계산기는 순위 목록을 입력받아 실제 결합식을 재현합니다. 예시 기록의 순위는 설명용으로 설정했습니다. 제품은 RRF 다음에 별도의 교차 인코더나 언어 모델로 후보 순위를 다시 매기지 않습니다. 답변을 작성할 때는 별도로 근거를 검토합니다.</p></details>
     </section>
 
     <section class="g-section" id="evidence">
-      <h2 data-ax="Heading">검색 결과가 어떻게 인용이 될까?</h2>
-      <p>“UDP가 손실을 복구했다”는 기록을 찾았다고 해봅시다. 당시 응용 프로그램이 복구한 것인지, 전송 프로토콜이 보장한 것인지는 문장 주변과 실험 조건을 읽어야 알 수 있습니다.</p>
+      <h2 data-ax="Heading">근거 검토와 인용</h2>
+      <p>검색 점수는 읽을 순서를 정합니다. 웹 질문 처리기는 선택한 구간과 주변 문맥을 읽고, 그 구간이 답변 문단의 주장을 뒷받침하는지 검토한 뒤 출처 번호를 연결합니다.</p>
       <ol class="g-flow">
         <li><strong>원문에서 읽기</strong><span>서버가 SQLite에서 현재 버전과 본문 범위를 확인합니다. 근거에 기록 ID, 버전 ID, 시작·끝 위치를 붙이고 관련 구간이나 적용 조건을 함께 읽습니다.</span></li>
         <li><strong>근거에 번호 붙이기</strong><span>LangGraph 에이전트가 읽기 전용 검색과 다시 읽기 도구를 사용합니다. 요청 안에서 발급된 근거 번호로만 저장 지식에 관한 주장을 인용할 수 있습니다.</span></li>
         <li><strong>문단별 검토</strong><span>모델이 질문·근거·답변 문단을 대조합니다. 뒷받침되지 않는 문단을 제외하고 조사하지 못한 범위를 표시합니다. 서버는 반환 직전에도 버전과 관계 상태를 다시 확인합니다.</span></li>
       </ol>
+      <details class="g-details"><summary>조회 중 변경과 과거 인용의 처리</summary>
       <div class="g-grid">
-        <article class="g-card"><h3>질문하는 동안 원문이 바뀌면</h3><p>답변을 준비하는 동안 근거의 버전·상태·색인 세대가 바뀌면 서버가 현재 답변을 무효화합니다. 새 검색은 수정된 기록으로 시작합니다.</p></article>
-        <article class="g-card"><h3>이미 발행한 아티클에서는</h3><p>인용은 작성 당시 읽은 저장본과 구간을 계속 가리킵니다. 출처 패널에서 당시 문장을 읽고 현재 기록을 따로 확인할 수 있습니다. 삭제된 원문의 본문은 출처에서 열 수 없습니다.</p></article>
+        <article class="g-card"><h3>답변 생성 중 근거 변경</h3><p>답변을 준비하는 동안 근거의 버전·상태·색인 세대가 바뀌면 서버가 현재 답변을 무효화합니다. 새 검색은 수정된 기록으로 시작합니다.</p></article>
+        <article class="g-card"><h3>발행 후 인용 버전</h3><p>인용은 작성 당시 읽은 저장본과 구간을 계속 가리킵니다. 출처 패널에서 당시 문장을 읽고 현재 기록을 따로 확인할 수 있습니다. 삭제된 원문의 본문은 출처에서 열 수 없습니다.</p></article>
       </div>
-      <details class="g-details"><summary>질문 길이와 근거 수의 한계</summary><p>직접 검색하는 질의는 모델 입력 64토큰까지입니다. 웹 질문은 긴 원문을 보존하고 짧은 검색 단위로 나누며 아직 확인하지 못한 부분을 추적합니다. 한 요청의 읽기 도구는 최대 8회입니다. 근거 수집에는 최대 10개 기록, 20개 구간, 본문 20,000자 한도가 있습니다. 답변은 사용자가 저장을 선택할 때 기록이 됩니다.</p></details>
+      </details>
+      <details class="g-details"><summary>질의 길이와 근거 수집 한도</summary><p>직접 검색하는 질의는 모델 입력 64토큰까지입니다. 웹 질문은 긴 원문을 보존하고 짧은 검색 단위로 나누며 아직 확인하지 못한 부분을 추적합니다. 한 요청의 읽기 도구는 최대 8회입니다. 근거 수집에는 최대 10개 기록, 20개 구간, 본문 20,000자 한도가 있습니다. 답변은 사용자가 저장을 선택할 때 기록이 됩니다.</p></details>
     </section>
 
     <section class="g-section" id="runtime">
-      <h2 data-ax="Heading">내 기기와 모델은 어디에서 연결될까?</h2>
+      <h2 data-ax="Heading">실행 위치와 접근 권한</h2>
+      <p>기록 저장과 검색은 로컬 서버에서 처리합니다. 웹 답변 생성과 자동 주제 분류는 연결한 외부 모델을 호출하며, 작업 종류에 따라 전송하는 맥락이 달라집니다.</p>
       <div class="g-table"><table>
         <caption>동작별 실행 위치와 필요한 연결</caption>
         <thead><tr><th scope="col">동작</th><th scope="col">실행 위치와 입력</th></tr></thead>
@@ -123,18 +131,21 @@
     </section>
 
     <section class="g-section" id="backup">
-      <h2 data-ax="Heading">다른 컴퓨터에서는 어떻게 이어갈까?</h2>
+      <h2 data-ax="Heading">백업과 복구</h2>
+      <p>이전할 때 보존해야 할 데이터는 SQLite 스냅샷과 무결성 확인용 매니페스트입니다. 검색 색인은 복구한 원문에서 다시 만들고, 모델 인증은 새 기기에서 연결합니다.</p>
       <div class="g-grid">
-        <article class="g-card"><h3>백업 ZIP에 들어가는 것</h3><p><code>cache-me.sqlite3</code> 스냅샷에는 기록·버전·주제·관계·아티클과 내부 삭제 이력이 있습니다. <code>manifest.json</code>에는 스키마·임베딩 프로필 정보와 DB 파일의 SHA-256이 들어갑니다.</p></article>
-        <article class="g-card"><h3>새 기기에서 준비할 것</h3><p>로그인 비밀, 모델 가중치, LanceDB 검색 색인은 백업에서 제외됩니다. 새 기기에서 모델을 준비하고 색인을 다시 만들며, 외부 모델을 쓸 때 다시 로그인합니다.</p></article>
+        <article class="g-card"><h3>스냅샷과 매니페스트</h3><p><code>cache-me.sqlite3</code> 스냅샷에는 기록·버전·주제·관계·아티클과 내부 삭제 이력이 있습니다. <code>manifest.json</code>에는 스키마·임베딩 프로필 정보와 DB 파일의 SHA-256이 들어갑니다.</p></article>
+        <article class="g-card"><h3>검색 색인과 모델 계정</h3><p>로그인 비밀, 모델 가중치, LanceDB 검색 색인은 백업에서 제외됩니다. 새 기기에서 모델을 준비하고 색인을 다시 만들며, 외부 모델을 쓸 때 다시 로그인합니다.</p></article>
       </div>
+      <details class="g-details"><summary>새 기기 복구 절차</summary>
       <ol class="g-flow">
         <li><strong>백업 다운로드</strong><span>실행 중인 서재의 설정에서 ‘내 데이터 → 백업 다운로드’를 선택합니다. SQLite의 일관된 스냅샷이 만들어집니다.</span></li>
         <li><strong>빈 경로에 배치</strong><span>같은 버전을 새 기기에 준비하고, 첫 서버 실행 전에 빈 데이터 디렉터리에 백업의 SQLite 파일을 같은 이름으로 놓습니다.</span></li>
         <li><strong>서재 확인</strong><span>서버를 시작해 원문을 연 뒤 설정에서 검색 기능을 준비합니다. 원문이 다시 검색되는지 확인합니다.</span></li>
       </ol>
       <p class="g-note">현재 복구 절차는 새 환경에 전체 스냅샷을 배치하는 방식입니다. 기존 서재와 합치는 가져오기 화면이나 삭제 기록을 개별 복원하는 휴지통은 제공하지 않습니다.</p>
-      <details class="g-details"><summary>이 설명과 대응하는 구현</summary><p><code>chunking.py</code>·<code>embedding.py</code>가 청크와 벡터를 만듭니다. <code>search.py</code>의 <code>_body_candidates</code>, <code>_topic_candidates</code>, <code>search</code>가 두 차례 순위 결합을 정의합니다. <code>topic_retrieval.py</code>는 주제 후보의 상한과 이름 규칙, <code>questions.py</code>는 문단별 검토와 재검증, <code>main.py</code>는 접속 검사와 백업 파일 구성을 담고 있습니다.</p></details>
+      </details>
+      <details class="g-details"><summary>구현 모듈</summary><p><code>chunking.py</code>·<code>embedding.py</code>가 청크와 벡터를 만듭니다. <code>search.py</code>의 <code>_body_candidates</code>, <code>_topic_candidates</code>, <code>search</code>가 두 차례 순위 결합을 정의합니다. <code>topic_retrieval.py</code>는 주제 후보의 상한과 이름 규칙, <code>questions.py</code>는 문단별 검토와 재검증, <code>main.py</code>는 접속 검사와 백업 파일 구성을 담고 있습니다.</p></details>
     </section>
   </main>
 </body>

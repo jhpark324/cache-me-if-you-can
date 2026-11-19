@@ -1,0 +1,223 @@
+[
+  {
+    "arguments": {
+      "input": {
+        "body_markdown": "UDP는 메시지를 독립적인 데이터그램으로 보낸다.\n\n도착 순서와 전달 성공을 보장하지 않는다.",
+        "kinds": [
+          "knowledge"
+        ],
+        "request_id": "60fe77df-7166-4998-a11a-b198d2151609",
+        "title": "UDP는 무엇을 보장할까?"
+      }
+    },
+    "name": "capture_create",
+    "structuredContent": {
+      "data": {
+        "capture": {
+          "body_markdown": "UDP는 메시지를 독립적인 데이터그램으로 보낸다.\n\n도착 순서와 전달 성공을 보장하지 않는다.",
+          "completion_state": null,
+          "concept_hints": [],
+          "concept_state": {
+            "applied_revision_id": null,
+            "error_code": null,
+            "job_id": "d2186a96-48ec-4bc1-9e2c-081b82f25209",
+            "requested_revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9",
+            "status": "pending",
+            "unresolved_hints": []
+          },
+          "concepts": [],
+          "created_at": "2026-11-19T00:05:19.960Z",
+          "deleted_at": null,
+          "event_time": null,
+          "id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+          "index_state": {
+            "build_id": "23c103c0-7f87-4c74-832a-13ad8ce78596",
+            "error_code": null,
+            "index_generation": 1,
+            "profile_id": "5d776885-b827-4385-b405-81ba17319683",
+            "status": "pending"
+          },
+          "is_current": true,
+          "kinds": [
+            "knowledge"
+          ],
+          "node_status": "absent",
+          "nodes": [],
+          "review_reason": null,
+          "review_state": "valid",
+          "revision_created_at": "2026-11-19T00:05:19.960Z",
+          "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9",
+          "revision_no": 1,
+          "sources": [],
+          "state_version": 1,
+          "title": "UDP는 무엇을 보장할까?",
+          "updated_at": "2026-11-19T00:05:19.960Z",
+          "visibility": "public"
+        },
+        "committed_ref": {
+          "body_end": null,
+          "body_start": null,
+          "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+          "node_id": null,
+          "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+        },
+        "replayed": false,
+        "request_id": "60fe77df-7166-4998-a11a-b198d2151609",
+        "result_state": "available",
+        "warnings": []
+      },
+      "ok": true,
+      "schema_version": 1
+    }
+  },
+  {
+    "arguments": {
+      "source": {
+        "body_end": 27,
+        "body_start": 0,
+        "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+        "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+      }
+    },
+    "name": "source_get",
+    "structuredContent": {
+      "data": {
+        "capture": {
+          "body_markdown": "UDP는 메시지를 독립적인 데이터그램으로 보낸다.\n\n도착 순서와 전달 성공을 보장하지 않는다.",
+          "completion_state": null,
+          "concept_hints": [],
+          "concept_state": {
+            "applied_revision_id": null,
+            "error_code": null,
+            "job_id": "d2186a96-48ec-4bc1-9e2c-081b82f25209",
+            "requested_revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9",
+            "status": "pending",
+            "unresolved_hints": []
+          },
+          "concepts": [],
+          "created_at": "2026-11-19T00:05:19.960Z",
+          "deleted_at": null,
+          "event_time": null,
+          "id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+          "index_state": {
+            "build_id": "23c103c0-7f87-4c74-832a-13ad8ce78596",
+            "error_code": null,
+            "index_generation": 1,
+            "profile_id": "5d776885-b827-4385-b405-81ba17319683",
+            "status": "pending"
+          },
+          "is_current": true,
+          "kinds": [
+            "knowledge"
+          ],
+          "node_status": "absent",
+          "nodes": [],
+          "review_reason": null,
+          "review_state": "valid",
+          "revision_created_at": "2026-11-19T00:05:19.960Z",
+          "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9",
+          "revision_no": 1,
+          "sources": [],
+          "state_version": 1,
+          "title": "UDP는 무엇을 보장할까?",
+          "updated_at": "2026-11-19T00:05:19.960Z",
+          "visibility": "public"
+        },
+        "current_revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9",
+        "is_current": true,
+        "node": null,
+        "review_state": "valid",
+        "source": {
+          "body_end": 27,
+          "body_start": 0,
+          "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+          "node_id": null,
+          "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+        },
+        "text": "UDP는 메시지를 독립적인 데이터그램으로 보낸다."
+      },
+      "ok": true,
+      "schema_version": 1
+    }
+  },
+  {
+    "arguments": {
+      "input": {
+        "body_markdown": "UDP는 메시지를 독립적인 데이터그램으로 전달한다. [1](#cite-1)",
+        "citations": [
+          {
+            "kind": "record",
+            "source": {
+              "body_end": 27,
+              "body_start": 0,
+              "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+              "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+            }
+          }
+        ],
+        "request_id": "52c5e813-3707-4592-9c40-60004c76e07d",
+        "summary": "UDP가 메시지를 보내는 단위를 복습합니다.",
+        "title": "UDP의 전달 단위",
+        "topics": [
+          "전송 계층"
+        ]
+      }
+    },
+    "name": "article_create",
+    "structuredContent": {
+      "data": {
+        "article": {
+          "body_markdown": "UDP는 메시지를 독립적인 데이터그램으로 전달한다. [1](#cite-1)",
+          "citations": [
+            {
+              "kind": "record",
+              "source": {
+                "body_end": 27,
+                "body_start": 0,
+                "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+                "node_id": null,
+                "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+              }
+            }
+          ],
+          "created_at": "2026-11-19T00:05:20.066Z",
+          "id": "6e743755-08e0-4d1b-8d9c-fb096a5e2ab5",
+          "review_state": "valid",
+          "revision_id": "5ba3fc5e-1559-4308-a916-2df50fb84736",
+          "revision_no": 1,
+          "sources": [
+            {
+              "availability": "available",
+              "reason": null,
+              "resolved_source": {
+                "body_end": 27,
+                "body_start": 0,
+                "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+                "node_id": null,
+                "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+              },
+              "review_state": "valid",
+              "source": {
+                "body_end": 27,
+                "body_start": 0,
+                "capture_id": "f224a8a5-0c8f-46f8-b3bf-746051bbd02d",
+                "node_id": null,
+                "revision_id": "fbb348b1-0571-4f26-a87a-adc81b609ca9"
+              }
+            }
+          ],
+          "summary": "UDP가 메시지를 보내는 단위를 복습합니다.",
+          "title": "UDP의 전달 단위",
+          "topics": [
+            "전송 계층"
+          ],
+          "updated_at": "2026-11-19T00:05:20.066Z"
+        },
+        "replayed": false,
+        "request_id": "52c5e813-3707-4592-9c40-60004c76e07d"
+      },
+      "ok": true,
+      "schema_version": 1
+    }
+  }
+]
