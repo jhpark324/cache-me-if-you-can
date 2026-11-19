@@ -77,7 +77,7 @@
 .ref-document .ref-zoom[open] .ref-zoom-label::before { content: "−"; margin-right: .45rem; }
 .ref-document .ref-zoom:not([open]) .ref-zoom-label::before { content: "+"; margin-right: .45rem; }
 .ref-document details summary { cursor: pointer; }
-.ref-document figure img { display: block; max-width: 100%; max-height: 34rem; margin-inline: auto; background: white; }
+.ref-document figure img { display: block; height: auto; max-width: 100%; max-height: 34rem; margin-inline: auto; background: white; }
 .ref-document .ref-diagram { display: block; border: 1px solid var(--g-line); padding: .6rem; border-radius: .5rem; background: white; }
 .ref-document figure details { margin-top: .45rem; }
 .ref-zoom > div { overscroll-behavior: contain; overflow: auto; max-height: min(70vh, 34rem); margin-block: .5rem; border: 1px solid var(--g-line); background: white; }

@@ -140,7 +140,7 @@ async function prepareBody(entry) {
     await copyFile(path.join(diagramDir, filename), path.join(site, "diagrams", filename));
     const svg = await readFile(path.join(diagramDir, filename), "utf8");
     const viewBox = svg.match(/\bviewBox="([^"]+)"/)?.[1].trim().split(/[\s,]+/).map(Number);
-    if (!viewBox || !(viewBox[2] > 0)) throw new Error("Missing diagram dimensions: " + filename);
+    if (!viewBox || !(viewBox[2] > 0 && viewBox[3] > 0)) throw new Error("Missing diagram dimensions: " + filename);
     const topic = sectionTitle(original, entry.title);
     const url = "diagrams/" + filename;
     const figure = body.ownerDocument.createElement("figure");
@@ -149,7 +149,7 @@ async function prepareBody(entry) {
         h("summary", null,
           h("span", { className: "ref-zoom-label" },
             h("span", { className: "ref-to-zoom" }, "도식 원본 크기로 보기"), h("span", { className: "ref-to-fit" }, "도식 전체 보기")),
-          h("span", { className: "ref-diagram" }, h("img", { src: url, loading: "lazy", alt: topic + " 도식" }))),
+          h("span", { className: "ref-diagram" }, h("img", { src: url, width: Math.ceil(viewBox[2]), height: Math.ceil(viewBox[3]), loading: "lazy", alt: topic + " 도식" }))),
         h("div", { tabIndex: 0, role: "region", "aria-label": topic + " 확대 도식 스크롤" },
           h("img", { src: url, loading: "lazy", alt: topic + " 확대 도식", width: Math.ceil(viewBox[2]) })))) +
       html(h("details", null, h("summary", null, "도식 텍스트로 읽기")));

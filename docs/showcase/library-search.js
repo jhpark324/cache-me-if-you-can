@@ -57,6 +57,18 @@ if (contents) {
   window.addEventListener("scroll", schedule, { passive: true });
   window.addEventListener("resize", schedule);
   window.addEventListener("pageshow", schedule);
+  new ResizeObserver(schedule).observe(page.querySelector(".ref-document"));
+  // Make a bookmarked section land below the headers after responsive tables and fonts settle.
+  const initial = toc.find(({ link }) => link.hash === location.hash);
+  const navigation = performance.getEntriesByType("navigation")[0];
+  if (initial && navigation?.type !== "back_forward") {
+    window.addEventListener("load", async () => {
+      await document.fonts.ready;
+      requestAnimationFrame(() => {
+        if (location.hash === initial.link.hash) initial.heading.scrollIntoView({ block: "start" });
+      });
+    }, { once: true });
+  }
   contents.addEventListener("toggle", schedule);
   schedule();
 }
