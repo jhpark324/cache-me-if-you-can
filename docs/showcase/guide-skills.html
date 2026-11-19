@@ -42,7 +42,7 @@
         <dt>호출 조건</dt><dd>캐시미를 지목해 저장·조회·정정·완료 처리·삭제를 요청한다. 조회 요청은 읽기 작업이다. 저장할 대상이나 범위가 모호하면 먼저 확인한다.</dd>
         <dt>입력</dt><dd>사용자가 지정한 대화 범위나 원문이 입력이다. 새 기록의 필수 필드는 <code>request_id</code>(UUID)와 <code>body_markdown</code>이다. 제목·유형·주제 후보·출처는 필요할 때 덧붙인다.</dd>
         <dt>처리</dt><dd>범위를 먼저 정하고, 따로 찾거나 정정할 내용을 기록 단위로 나눈다. 같은 결정의 이유와 조건은 함께 보존한다. ‘한 기록으로’ 또는 ‘원문 그대로’라는 요청을 우선한다.</dd>
-        <dt>저장·반환</dt><dd>기록마다 별도의 요청 ID로 <a class="s-tool-ref" href="guide-mcp.html#capture_create"><code>capture_create</code></a>를 호출한다. 반환된 <code>capture</code>에서 실제 제목·본문·메타데이터를 보여 준다. ‘모든 기록’에서 바로 열 수 있고, 뒤이어 주제 연결과 색인 작업이 진행된다.</dd>
+        <dt>저장·반환</dt><dd>기록마다 별도의 요청 ID로 <a class="s-tool-ref" href="guide-mcp.html#capture_create"><code>capture_create</code></a>를 호출한다. 반환된 <code>capture</code>에서 실제 제목·본문·메타데이터를 보여 준다. ‘모든 기록’에서 바로 열 수 있고, 서버는 <code>concept_hints</code>와 본문을 바탕으로 <a href="guide-topics.html">기존 주제를 재사용하거나 새 주제를 등록</a>한다. 검색 색인은 별도의 작업으로 만든다.</dd>
       </dl>
       <a class="s-source-link" href="ref-skill-cache-me.html">기록 관리 스킬 원문</a>
     </section>
@@ -93,7 +93,7 @@
           </ol>
           <figure class="s-outcome"><figcaption><span class="s-who">웹 서재에서 보는 결과</span><strong>모든 기록에 두 건</strong></figcaption>
             <img src="media/story-records.jpg" decoding="async" width="1440" height="810" alt="모든 기록에 ‘TCP는 순서를 어떻게 지킬까?’와 ‘UDP는 무엇을 보장할까?’가 별도 행으로 표시된 실제 화면">
-            <p>주제가 연결되면 지식 공간에서도 두 기록을 찾을 수 있습니다.</p>
+            <p>두 기록을 각각 열 수 있습니다. 두 기록에 ‘전송 계층’이 연결되면 지식 공간에서 같은 주제 아래 나타납니다. <a href="guide-topics.html#cases">TCP·UDP 주제 분류 예시 보기</a></p>
           </figure>
         </div>
       </article>

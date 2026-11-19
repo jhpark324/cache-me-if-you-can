@@ -1,0 +1,46 @@
+.t-overview { display: grid; grid-template-columns: minmax(0, .95fr) minmax(0, 1fr); gap: clamp(1.2rem, 3.5vw, 3rem); align-items: start; }
+.t-overview h2 { margin: 0 0 .4rem; font-size: clamp(1.22rem, 2.2vw, 1.55rem); line-height: 1.35; letter-spacing: -.045em; }
+.t-diagram { min-width: 0; margin: 0; padding: .9rem; border: 1px solid var(--g-line); border-radius: .8rem; background: var(--g-surface); }
+.t-diagram figcaption span { display: block; color: var(--g-muted); font-size: .87rem; }
+.t-diagram img { display: block; width: min(100%, 27rem); height: auto; margin: .65rem auto .2rem; }
+.t-diagram a { display: inline-flex; align-items: center; min-height: 44px; font-size: .88rem; }
+.t-roles dl, .t-case dl, .t-rules { margin: 0; }
+.t-roles dt, .t-case dt, .t-rules dt { color: var(--g-accent); font-weight: 650; }
+.t-roles dt { margin-top: .95rem; padding-top: .85rem; border-top: 1px solid var(--g-line); }
+.t-roles dd, .t-case dd, .t-rules dd { margin: .25rem 0 0; }
+.t-roles dd, .t-rules dd { color: var(--g-muted); }
+.t-roles code { font-family: var(--g-mono); font-size: .88em; }
+.t-contents { margin-block: 1.5rem; }
+.t-chooser { min-width: 0; margin: 1rem 0 .65rem; padding: 0; border: 0; }
+.t-chooser legend { margin-bottom: .45rem; padding: 0; color: var(--g-muted); font-size: .85rem; }
+.t-options { display: flex; flex-wrap: wrap; gap: .45rem; }
+.t-options label { position: relative; cursor: pointer; }
+.t-options input { position: absolute; width: 1px; height: 1px; padding: 0; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+.t-options span { display: flex; justify-content: center; align-items: center; min-height: 44px; padding: .4rem .9rem; border: 1px solid var(--g-line); border-radius: .45rem; color: var(--g-ink); }
+.t-options input:checked + span { color: var(--g-bg); background: var(--g-accent); border-color: var(--g-accent); font-weight: 700; }
+.t-options input:focus-visible + span { outline: 2px solid var(--g-ink); outline-offset: 2px; }
+.t-options label:hover span { border-color: var(--g-accent); }
+.t-case { border: 1px solid var(--g-line); border-radius: .8rem; background: var(--g-surface); padding: clamp(.9rem, 2.2vw, 1.4rem); }
+.t-case + .t-case { margin-top: .7rem; }
+.t-example:has(input[name="topic-case"]:checked) .t-case { display: none; margin-top: 0; }
+.t-example:has(#t-reuse:checked) #case-reuse,
+.t-example:has(#t-new:checked) #case-new,
+.t-example:has(#t-empty:checked) #case-empty,
+.t-example:has(#t-defer:checked) #case-defer { display: block; }
+.t-example .t-case h3 { margin: 0 0 .7rem; }
+.t-case dl, .t-rules { display: grid; grid-template-columns: minmax(5.5rem, auto) minmax(0, 1fr); column-gap: 1rem; }
+.t-case dl > *, .t-rules > * { margin: 0; padding-block: .55rem; border-top: 1px solid var(--g-line); }
+.t-rules { grid-template-columns: minmax(9rem, .45fr) minmax(0, 1fr); }
+.t-case dd code { display: block; width: fit-content; margin-top: .24rem; color: var(--g-muted); white-space: normal; }
+@media (max-width: 46rem) {
+  .t-overview { grid-template-columns: minmax(0, 1fr); }
+  .t-diagram { max-width: 32rem; }
+}
+@media (max-width: 38rem) {
+  .t-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .t-case dl, .t-rules { grid-template-columns: minmax(0, 1fr); }
+  .t-case dt, .t-rules dt { padding: .65rem 0 .12rem; }
+  .t-case dd, .t-rules dd { border-top: 0; padding: 0 0 .65rem; }
+  .t-case dd:last-child, .t-rules dd:last-child { padding-bottom: 0; }
+  .t-diagram { padding: .65rem; }
+}

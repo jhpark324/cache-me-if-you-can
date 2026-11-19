@@ -2,6 +2,7 @@ const sections = [
   ["시스템", [
     ["guide.html", "아키텍처 개요"],
     ["guide-system.html", "구성 요소와 운영"],
+    ["guide-topics.html", "주제 매칭과 등록"],
     ["guide-engine.html", "저장·검색 엔진"],
   ]],
   ["인터페이스 명세", [
